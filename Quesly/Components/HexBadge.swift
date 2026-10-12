@@ -6,7 +6,7 @@ struct Hexagon: Shape {
         let r = min(rect.width, rect.height) / 2
         var path = Path()
         for i in 0..<6 {
-            let angle = Angle.degrees(Double(i) * 60 - 90).radians
+            let angle = CGFloat(Angle.degrees(Double(i) * 60 - 90).radians)
             let p = CGPoint(x: c.x + r * cos(angle), y: c.y + r * sin(angle))
             if i == 0 { path.move(to: p) } else { path.addLine(to: p) }
         }

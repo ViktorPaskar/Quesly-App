@@ -24,8 +24,13 @@ enum MainTab: CaseIterable {
 
 struct MainTabView: View {
     @Environment(AppStore.self) private var store
-    @State private var tab: MainTab = .feed
-    @State private var paths: [MainTab: NavigationPath] = [:]
+    @State private var tab: MainTab = DemoConfig.initialTab
+    @State private var paths: [MainTab: NavigationPath] = {
+        guard let route = DemoConfig.initialRoute else { return [:] }
+        var path = NavigationPath()
+        path.append(route)
+        return [DemoConfig.initialTab: path]
+    }()
 
     var body: some View {
         VStack(spacing: 0) {

@@ -8,8 +8,8 @@ struct DailyQuestionView: View {
     /// Shown when the flow is presented over the feed (lets the user close it).
     var onClose: (() -> Void)? = nil
 
-    @State private var isComposing = false
-    @State private var text = ""
+    @State private var isComposing = DemoConfig.startsComposing
+    @State private var text = DemoConfig.composerSample
     @FocusState private var editorFocused: Bool
 
     private var question: DailyQuestion { store.todayQuestion }

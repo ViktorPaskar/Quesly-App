@@ -2,7 +2,7 @@ import SwiftUI
 
 struct FeedView: View {
     @Environment(AppStore.self) private var store
-    @State private var scope: FeedScope = .world
+    @State private var scope: FeedScope = DemoConfig.initialFeedScope
     @State private var showQuestion = false
 
     var body: some View {

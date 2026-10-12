@@ -32,7 +32,7 @@ final class AppStore {
     var isPrivateAccount = false { didSet { persist() } }
 
     private var isRestoring = false
-    private let defaultsKey = "quesly.snapshot.v1"
+    nonisolated static let defaultsKey = "quesly.snapshot.v1"
 
     init() {
         users = Dictionary(uniqueKeysWithValues: MockData.users.map { ($0.id, $0) })
@@ -99,7 +99,7 @@ final class AppStore {
     }
 
     func deleteAccount() {
-        UserDefaults.standard.removeObject(forKey: defaultsKey)
+        UserDefaults.standard.removeObject(forKey: Self.defaultsKey)
         me = MockData.me
         myAnswers = []
         followingIds = MockData.followingIds
@@ -276,14 +276,14 @@ final class AppStore {
             remindersEnabled: remindersEnabled, reminderTime: reminderTime, isPrivateAccount: isPrivateAccount
         )
         if let data = try? JSONEncoder().encode(snapshot) {
-            UserDefaults.standard.set(data, forKey: defaultsKey)
+            UserDefaults.standard.set(data, forKey: Self.defaultsKey)
         }
     }
 
     private func restore() {
         isRestoring = true
         defer { isRestoring = false }
-        guard let data = UserDefaults.standard.data(forKey: defaultsKey),
+        guard let data = UserDefaults.standard.data(forKey: Self.defaultsKey),
               let s = try? JSONDecoder().decode(Snapshot.self, from: data) else {
             followingIds = MockData.followingIds
             return

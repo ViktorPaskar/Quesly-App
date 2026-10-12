@@ -8,6 +8,7 @@ enum NotificationScheduler {
 
     @MainActor
     static func requestAuthorization(store: AppStore) {
+        guard !DemoConfig.isActive else { return }
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
             guard granted else { return }
             Task { @MainActor in reschedule(store: store) }

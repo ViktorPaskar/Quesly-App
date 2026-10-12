@@ -2,7 +2,15 @@ import SwiftUI
 
 @main
 struct QueslyApp: App {
-    @State private var store = AppStore()
+    @State private var store: AppStore
+
+    init() {
+        DemoConfig.resetPersistedState()
+        let store = AppStore()
+        DemoConfig.apply(to: store)
+        _store = State(initialValue: store)
+    }
+
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {

@@ -7,16 +7,60 @@ on:
 
 jobs:
   build:
+    name: Build, screenshots & IPA
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.4.app || sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+
       - name: Build for iOS Simulator
         run: |
           set -o pipefail
           xcodebuild -project Quesly.xcodeproj -scheme Quesly \
             -destination 'generic/platform=iOS Simulator' \
-            -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log | grep -E "error:|\*\* BUILD" || true
-          grep -q "BUILD SUCCEEDED" build.log
+            -configuration Debug -derivedDataPath build/sim \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build-sim.log | grep -E "error:|\*\* BUILD" || true
+          grep -q "BUILD SUCCEEDED" build-sim.log
+
+      - name: Take screenshots in the simulator
+        run: |
+          set -x
+          DEVICE=$(xcrun simctl list devices available | grep -E "iPhone 16 \(" | head -1 | grep -oE "[0-9A-F-]{36}")
+          [ -z "$DEVICE" ] && DEVICE=$(xcrun simctl list devices available | grep -E "iPhone" | head -1 | grep -oE "[0-9A-F-]{36}")
+          xcrun simctl boot "$DEVICE"
+          xcrun simctl bootstatus "$DEVICE" -b
+          xcrun simctl status_bar "$DEVICE" override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 || true
+          xcrun simctl install "$DEVICE" build/sim/Build/Products/Debug-iphonesimulator/Quesly.app
+          mkdir -p screenshots
+          i=1
+          for screen in welcome question composer feed friends archive notifications profile menu achievements; do
+            xcrun simctl terminate "$DEVICE" app.quesly.ios || true
+            SIMCTL_CHILD_QUESLY_SCREEN=$screen xcrun simctl launch "$DEVICE" app.quesly.ios
+            sleep 6
+            xcrun simctl io "$DEVICE" screenshot "screenshots/$(printf '%02d' $i)-$screen.png"
+            i=$((i+1))
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Quesly-screenshots
+          path: screenshots
+
+      - name: Build unsigned IPA (for Sideloadly / AltStore)
+        run: |
+          set -o pipefail
+          xcodebuild -project Quesly.xcodeproj -scheme Quesly \
+            -destination 'generic/platform=iOS' \
+            -configuration Release -derivedDataPath build/device \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 | tee build-device.log | grep -E "error:|\*\* BUILD" || true
+          grep -q "BUILD SUCCEEDED" build-device.log
+          mkdir -p Payload
+          cp -R build/device/Build/Products/Release-iphoneos/Quesly.app Payload/
+          zip -qr Quesly.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Quesly-ipa
+          path: Quesly.ipa

@@ -12,7 +12,7 @@ enum FeedScope: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class AppStore {
-    static let maxAnswerLength = 200
+    nonisolated static let maxAnswerLength = 200
 
     // MARK: State
 
@@ -56,18 +56,18 @@ final class AppStore {
         if notifications.isEmpty { notifications = MockData.notifications(now: now) }
     }
 
-    static func question(for date: Date) -> DailyQuestion {
+    nonisolated static func question(for date: Date) -> DailyQuestion {
         let day = Calendar.current.ordinality(of: .day, in: .era, for: date) ?? 0
         return MockData.questions[day % MockData.questions.count]
     }
 
-    static func nextQuestionDate(after date: Date = .now) -> Date {
+    nonisolated static func nextQuestionDate(after date: Date = .now) -> Date {
         let cal = Calendar.current
         return cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: date)) ?? date
     }
 
     /// "14h" / "35m" until the next question drops.
-    static func timeLeftString(now: Date = .now) -> String {
+    nonisolated static func timeLeftString(now: Date = .now) -> String {
         let seconds = max(0, nextQuestionDate(after: now).timeIntervalSince(now))
         let hours = Int(seconds) / 3600
         if hours >= 1 { return "\(hours)h" }

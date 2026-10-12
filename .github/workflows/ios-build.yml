@@ -5,6 +5,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build, screenshots & IPA
@@ -47,6 +50,19 @@ jobs:
         with:
           name: Quesly-screenshots
           path: screenshots
+
+      - name: Publish screenshots to the ci-screenshots branch
+        if: github.event_name != 'pull_request'
+        run: |
+          cd screenshots
+          git init -q -b ci-screenshots
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          { echo "# Quesly screenshots"; echo; echo "Commit: ${GITHUB_SHA}"; echo;
+            for f in *.png; do echo "### ${f%.png}"; echo "<img src=\"$f\" width=\"300\">"; echo; done; } > README.md
+          git add -A
+          git commit -qm "Screenshots for ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" ci-screenshots
 
       - name: Build unsigned IPA (for Sideloadly / AltStore)
         run: |

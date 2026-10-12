@@ -33,7 +33,7 @@ enum DemoConfig {
             store.signIn(email: MockData.me.email)
         default:
             store.signIn(email: MockData.me.email)
-            store.submitAnswer("One day off? I'd call my friends, take a random road trip and just see where the day takes us")
+            store.submitAnswer(MockData.sampleAnswers[store.todayQuestion.id] ?? "")
         }
     }
 
@@ -56,7 +56,8 @@ enum DemoConfig {
 
     static var startsComposing: Bool { screen == .composer }
     static var composerSample: String {
-        screen == .composer ? "One day off? I'd call my friends, take a random road trip and just see where the day takes us" : ""
+        guard screen == .composer else { return "" }
+        return MockData.sampleAnswers[AppStore.question(for: .now).id] ?? ""
     }
     static var initialFeedScope: FeedScope { screen == .friends ? .friends : .world }
 }

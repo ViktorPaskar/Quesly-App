@@ -70,21 +70,34 @@ enum MockData {
         return list
     }
 
-    /// Past answers of `me`, shown in Profile and Archive.
+    /// Sample answers of `me`, one per question, used to build a believable history.
+    static let sampleAnswers: [String: String] = [
+        "q-dayoff": "One day off? I'd call my friends, take a random road trip and just see where the day takes us",
+        "q-happy": "When I hear my favorite song randomly playing in a cafe... It feels awesome",
+        "q-live": "Somewhere by the sea 🌊 where mornings start with coffee on the balcony",
+        "q-power": "Teleportation ✨ so I could visit my family anytime without packing or flights",
+        "q-advice": "\"You don't have to have it all figured out to move forward\" — my grandma",
+        "q-song": "Anything by ABBA. Instant dance mode in the kitchen 💃",
+        "q-proud": "I finally started running in the mornings and kept it up for a month",
+        "q-tiny": "A stranger complimented my jacket on the metro and made my whole day",
+        "q-learn": "Pottery! I want to make my own coffee mugs",
+        "q-meal": "My mom's crêpes on Sunday mornings 🥞",
+    ]
+
+    /// Past answers of `me` for the previous days' questions, shown in Profile and Archive.
     static func myHistory(now: Date = .now) -> [Answer] {
         let cal = Calendar.current
-        func daysAgo(_ d: Int) -> Date { cal.date(byAdding: .day, value: -d, to: now) ?? now }
-        return [
-            .init(id: "h1", questionId: "q-happy", questionText: "What's a small thing that makes you happy every day?", authorId: "me",
-                  text: "When I hear my favorite song randomly playing in a cafe... It feels awesome", createdAt: daysAgo(1),
-                  reactions: [.love: 14, .fire: 22, .smile: 30, .clap: 7]),
-            .init(id: "h2", questionId: "q-power", questionText: "If you had one superpower, what would it be?", authorId: "me",
-                  text: "Teleportation ✨ so I could visit my family anytime without packing or flights", createdAt: daysAgo(2),
-                  reactions: [.love: 2, .fire: 31, .smile: 3, .clap: 5]),
-            .init(id: "h3", questionId: "q-live", questionText: "If you could live anywhere in the world, where would it be?", authorId: "me",
-                  text: "Somewhere by the sea 🌊 where mornings start with coffee on the balcony", createdAt: daysAgo(3),
-                  reactions: [.love: 68, .fire: 15, .smile: 21, .clap: 10]),
+        let reactions: [[ReactionKind: Int]] = [
+            [.love: 14, .fire: 22, .smile: 30, .clap: 7],
+            [.love: 2, .fire: 31, .smile: 3, .clap: 5],
+            [.love: 68, .fire: 15, .smile: 21, .clap: 10],
         ]
+        return (1...3).map { daysAgo in
+            let date = cal.date(byAdding: .day, value: -daysAgo, to: now) ?? now
+            let q = AppStore.question(for: date)
+            return Answer(id: "h\(daysAgo)", questionId: q.id, questionText: q.text, authorId: "me",
+                          text: sampleAnswers[q.id] ?? "", createdAt: date, reactions: reactions[daysAgo - 1])
+        }
     }
 
     static func notifications(now: Date = .now) -> [AppNotification] {

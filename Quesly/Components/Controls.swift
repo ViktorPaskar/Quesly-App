@@ -3,20 +3,26 @@ import SwiftUI
 /// Lime pill CTA used on green screens ("Answer", "Submit").
 struct LimeButton: View {
     let title: String
+    var systemImage: String? = nil
     var isEnabled = true
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(.quesly(16, .semibold))
-                .foregroundStyle(Color.qGreen)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(Capsule().fill(Color.qLime.opacity(isEnabled ? 1 : 0.45)))
+            HStack(spacing: 8) {
+                Text(title)
+                if let systemImage { Image(systemName: systemImage).font(.system(size: 15, weight: .bold)) }
+            }
+            .font(.quesly(17, .bold))
+            .foregroundStyle(Color.qGreen)
+            .frame(maxWidth: .infinity)
+            .frame(height: 54)
+            .background(Capsule().fill(Color.qLime.opacity(isEnabled ? 1 : 0.4)))
+            .shadow(color: Color.qLime.opacity(isEnabled ? 0.35 : 0), radius: 16, y: 6)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .disabled(!isEnabled)
+        .animation(.qSpring, value: isEnabled)
     }
 }
 
@@ -29,18 +35,47 @@ struct GreenButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.quesly(16, .semibold))
+                .font(.quesly(17, .semibold))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(Capsule().fill(Color.qGreen.opacity(isEnabled ? 1 : 0.4)))
+                .frame(height: 54)
+                .background(Capsule().fill(Color.qGreen.opacity(isEnabled ? 1 : 0.35)))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .disabled(!isEnabled)
     }
 }
 
-/// Two-tab underline switcher ("World / Friends", "Your Answers / Saved Answers").
+/// Small Follow / Following pill.
+struct FollowPill: View {
+    let isFollowing: Bool
+    var compact = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                if isFollowing {
+                    Image(systemName: "checkmark").font(.system(size: compact ? 10 : 11, weight: .bold))
+                        .transition(.scale.combined(with: .opacity))
+                }
+                Text(isFollowing ? "Following" : "Follow")
+            }
+            .font(.quesly(compact ? 12 : 13, .semibold))
+            .foregroundStyle(isFollowing ? Color.qGreen : .white)
+            .padding(.horizontal, compact ? 10 : 14)
+            .frame(height: compact ? 26 : 32)
+            .background(Capsule().fill(isFollowing ? Color.qMint : Color.qGreen))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.pressable)
+        .animation(.qSpring, value: isFollowing)
+        .sensoryFeedback(.success, trigger: isFollowing) { _, new in new }
+        .accessibilityLabel(isFollowing ? "Following" : "Follow")
+    }
+}
+
+/// Two-tab underline switcher ("World / Friends", "Answers / Saved").
 struct UnderlineTabs<T: Hashable & Identifiable>: View {
     let items: [T]
     @Binding var selection: T
@@ -53,19 +88,20 @@ struct UnderlineTabs<T: Hashable & Identifiable>: View {
             ForEach(items) { item in
                 let isActive = item == selection
                 Button {
-                    withAnimation(.snappy(duration: 0.25)) { selection = item }
+                    withAnimation(.qSpring) { selection = item }
                 } label: {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 10) {
                         Text(title(item))
-                            .font(.quesly(14, isActive ? .semibold : .regular))
+                            .font(.quesly(15, isActive ? .semibold : .medium))
                             .foregroundStyle(isActive ? activeColor : Color.qGray)
                         ZStack {
-                            Rectangle().fill(Color.clear).frame(height: 3)
+                            Capsule().fill(Color.qLine).frame(height: 1)
                             if isActive {
-                                Rectangle().fill(activeColor).frame(height: 3)
+                                Capsule().fill(activeColor).frame(height: 3)
                                     .matchedGeometryEffect(id: "underline", in: ns)
                             }
                         }
+                        .frame(height: 3)
                     }
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
@@ -74,6 +110,7 @@ struct UnderlineTabs<T: Hashable & Identifiable>: View {
                 .accessibilityAddTraits(isActive ? .isSelected : [])
             }
         }
+        .sensoryFeedback(.selection, trigger: selection)
     }
 }
 
@@ -83,22 +120,41 @@ struct BackHeader: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             Button { dismiss() } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(Color.qInk)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 44, height: 44)
             }
             .accessibilityLabel("Back")
-            Text(title).font(.quesly(18, .medium)).foregroundStyle(Color.qInk)
+            Text(title).font(.quesly(20, .semibold)).foregroundStyle(Color.qInk)
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2)
         .background(Color.white)
-        .overlay(alignment: .bottom) { Divider() }
+        .overlay(alignment: .bottom) { Rectangle().fill(Color.qLine).frame(height: 1) }
     }
+}
+
+/// Centered title header used on tab roots.
+struct TitleHeader<Trailing: View>: View {
+    let title: String
+    @ViewBuilder var trailing: () -> Trailing
+
+    var body: some View {
+        ZStack {
+            Text(title).font(.quesly(20, .semibold)).foregroundStyle(Color.qInk)
+            HStack { Spacer(); trailing() }
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 52)
+    }
+}
+
+extension TitleHeader where Trailing == EmptyView {
+    init(title: String) { self.init(title: title) { EmptyView() } }
 }
 
 extension View {
@@ -110,7 +166,7 @@ extension View {
     }
 }
 
-/// Small helper to render the question with brand highlights (lime words).
+/// Renders the question with brand highlights (lime words).
 enum QuestionText {
     static func attributed(_ question: DailyQuestion, base: Color = .white, highlight: Color = .qLime) -> AttributedString {
         var text = AttributedString(question.text.uppercased())
@@ -136,5 +192,49 @@ enum RelativeTime {
 
     static func dayLabel(_ date: Date) -> String {
         Calendar.current.isDateInToday(date) ? "Today" : date.formatted(.dateTime.day().month(.abbreviated))
+    }
+}
+
+/// Friendly empty state with an optional action.
+struct EmptyStateView<Actions: View>: View {
+    let symbol: String
+    let title: String
+    let message: String
+    @ViewBuilder var actions: () -> Actions
+    @State private var bob = false
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: symbol)
+                .font(.system(size: 34, weight: .semibold))
+                .foregroundStyle(Color.qGreen)
+                .frame(width: 84, height: 84)
+                .background(Circle().fill(Color.qLime))
+                .offset(y: bob ? -4 : 4)
+                .animation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true), value: bob)
+                .onAppear { bob = true }
+            Text(title).font(.quesly(20, .semibold)).foregroundStyle(Color.qInk)
+            Text(message)
+                .font(.quesly(15))
+                .foregroundStyle(Color.qGray)
+                .multilineTextAlignment(.center)
+            actions().padding(.top, 6)
+        }
+        .padding(.horizontal, 36)
+        .padding(.vertical, 40)
+        .frame(maxWidth: .infinity)
+    }
+}
+
+extension EmptyStateView where Actions == EmptyView {
+    init(symbol: String, title: String, message: String) {
+        self.init(symbol: symbol, title: title, message: message) { EmptyView() }
+    }
+}
+
+/// Shared invite text + link.
+enum Invite {
+    static func text(for username: String) -> String {
+        "Join me on Quesly — one question a day, millions of stories ✨ Add me: @\(username) https://quesly.app/u/\(username)"
     }
 }

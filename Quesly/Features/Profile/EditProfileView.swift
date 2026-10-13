@@ -47,10 +47,10 @@ struct EditProfileView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
-                        Text("Password").font(.quesly(11)).foregroundStyle(Color.qGray)
+                        Text("Password").font(.quesly(13)).foregroundStyle(Color.qGray)
                         Spacer()
                         Button("Change your password") {}
-                            .font(.quesly(11, .medium))
+                            .font(.quesly(13, .medium))
                             .foregroundStyle(Color.qGreen)
                     }
                     HStack {
@@ -63,10 +63,10 @@ struct EditProfileView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("About").font(.quesly(11)).foregroundStyle(Color.qGray)
+                    Text("About").font(.quesly(13)).foregroundStyle(Color.qGray)
                     TextField("Tell people about yourself", text: $draft.bio, axis: .vertical)
                         .lineLimit(3...6)
-                        .font(.quesly(15))
+                        .font(.quesly(16))
                         .padding(14)
                         .background(RoundedRectangle(cornerRadius: 10).stroke(Color.qLine))
                 }
@@ -92,7 +92,7 @@ struct EditProfileView: View {
 
     private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.quesly(11)).foregroundStyle(Color.qGray)
+            Text(title).font(.quesly(13)).foregroundStyle(Color.qGray)
             content().queslyField()
         }
     }

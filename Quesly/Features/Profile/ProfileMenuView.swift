@@ -2,61 +2,121 @@ import SwiftUI
 
 struct ProfileMenuView: View {
     var body: some View {
-        List {
-            row("Achievements", "checkmark.seal", .achievements)
-            row("Invite Friends", "person.badge.plus", .invite)
-            row("Settings", "gearshape", .settings)
-            row("Feedback", "envelope", .feedback)
+        ScrollView {
+            VStack(spacing: 10) {
+                row("Achievements", "rosette", Color(hex: 0xE2A72E), .achievements)
+                row("Invite Friends", "paperplane.fill", Color(hex: 0xE84FA5), .invite)
+                row("Settings", "gearshape.fill", .qGreen, .settings)
+                row("Blocked people", "hand.raised.fill", Color(hex: 0xE5484D), .blocked)
+                row("Feedback", "bubble.left.and.text.bubble.right.fill", Color(hex: 0x2D7BF0), .feedback)
+            }
+            .padding(16)
         }
-        .listStyle(.plain)
+        .background(Color.white)
         .queslyBackHeader("Profile")
     }
 
-    private func row(_ title: String, _ symbol: String, _ route: Route) -> some View {
+    private func row(_ title: String, _ symbol: String, _ tint: Color, _ route: Route) -> some View {
         NavigationLink(value: route) {
-            Label {
-                Text(title).font(.quesly(15)).foregroundStyle(Color.qInk)
-            } icon: {
-                Image(systemName: symbol).foregroundStyle(Color.qInk)
+            HStack(spacing: 14) {
+                Image(systemName: symbol)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 38, height: 38)
+                    .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(tint))
+                Text(title).font(.quesly(17, .medium)).foregroundStyle(Color.qInk)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.qGray.opacity(0.7))
             }
+            .padding(.horizontal, 14)
+            .frame(height: 62)
+            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.qField))
         }
-        .listRowSeparator(.hidden)
+        .buttonStyle(.pressable)
     }
 }
 
 struct InviteFriendsView: View {
     @Environment(AppStore.self) private var store
-
-    private var inviteText: String {
-        "Join me on Quesly — one question a day, millions of stories. Add me: @\(store.me.username) https://quesly.app/invite/\(store.me.username)"
-    }
+    @State private var wave = false
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 18) {
             Spacer()
             HexBadge(color: Color(hex: 0xE84FA5), symbol: "hand.wave.fill")
-                .frame(width: 90)
+                .frame(width: 110)
+                .rotationEffect(.degrees(wave ? 8 : -8))
+                .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: wave)
+                .onAppear { wave = true }
             Text("Invite your friends")
-                .font(.quesly(22, .bold))
+                .font(.quesly(28, .bold))
                 .foregroundStyle(Color.qInk)
             Text("Quesly is better with people you care about. Invite 10 friends to unlock the **Vibe Connector** badge.")
-                .font(.quesly(15))
+                .font(.quesly(16))
                 .foregroundStyle(Color.qGray)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
+
+            VStack(spacing: 8) {
+                ProgressView(value: 7, total: 10).tint(Color(hex: 0xE84FA5))
+                Text("7 of 10 friends joined").font(.quesly(14, .medium)).foregroundStyle(Color.qGray)
+            }
+            .padding(.horizontal, 48)
+            .padding(.top, 8)
+
             Spacer()
-            ShareLink(item: inviteText) {
-                Text("Share invite link")
-                    .font(.quesly(16, .semibold))
+            ShareLink(item: Invite.text(for: store.me.username)) {
+                Label("Share invite link", systemImage: "paperplane.fill")
+                    .font(.quesly(17, .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 50)
+                    .frame(height: 54)
                     .background(Capsule().fill(Color.qGreen))
             }
+            .buttonStyle(.pressable)
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
         }
         .background(Color.white)
         .queslyBackHeader("Invite Friends")
+    }
+}
+
+struct BlockedUsersView: View {
+    @Environment(AppStore.self) private var store
+
+    var body: some View {
+        let blocked = store.blockedIds.compactMap { store.user($0) }.sorted { $0.username < $1.username }
+        Group {
+            if blocked.isEmpty {
+                EmptyStateView(symbol: "hand.raised.fill", title: "No one blocked",
+                               message: "People you block won't appear in your feeds, and they won't know.")
+                    .frame(maxHeight: .infinity, alignment: .top)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(blocked) { user in
+                            HStack(spacing: 12) {
+                                Avatar(user: user, size: 44)
+                                Text(user.username).font(.quesly(16, .semibold))
+                                Spacer()
+                                Button("Unblock") { withAnimation(.qSmooth) { store.unblock(user.id) } }
+                                    .font(.quesly(14, .semibold))
+                                    .foregroundStyle(Color.qGreen)
+                                    .padding(.horizontal, 14)
+                                    .frame(height: 34)
+                                    .background(Capsule().fill(Color.qMint))
+                            }
+                            .padding(.vertical, 8)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+            }
+        }
+        .background(Color.white)
+        .queslyBackHeader("Blocked people")
     }
 }

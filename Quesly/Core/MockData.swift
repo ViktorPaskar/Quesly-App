@@ -36,38 +36,117 @@ enum MockData {
         .init(id: "u4", username: "mr.smith", bio: "Side projects all day.", avatarHue: 0.62, badge: .blue, followers: 501, following: 77, streak: 21),
         .init(id: "u5", username: "john.john", bio: "There's a coin and a coffee. I enjoy the little things in life.", avatarHue: 0.02, badge: .red, followers: 342, following: 89, streak: 4),
         .init(id: "u6", username: "chill_mara", bio: "Gamer, dreamer.", avatarHue: 0.85, followers: 60, following: 61, streak: 1),
-        .init(id: "u7", username: "AnnaViva", avatarHue: 0.95, badge: .green, followers: 77, following: 120, streak: 9),
-        .init(id: "u8", username: "arturo_sun", avatarHue: 0.1, followers: 51, following: 44, streak: 3),
-        .init(id: "u9", username: "koko_lilly", avatarHue: 0.75, followers: 33, following: 50, streak: 5),
-        .init(id: "u10", username: "nata.ver", avatarHue: 0.0, followers: 21, following: 18, streak: 2),
+        .init(id: "u7", username: "AnnaViva", bio: "Dancing through Lyon 💃", avatarHue: 0.95, badge: .green, followers: 77, following: 120, streak: 9),
+        .init(id: "u8", username: "arturo_sun", bio: "Sunsets collector.", avatarHue: 0.1, followers: 51, following: 44, streak: 3),
+        .init(id: "u9", username: "koko_lilly", bio: "Art student, Bordeaux.", avatarHue: 0.75, followers: 33, following: 50, streak: 5),
+        .init(id: "u10", username: "nata.ver", bio: "Books & bikes.", avatarHue: 0.0, followers: 21, following: 18, streak: 2),
+        .init(id: "u11", username: "leo.martin", bio: "Paris • film photography", avatarHue: 0.45, followers: 410, following: 300, streak: 7),
+        .init(id: "u12", username: "camille_b", bio: "Always hungry, always curious.", avatarHue: 0.9, badge: .purple, followers: 980, following: 410, streak: 15),
+        .init(id: "u13", username: "yasmine.k", bio: "Med student. Coffee-powered.", avatarHue: 0.05, followers: 220, following: 180, streak: 4),
+        .init(id: "u14", username: "theo_runs", bio: "Marathon in progress 🏃", avatarHue: 0.58, badge: .blue, followers: 150, following: 120, streak: 30),
     ]
 
     /// Users that `me` follows (drives the Friends feed).
     static let followingIds: Set<String> = ["u2", "u3", "u4", "u5", "u8", "u9", "u10"]
 
+    /// Other people's answers per question: (authorId, text, minutesAgo).
+    private static let feedAnswers: [String: [(String, String, Double)]] = [
+        "q-dayoff": [
+            ("u5", "Call my best friend and spend the whole day together", 1),
+            ("u1", "Visit my grandma and listen to her stories aaaaall day", 3),
+            ("u2", "Go to the huge botanical garden 🌿", 5),
+            ("u3", "Do an insane 10-mile hike up the mountain trail I keep putting off", 10),
+            ("u4", "Work on my side hustle project non-stop. I need to make serious progress! 🚀", 13),
+            ("u12", "Croissant tour across Paris. Rating every single one 🥐", 18),
+            ("u7", "Long morning run, healthy brunch, yoga session and early bed :)", 22),
+        ],
+        "q-happy": [
+            ("u2", "The first sip of coffee while the apartment is still quiet ☕️", 2),
+            ("u5", "When my dog loses his mind because I came home after 5 minutes", 4),
+            ("u9", "Fresh sheets. Every. Single. Time.", 8),
+            ("u11", "Golden hour light on the Seine on my way home", 11),
+            ("u3", "Finding a song I haven't heard in years on shuffle", 15),
+            ("u13", "My little sister's voice messages, they're always 4 minutes long", 20),
+        ],
+        "q-live": [
+            ("u8", "Lisbon. Tiles, trams and sunsets every evening 🌅", 2),
+            ("u4", "Tokyo, just to be surrounded by order and ramen", 6),
+            ("u2", "A small village in the Alps with a huge garden", 9),
+            ("u12", "Napoli, for the pizza and the chaos", 12),
+            ("u10", "Copenhagen — bikes everywhere and cozy cafés", 17),
+            ("u7", "Barcelona, so I can dance until 3am and nap at the beach", 25),
+        ],
+        "q-power": [
+            ("u3", "Teleportation. No more 2-hour train rides to see my parents", 3),
+            ("u14", "Never get tired. Imagine the running PRs 🏃", 7),
+            ("u5", "Pause time for 10 minutes every morning", 9),
+            ("u9", "Speaking every language in the world", 14),
+            ("u6", "Infinite phone battery. Simple but life-changing", 19),
+            ("u13", "Healing people with a touch. Med school would be way easier", 23),
+        ],
+        "q-advice": [
+            ("u1", "\"Don't compare your chapter 1 to someone's chapter 20\" — my mom", 2),
+            ("u4", "Done is better than perfect", 5),
+            ("u11", "Take the photo. You won't regret having it", 8),
+            ("u2", "Drink water before deciding anything important", 12),
+            ("u12", "Say yes to the weird invitations", 16),
+            ("u7", "You can't pour from an empty cup", 21),
+        ],
+        "q-song": [
+            ("u7", "September — Earth, Wind & Fire. Instant smile", 1),
+            ("u5", "Mr. Blue Sky. Every morning on the metro", 4),
+            ("u9", "Anything by Stromae, honestly", 9),
+            ("u3", "Dancing Queen. No explanation needed 💃", 13),
+            ("u12", "Les Champs-Élysées, I'm a cliché and I'm proud", 18),
+            ("u10", "Here Comes the Sun 🌞", 24),
+        ],
+        "q-proud": [
+            ("u14", "I ran my first half marathon last spring", 2),
+            ("u13", "Passed my anatomy exam after failing it once", 6),
+            ("u2", "My plants are alive. All 23 of them 🌿", 10),
+            ("u5", "I finally called my dad after 2 years", 14),
+            ("u9", "Sold my first painting!", 19),
+            ("u4", "Shipped my app to 100 users", 26),
+        ],
+        "q-tiny": [
+            ("u8", "A stranger held the door and smiled like they meant it", 2),
+            ("u5", "My barista remembered my order 🥹", 5),
+            ("u1", "Grandma learned to send voice messages", 9),
+            ("u11", "Found 20€ in an old jacket", 12),
+            ("u3", "Rainy evening, blanket, new book", 16),
+            ("u12", "Friend sent me a meme that was exactly my life", 22),
+        ],
+        "q-learn": [
+            ("u9", "Ceramics. I want to make my own plates", 3),
+            ("u4", "Swift! Building my own apps", 6),
+            ("u7", "Salsa, properly this time", 9),
+            ("u13", "Sign language", 13),
+            ("u2", "Italian, so I can order like a local 🇮🇹", 18),
+            ("u14", "Cooking something other than pasta", 24),
+        ],
+        "q-meal": [
+            ("u1", "Grandma's borscht with way too much sour cream", 2),
+            ("u12", "Croque-monsieur at midnight", 5),
+            ("u5", "Dad's barbecue on Sundays", 8),
+            ("u13", "Mom's couscous, nothing comes close", 12),
+            ("u2", "Tomato soup and grilled cheese on a rainy day", 17),
+            ("u8", "Bacalhau à Brás, like in Porto", 23),
+        ],
+    ]
+
     static func answers(for question: DailyQuestion, now: Date = .now) -> [Answer] {
-        func ago(_ minutes: Double) -> Date { now.addingTimeInterval(-minutes * 60) }
-        let q = question
-        var list: [Answer] = [
-            .init(id: "a-u1", questionId: q.id, questionText: q.text, authorId: "u1",
-                  text: "Visit my grandma and listen to her stories aaaaall day", createdAt: ago(3),
-                  reactions: [.love: 1], myReactions: [.love]),
-            .init(id: "a-u2", questionId: q.id, questionText: q.text, authorId: "u2",
-                  text: "Go to the huge botanical garden 🌿", createdAt: ago(5),
-                  reactions: [.fire: 2], isSaved: true),
-            .init(id: "a-u3", questionId: q.id, questionText: q.text, authorId: "u3",
-                  text: "Do an insane 10-mile hike up the mountain trail I keep putting off", createdAt: ago(10)),
-            .init(id: "a-u4", questionId: q.id, questionText: q.text, authorId: "u4",
-                  text: "Work on my side hustle project non-stop. I need to make serious progress! 🚀", createdAt: ago(13)),
-            .init(id: "a-u5", questionId: q.id, questionText: q.text, authorId: "u5",
-                  text: "Call my best friend and spend the whole day together", createdAt: ago(1)),
-            .init(id: "a-u6", questionId: q.id, questionText: q.text, authorId: "u6",
-                  text: "Finally beat that game I started last year. No distractions, just pure gaming", createdAt: ago(16)),
-            .init(id: "a-u7", questionId: q.id, questionText: q.text, authorId: "u7",
-                  text: "Long morning run, healthy brunch, yoga session and early bed :)", createdAt: ago(22)),
-        ]
-        list.sort { $0.createdAt > $1.createdAt }
-        return list
+        let seeds = feedAnswers[question.id] ?? feedAnswers["q-dayoff"]!
+        return seeds.enumerated().map { index, seed in
+            let (author, text, minutes) = seed
+            var answer = Answer(id: "a-\(question.id)-\(author)", questionId: question.id, questionText: question.text,
+                                authorId: author, text: text, createdAt: now.addingTimeInterval(-minutes * 60))
+            // A few answers start with reactions / saved so the feed looks alive.
+            if index == 1 { answer.myReaction = .love; answer.reactions = [.love: 1] }
+            if index == 2 { answer.isSaved = true; answer.reactions = [.fire: 2] }
+            if index == 4 { answer.visibility = .friends }
+            return answer
+        }
+        .sorted { $0.createdAt > $1.createdAt }
     }
 
     /// Sample answers of `me`, one per question, used to build a believable history.
@@ -84,13 +163,13 @@ enum MockData {
         "q-meal": "My mom's crêpes on Sunday mornings 🥞",
     ]
 
-    /// Past answers of `me` for the previous days' questions, shown in Profile and Archive.
+    /// Past answers of `me` for the previous days' questions, shown in Profile.
     static func myHistory(now: Date = .now) -> [Answer] {
         let cal = Calendar.current
         let reactions: [[ReactionKind: Int]] = [
-            [.love: 14, .fire: 22, .smile: 30, .clap: 7],
-            [.love: 2, .fire: 31, .smile: 3, .clap: 5],
-            [.love: 68, .fire: 15, .smile: 21, .clap: 10],
+            [.love: 14, .fire: 22, .haha: 3, .touched: 7],
+            [.love: 2, .fire: 31, .haha: 12, .touched: 5],
+            [.love: 68, .fire: 15, .haha: 1, .touched: 10],
         ]
         return (1...3).map { daysAgo in
             let date = cal.date(byAdding: .day, value: -daysAgo, to: now) ?? now
@@ -103,14 +182,15 @@ enum MockData {
     static func notifications(now: Date = .now) -> [AppNotification] {
         func ago(_ minutes: Double) -> Date { now.addingTimeInterval(-minutes * 60) }
         return [
-            .init(id: "n1", kind: .reaction, actorId: "u7", message: "reacted to your answer", date: ago(30)),
-            .init(id: "n2", kind: .reaction, actorId: "u4", message: "reacted to your answer", date: ago(48)),
-            .init(id: "n3", kind: .follow, actorId: "u2", message: "started following you", date: ago(60)),
-            .init(id: "n4", kind: .reaction, actorId: "u9", message: "reacted to your answer", date: ago(120)),
-            .init(id: "n5", kind: .reaction, actorId: "u5", message: "reacted to your answer", date: ago(130)),
+            .init(id: "n1", kind: .reaction, actorId: "u7", message: "reacted to your answer", date: ago(30), answerId: "h1", reaction: .love),
+            .init(id: "n2", kind: .reaction, actorId: "u4", message: "reacted to your answer", date: ago(48), answerId: "h1", reaction: .fire),
+            .init(id: "n3", kind: .follow, actorId: "u12", message: "started following you", date: ago(60)),
+            .init(id: "n4", kind: .reaction, actorId: "u9", message: "reacted to your answer", date: ago(120), answerId: "h1", reaction: .touched),
+            .init(id: "n5", kind: .reaction, actorId: "u5", message: "reacted to your answer", date: ago(130), answerId: "h2", reaction: .haha),
             .init(id: "n6", kind: .badge, actorId: nil, message: "**3 days in a row!** A new badge is ready", date: ago(300)),
-            .init(id: "n7", kind: .reaction, actorId: "u3", message: "reacted to your answer", date: ago(360)),
-            .init(id: "n8", kind: .reaction, actorId: "u10", message: "reacted to your answer", date: ago(380)),
+            .init(id: "n7", kind: .reaction, actorId: "u3", message: "reacted to your answer", date: ago(360), answerId: "h2", reaction: .fire),
+            .init(id: "n8", kind: .reaction, actorId: "u10", message: "reacted to your answer", date: ago(380), answerId: "h3", reaction: .love),
+            .init(id: "n9", kind: .follow, actorId: "u14", message: "started following you", date: ago(500)),
         ]
     }
 }

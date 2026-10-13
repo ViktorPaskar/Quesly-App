@@ -7,6 +7,15 @@
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Outfit-Regular.ttf</string>
+		<string>Outfit-Medium.ttf</string>
+		<string>Outfit-SemiBold.ttf</string>
+		<string>Outfit-Bold.ttf</string>
+		<string>Outfit-ExtraBold.ttf</string>
+		<string>Outfit-Black.ttf</string>
+	</array>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Quesly saves your answer story cards to your photo library.</string>
 </dict>

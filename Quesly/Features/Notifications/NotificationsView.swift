@@ -4,73 +4,130 @@ struct NotificationsView: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
+        let groups = store.groupedNotifications
         VStack(spacing: 0) {
-            Text("Notifications")
-                .font(.quesly(18, .medium))
-                .foregroundStyle(Color.qInk)
-                .padding(.vertical, 12)
-            Divider()
+            TitleHeader(title: "Notifications")
+            Rectangle().fill(Color.qLine).frame(height: 1)
 
-            if store.notifications.isEmpty {
-                ContentUnavailableView("All caught up", systemImage: "bell",
-                                       description: Text("Reactions and new badges will show up here."))
+            if groups.isEmpty {
+                EmptyStateView(symbol: "bell.fill", title: "All caught up",
+                               message: "Reactions, new followers and badges will show up here.")
+                Spacer()
             } else {
-                List(store.notifications) { item in
-                    row(item)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 9, leading: 16, bottom: 9, trailing: 16))
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
+                            row(group)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                                .background(group.date > store.notificationsSeenAt ? Color.qMint.opacity(0.6) : .white)
+                                .staggeredAppear(index)
+                        }
+                    }
                 }
-                .listStyle(.plain)
             }
         }
         .background(Color.white)
         .toolbar(.hidden, for: .navigationBar)
+        .onDisappear { store.markNotificationsSeen() }
     }
 
     @ViewBuilder
-    private func row(_ item: AppNotification) -> some View {
-        let actor = item.actorId.flatMap { store.user($0) }
-        let content = HStack(spacing: 12) {
-            if let actor {
-                Avatar(user: actor, size: 30)
-            } else {
-                QueslyMark(color: .qLime, cutout: .qGreen)
-                    .frame(width: 15)
-                    .frame(width: 30, height: 30)
-                    .background(Circle().fill(Color.qGreen))
+    private func row(_ group: NotificationGroup) -> some View {
+        let actors = group.actorIds.compactMap { store.user($0) }
+        let content = HStack(alignment: .top, spacing: 12) {
+            leading(group, actors: actors)
+            VStack(alignment: .leading, spacing: 4) {
+                title(group, actors: actors)
+                    .font(.quesly(15))
+                    .foregroundStyle(Color.qInk)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let answerId = group.answerId, let answer = store.answer(answerId) {
+                    Text("“\(answer.text)”")
+                        .font(.quesly(14))
+                        .foregroundStyle(Color.qGray)
+                        .lineLimit(1)
+                }
+                Text(RelativeTime.short(group.date))
+                    .font(.quesly(13))
+                    .foregroundStyle(Color.qGray)
             }
-            message(item, actor: actor)
-                .font(.quesly(12))
-                .foregroundStyle(Color.qInk)
-                .lineLimit(2)
-            Spacer()
-            Text(RelativeTime.short(item.date))
-                .font(.quesly(11))
-                .foregroundStyle(Color.qGray)
+            Spacer(minLength: 8)
+            if group.kind == .follow, let actor = actors.first {
+                FollowPill(isFollowing: store.isFollowing(actor.id), compact: true) { store.toggleFollow(actor.id) }
+            }
         }
-        if let actor {
-            NavigationLink(value: Route.profile(actor.id)) { content }
-                .buttonStyle(.plain)
-        } else if item.kind == .badge {
-            NavigationLink(value: Route.achievements) { content }
-                .buttonStyle(.plain)
+
+        if group.kind == .badge {
+            NavigationLink(value: Route.achievements) { content }.buttonStyle(.plain)
+        } else if actors.count == 1, let actor = actors.first {
+            NavigationLink(value: Route.profile(actor.id)) { content }.buttonStyle(.plain)
         } else {
             content
         }
     }
 
-    private func message(_ item: AppNotification, actor: AppUser?) -> Text {
+    @ViewBuilder
+    private func leading(_ group: NotificationGroup, actors: [AppUser]) -> some View {
+        switch group.kind {
+        case .reaction, .follow:
+            ZStack(alignment: .bottomTrailing) {
+                AvatarStack(users: actors, size: 40)
+                if let r = group.reactions.first {
+                    Text(r.emoji)
+                        .font(.system(size: 13))
+                        .frame(width: 22, height: 22)
+                        .background(Circle().fill(.white))
+                        .overlay(Circle().stroke(Color.qLine))
+                        .offset(x: 4, y: 4)
+                } else if group.kind == .follow {
+                    Image(systemName: "person.fill.badge.plus")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Color.qLime)
+                        .frame(width: 22, height: 22)
+                        .background(Circle().fill(Color.qGreen))
+                        .overlay(Circle().stroke(.white, lineWidth: 2))
+                        .offset(x: 4, y: 4)
+                }
+            }
+        case .badge:
+            Image(systemName: "rosette")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Color.qGreen)
+                .frame(width: 40, height: 40)
+                .background(Circle().fill(Color.qLime))
+        case .posted:
+            QueslyMark(color: .qLime, cutout: .qGreen)
+                .frame(width: 20)
+                .frame(width: 40, height: 40)
+                .background(Circle().fill(Color.qGreen))
+        }
+    }
+
+    private func title(_ group: NotificationGroup, actors: [AppUser]) -> Text {
+        func bold(_ s: String) -> AttributedString {
+            var a = AttributedString(s)
+            a.font = .quesly(15, .semibold)
+            return a
+        }
         var text = AttributedString()
-        if let actor {
-            var name = AttributedString(actor.username + " ")
-            name.foregroundColor = .qGreen
-            name.font = .quesly(12, .semibold)
-            text += name
-            text += AttributedString(item.message)
-        } else {
-            var body = (try? AttributedString(markdown: item.message)) ?? AttributedString(item.message)
-            body.foregroundColor = .qGreen
-            text += body
+        switch group.kind {
+        case .reaction:
+            guard let first = actors.first else { return Text("New reactions") }
+            text += bold(first.username)
+            if actors.count == 2 {
+                text += AttributedString(" and ")
+                text += bold(actors[1].username)
+            } else if actors.count > 2 {
+                text += AttributedString(" and ")
+                text += bold("\(actors.count - 1) others")
+            }
+            text += AttributedString(" reacted \(group.reactions.map(\.emoji).joined()) to your answer")
+        case .follow:
+            text += bold(actors.first?.username ?? "Someone")
+            text += AttributedString(" started following you")
+        case .badge, .posted:
+            text = (try? AttributedString(markdown: group.message)) ?? AttributedString(group.message)
         }
         return Text(text)
     }

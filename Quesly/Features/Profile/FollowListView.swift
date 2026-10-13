@@ -16,42 +16,22 @@ struct FollowListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass").font(.system(size: 13)).foregroundStyle(Color.qGray)
-                TextField("Search", text: $query)
-                    .font(.quesly(14))
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-            }
-            .padding(.horizontal, 12)
-            .frame(height: 38)
-            .background(RoundedRectangle(cornerRadius: 8).fill(Color.qField))
-            .padding(16)
+            SearchField(text: $query)
+                .padding(16)
 
-            List(filtered) { user in
-                HStack(spacing: 12) {
-                    NavigationLink(value: Route.profile(user.id)) {
-                        HStack(spacing: 12) {
-                            Avatar(user: user, size: 40)
-                            Text(user.username).font(.quesly(15, .medium)).foregroundStyle(Color.qInk)
-                        }
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(filtered.enumerated()), id: \.element.id) { index, user in
+                        PersonRow(user: user).staggeredAppear(index)
                     }
-                    .buttonStyle(.plain)
-                    Spacer()
-                    let following = store.isFollowing(user.id)
-                    Button { store.toggleFollow(user.id) } label: {
-                        Text(following ? "Followed" : "Follow")
-                            .font(.quesly(11, .medium))
-                            .foregroundStyle(following ? Color.qGreen : .white)
-                            .frame(width: 76, height: 28)
-                            .background(RoundedRectangle(cornerRadius: 6)
-                                .fill(following ? Color.qGreen.opacity(0.08) : Color.qGreen))
+                    if filtered.isEmpty {
+                        EmptyStateView(symbol: "person.2.fill", title: "No one here yet",
+                                       message: "Find people to follow in Discover.")
                     }
-                    .buttonStyle(.borderless)
                 }
-                .listRowSeparator(.hidden)
+                .padding(.horizontal, 16)
             }
-            .listStyle(.plain)
+            .scrollDismissesKeyboard(.immediately)
         }
         .background(Color.white)
         .queslyBackHeader(kind == .following ? "Following" : "Followers")

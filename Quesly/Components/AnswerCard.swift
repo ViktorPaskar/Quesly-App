@@ -11,6 +11,7 @@ enum Route: Hashable {
     case settings
     case feedback
     case invite
+    case blocked
 }
 
 struct AnswerCard: View {
@@ -19,162 +20,324 @@ struct AnswerCard: View {
     var showsQuestion = false
     var showsAuthor = true
 
+    @State private var isTrayOpen = false
     @State private var isSharing = false
+    @State private var isEditing = false
+    @State private var isReporting = false
     @State private var confirmDelete = false
-    @State private var reported = false
+    @State private var popTrigger = 0
 
     private var author: AppUser? { store.user(answer.authorId) }
     private var isMine: Bool { answer.authorId == store.me.id }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if showsQuestion {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("• \(answer.questionText)")
-                        .font(.quesly(11, .semibold))
-                        .foregroundStyle(Color.qGreen)
-                        .lineLimit(1)
-                    Spacer()
-                    if !showsAuthor {
-                        Text(RelativeTime.dayLabel(answer.createdAt))
-                            .font(.quesly(11)).foregroundStyle(Color.qGray)
-                    }
-                }
-            }
+        VStack(alignment: .leading, spacing: 12) {
+            if showsQuestion { questionLine }
 
             HStack(alignment: .top, spacing: 12) {
                 if showsAuthor {
                     NavigationLink(value: Route.profile(answer.authorId)) {
-                        Avatar(user: author, size: 42,
-                               showsAddButton: !isMine && !store.isFollowing(answer.authorId))
+                        Avatar(user: author, size: 44)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressable)
                 }
 
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 8) {
                     if showsAuthor { header }
                     Text(answer.text)
-                        .font(.quesly(15))
+                        .font(.quesly(18, relativeTo: .body))
+                        .lineSpacing(3)
                         .foregroundStyle(Color.qInk)
                         .fixedSize(horizontal: false, vertical: true)
-                    actions.padding(.top, 4)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                        .onTapGesture(count: 2) { doubleTapReact() }
+                        .overlay { DoubleTapPop(emoji: ReactionKind.love.emoji, trigger: popTrigger) }
+                    actions
                 }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
+        .padding(.horizontal, 18)
+        .padding(.top, 16)
+        .padding(.bottom, 10)
         .background(Color.white)
         .sheet(isPresented: $isSharing) {
             ShareStorySheet(answer: answer)
                 .presentationDetents([.large])
         }
+        .sheet(isPresented: $isEditing) {
+            EditAnswerSheet(answer: answer)
+                .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $isReporting) {
+            ReportSheet(answer: answer)
+                .presentationDetents([.medium, .large])
+        }
         .confirmationDialog("Delete this answer?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { store.deleteAnswer(answer.id) }
         }
-        .alert("Thanks for letting us know", isPresented: $reported) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Our team will review this answer. Quesly is a kind place.")
+    }
+
+    private var questionLine: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text("Q")
+                .font(.quesly(11, .bold))
+                .foregroundStyle(Color.qLime)
+                .frame(width: 18, height: 18)
+                .background(RoundedRectangle(cornerRadius: 5).fill(Color.qGreen))
+            Text(answer.questionText)
+                .font(.quesly(14, .semibold))
+                .foregroundStyle(Color.qGreen)
+                .lineLimit(2)
+            Spacer(minLength: 8)
+            if !showsAuthor {
+                Text(RelativeTime.dayLabel(answer.createdAt))
+                    .font(.quesly(13)).foregroundStyle(Color.qGray)
+            }
         }
     }
 
     private var header: some View {
         HStack(spacing: 6) {
             if answer.isPinned && isMine {
-                Image(systemName: "pin.fill").font(.system(size: 10)).foregroundStyle(Color.qGreen)
+                Image(systemName: "pin.fill").font(.system(size: 11)).foregroundStyle(Color.qGreen)
             }
             NavigationLink(value: Route.profile(answer.authorId)) {
                 Text(author?.username ?? "unknown")
-                    .font(.quesly(13, .semibold))
+                    .font(.quesly(16, .semibold))
                     .foregroundStyle(isMine ? Color.qGreen : Color.qInk)
+                    .lineLimit(1)
             }
             .buttonStyle(.plain)
             if let badge = author?.badge {
-                HexBadge(color: badge.color, symbol: "star.fill").frame(width: 14, height: 14)
+                HexBadge(color: badge.color, symbol: badge.symbol).frame(width: 16, height: 16)
             }
-            Text(RelativeTime.short(answer.createdAt))
-                .font(.quesly(12)).foregroundStyle(Color.qGray)
-            Spacer()
-            Menu {
-                Button { UIPasteboard.general.string = answer.text } label: {
-                    Label("Copy text", systemImage: "doc.on.doc")
-                }
-                Button { isSharing = true } label: {
-                    Label("Share as story", systemImage: "square.and.arrow.up")
-                }
-                if isMine {
-                    Button(role: .destructive) { confirmDelete = true } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-                } else {
-                    Button(role: .destructive) { reported = true } label: {
-                        Label("Report", systemImage: "flag")
-                    }
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.qGray.opacity(0.7))
-                    .frame(width: 28, height: 20)
+            Text(RelativeTime.short(answer.createdAt) + (answer.isEdited ? " · edited" : ""))
+                .font(.quesly(13)).foregroundStyle(Color.qGray)
+                .lineLimit(1)
+            if answer.visibility == .friends {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.qGray)
+                    .accessibilityLabel("Friends only")
             }
-            .accessibilityLabel("More")
+            Spacer(minLength: 4)
+            if !isMine && !store.isFollowing(answer.authorId) {
+                FollowPill(isFollowing: false, compact: true) { store.toggleFollow(answer.authorId) }
+                    .transition(.scale.combined(with: .opacity))
+            }
+            moreMenu
         }
+        .animation(.qSpring, value: store.isFollowing(answer.authorId))
+    }
+
+    private var moreMenu: some View {
+        Menu {
+            Button { isSharing = true } label: { Label("Share as story", systemImage: "square.and.arrow.up") }
+            Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", systemImage: "doc.on.doc") }
+            if isMine {
+                if answer.isEditable() {
+                    Button { isEditing = true } label: { Label("Edit", systemImage: "pencil") }
+                }
+                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
+            } else {
+                Button(role: .destructive) { isReporting = true } label: { Label("Report or block", systemImage: "flag") }
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Color.qGray)
+                .frame(width: 36, height: 36)
+                .contentShape(Rectangle())
+        }
+        .accessibilityLabel("More")
     }
 
     private var actions: some View {
-        HStack(spacing: 14) {
-            ForEach(ReactionKind.allCases) { kind in
-                ReactionButton(kind: kind,
-                               count: answer.count(kind),
-                               isOn: answer.myReactions.contains(kind)) {
-                    store.toggleReaction(kind, on: answer.id)
+        HStack(spacing: 4) {
+            if isMine {
+                ReactionSummary(answer: answer)
+            } else {
+                ReactionControl(answer: answer, isTrayOpen: $isTrayOpen) { kind in
+                    withAnimation(.qSpring) { store.react(kind, on: answer.id) }
                 }
             }
-            Spacer()
-            Button { store.toggleSave(answer.id) } label: {
-                Image(systemName: answer.isSaved ? "bookmark.fill" : "bookmark")
-                    .font(.system(size: 17))
-                    .foregroundStyle(answer.isSaved ? Color.qGreen : Color.qGray)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(answer.isSaved ? "Remove from saved" : "Save")
-            .sensoryFeedback(.selection, trigger: answer.isSaved)
+            Spacer(minLength: 0)
+            if !isTrayOpen {
+                Group {
+                    iconButton(answer.isSaved ? "bookmark.fill" : "bookmark",
+                               tint: answer.isSaved ? .qGreen : .qGray,
+                               label: answer.isSaved ? "Remove from saved" : "Save") {
+                        withAnimation(.qSpring) { store.toggleSave(answer.id) }
+                    }
+                    .symbolEffect(.bounce, value: answer.isSaved)
+                    .sensoryFeedback(.selection, trigger: answer.isSaved)
 
-            Button { isSharing = true } label: {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.system(size: 17))
-                    .foregroundStyle(Color.qGray)
+                    iconButton("square.and.arrow.up", tint: .qGray, label: "Share") { isSharing = true }
+                }
+                .transition(.opacity)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Share")
         }
+        .animation(.qSpring, value: isTrayOpen)
+    }
+
+    private func iconButton(_ symbol: String, tint: Color, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 19, weight: .regular))
+                .foregroundStyle(tint)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.pressable)
+        .accessibilityLabel(label)
+    }
+
+    private func doubleTapReact() {
+        guard !isMine else { return }
+        popTrigger += 1
+        if answer.myReaction != .love {
+            withAnimation(.qSpring) { store.react(.love, on: answer.id) }
+        }
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
 }
 
-struct ReactionButton: View {
-    let kind: ReactionKind
-    let count: Int
-    let isOn: Bool
-    let action: () -> Void
+// MARK: - Edit
+
+struct EditAnswerSheet: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let answer: Answer
+    @State private var text = ""
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                Image(systemName: isOn || count > 0 ? kind.filledSymbol : kind.symbol)
-                    .font(.system(size: 17))
-                    .foregroundStyle(isOn || count > 0 ? kind.color : Color.qGray)
-                    .symbolEffect(.bounce, value: isOn)
-                if count > 0 {
-                    Text("\(count)")
-                        .font(.quesly(11, .medium))
-                        .foregroundStyle(kind.color)
-                        .contentTransition(.numericText())
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(answer.questionText.uppercased())
+                    .font(.quesly(14, .bold))
+                    .foregroundStyle(Color.qGreen)
+                TextEditor(text: $text)
+                    .font(.quesly(18))
+                    .scrollContentBackground(.hidden)
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.qField))
+                    .onChange(of: text) { _, new in
+                        if new.count > AppStore.maxAnswerLength { text = String(new.prefix(AppStore.maxAnswerLength)) }
+                    }
+                HStack {
+                    TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                        let left = max(0, Int(Answer.editWindow - ctx.date.timeIntervalSince(answer.createdAt)))
+                        Label(String(format: "%d:%02d left to edit", left / 60, left % 60), systemImage: "timer")
+                            .font(.quesly(13, .medium))
+                            .foregroundStyle(left < 60 ? Color.qFlame : Color.qGray)
+                            .monospacedDigit()
+                    }
+                    Spacer()
+                    Text("\(text.count)/\(AppStore.maxAnswerLength)")
+                        .font(.quesly(13, .medium)).foregroundStyle(Color.qGray).monospacedDigit()
+                }
+                GreenButton(title: "Save changes", isEnabled: !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            && answer.isEditable()) {
+                    store.editAnswer(answer.id, text: text)
+                    dismiss()
+                }
+            }
+            .padding(20)
+            .navigationTitle("Edit answer")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+            }
+        }
+        .onAppear { text = answer.text }
+    }
+}
+
+// MARK: - Report / block
+
+struct ReportSheet: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let answer: Answer
+    @State private var sentReason: ReportReason?
+    @State private var confirmBlock = false
+
+    private var author: AppUser? { store.user(answer.authorId) }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if sentReason == nil { reasons } else { thanks }
+            }
+            .animation(.qSmooth, value: sentReason)
+            .navigationTitle(sentReason == nil ? "Report answer" : "")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
+            }
+            .confirmationDialog("Block @\(author?.username ?? "")?", isPresented: $confirmBlock, titleVisibility: .visible) {
+                Button("Block", role: .destructive) {
+                    store.block(answer.authorId)
+                    dismiss()
+                }
+            } message: {
+                Text("You won't see their answers, and they won't be notified.")
+            }
+        }
+    }
+
+    private var reasons: some View {
+        List {
+            Section {
+                ForEach(ReportReason.allCases) { reason in
+                    Button {
+                        store.report(answer.id, reason: reason)
+                        sentReason = reason
+                    } label: {
+                        HStack {
+                            Text(reason.rawValue).font(.quesly(16)).foregroundStyle(Color.qInk)
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Color.qGray)
+                        }
+                    }
+                }
+            } header: {
+                Text("Why are you reporting this?").font(.quesly(13, .medium))
+            } footer: {
+                Text("Reports are anonymous. Quesly is a kind place — we review every report.")
+                    .font(.quesly(13))
+            }
+            Section {
+                Button(role: .destructive) { confirmBlock = true } label: {
+                    Label("Block @\(author?.username ?? "")", systemImage: "hand.raised.fill")
+                        .font(.quesly(16, .medium))
                 }
             }
         }
-        .buttonStyle(.plain)
-        .sensoryFeedback(.impact(weight: .light), trigger: isOn)
-        .accessibilityLabel("\(kind.rawValue), \(count)")
-        .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+
+    private var thanks: some View {
+        VStack(spacing: 16) {
+            Spacer()
+            Image(systemName: "checkmark.shield.fill")
+                .font(.system(size: 52))
+                .foregroundStyle(Color.qGreen)
+                .symbolEffect(.bounce, value: sentReason)
+            Text("Thanks for letting us know").font(.quesly(22, .semibold))
+            Text("We'll review this answer. You can also block this person so you never see their answers again.")
+                .font(.quesly(15)).foregroundStyle(Color.qGray).multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+            Spacer()
+            Button(role: .destructive) { confirmBlock = true } label: {
+                Text("Block @\(author?.username ?? "")")
+                    .font(.quesly(16, .semibold))
+                    .frame(maxWidth: .infinity).frame(height: 50)
+                    .background(Capsule().stroke(Color.red.opacity(0.5)))
+            }
+            .padding(.horizontal, 24)
+            GreenButton(title: "Done") { dismiss() }.padding(.horizontal, 24).padding(.bottom, 12)
+        }
     }
 }

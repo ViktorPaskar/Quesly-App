@@ -1,21 +1,28 @@
 import SwiftUI
 
 enum MainTab: CaseIterable {
-    case feed, archive, notifications, profile
+    case feed, discover, notifications, profile
 
     var symbol: String {
         switch self {
         case .feed: return "house"
-        case .archive: return "folder"
+        case .discover: return "magnifyingglass"
         case .notifications: return "bell"
         case .profile: return "person"
+        }
+    }
+
+    var activeSymbol: String {
+        switch self {
+        case .discover: return "magnifyingglass"
+        default: return symbol + ".fill"
         }
     }
 
     var title: String {
         switch self {
         case .feed: return "Feed"
-        case .archive: return "Archive"
+        case .discover: return "Discover"
         case .notifications: return "Notifications"
         case .profile: return "Profile"
         }
@@ -31,18 +38,23 @@ struct MainTabView: View {
         path.append(route)
         return [DemoConfig.initialTab: path]
     }()
+    @Namespace private var ns
+    @State private var demoShare = DemoConfig.opensShareSheet
 
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                stack(.feed) { FeedView() }
-                stack(.archive) { ArchiveView() }
+                stack(.feed) { FeedView(onDiscover: { select(.discover) }) }
+                stack(.discover) { DiscoverView() }
                 stack(.notifications) { NotificationsView() }
                 stack(.profile) { ProfileView(userId: store.me.id, isTabRoot: true) }
             }
             tabBar
         }
         .ignoresSafeArea(.keyboard)
+        .sheet(isPresented: $demoShare) {
+            if let answer = store.todaysAnswer { ShareStorySheet(answer: answer) }
+        }
     }
 
     private func stack<Content: View>(_ t: MainTab, @ViewBuilder root: () -> Content) -> some View {
@@ -50,6 +62,7 @@ struct MainTabView: View {
             root().withQueslyRoutes()
         }
         .opacity(tab == t ? 1 : 0)
+        .scaleEffect(tab == t ? 1 : 0.985)
         .allowsHitTesting(tab == t)
         .accessibilityHidden(tab != t)
     }
@@ -58,30 +71,57 @@ struct MainTabView: View {
         Binding(get: { paths[t] ?? NavigationPath() }, set: { paths[t] = $0 })
     }
 
+    private func select(_ t: MainTab) {
+        if tab == t {
+            withAnimation(.qSmooth) { paths[t] = NavigationPath() } // re-tap pops to root
+        } else {
+            withAnimation(.easeOut(duration: 0.18)) { tab = t }
+        }
+    }
+
     private var tabBar: some View {
-        HStack {
+        HStack(spacing: 0) {
             ForEach(MainTab.allCases, id: \.self) { t in
-                Button {
-                    if tab == t {
-                        paths[t] = NavigationPath() // re-tap pops to root
-                    } else {
-                        tab = t
+                let active = tab == t
+                Button { select(t) } label: {
+                    VStack(spacing: 5) {
+                        Image(systemName: active ? t.activeSymbol : t.symbol)
+                            .font(.system(size: 21, weight: active ? .semibold : .regular))
+                            .foregroundStyle(active ? Color.qGreen : Color.qInk.opacity(0.75))
+                            .symbolEffect(.bounce, value: active)
+                            .overlay(alignment: .topTrailing) {
+                                if t == .notifications && store.unreadNotifications > 0 && !active {
+                                    Text("\(min(store.unreadNotifications, 9))")
+                                        .font(.custom("Outfit-Bold", fixedSize: 10))
+                                        .foregroundStyle(Color.qGreen)
+                                        .frame(minWidth: 16, minHeight: 16)
+                                        .background(Circle().fill(Color.qLime))
+                                        .overlay(Circle().stroke(.white, lineWidth: 1.5))
+                                        .offset(x: 8, y: -6)
+                                        .transition(.scale)
+                                }
+                            }
+                        ZStack {
+                            if active {
+                                Capsule().fill(Color.qGreen)
+                                    .frame(width: 18, height: 4)
+                                    .matchedGeometryEffect(id: "tabIndicator", in: ns)
+                            }
+                        }
+                        .frame(height: 4)
                     }
-                } label: {
-                    Image(systemName: tab == t && t == .profile ? "person.fill" : t.symbol)
-                        .font(.system(size: 19, weight: .regular))
-                        .foregroundStyle(tab == t ? (t == .profile ? Color(hex: 0x6CC417) : Color.qGreen) : Color.qInk)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
-                        .contentShape(Rectangle())
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(t.title)
-                .accessibilityAddTraits(tab == t ? .isSelected : [])
+                .accessibilityAddTraits(active ? .isSelected : [])
             }
         }
+        .animation(.qSpring, value: tab)
         .background(Color.white.ignoresSafeArea(edges: .bottom))
-        .overlay(alignment: .top) { Divider() }
+        .overlay(alignment: .top) { Rectangle().fill(Color.qLine).frame(height: 1) }
         .sensoryFeedback(.selection, trigger: tab)
     }
 }
@@ -99,6 +139,7 @@ extension View {
             case .settings: SettingsView()
             case .feedback: FeedbackView()
             case .invite: InviteFriendsView()
+            case .blocked: BlockedUsersView()
             }
         }
     }

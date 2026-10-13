@@ -7,35 +7,45 @@ enum FeedScope: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum OnboardingStep: String, Codable {
+    case findFriends, notifications, done
+}
+
 /// Single source of truth for the app. Currently backed by `MockData` + local persistence;
 /// swap the bodies of the mutating methods for API calls when the backend is ready.
 @MainActor
 @Observable
 final class AppStore {
     nonisolated static let maxAnswerLength = 200
+    nonisolated static let defaultsKey = "quesly.snapshot.v2"
 
     // MARK: State
 
     private(set) var isSignedIn = false
+    private(set) var onboarding: OnboardingStep = .done
     var me: AppUser = MockData.me
     private(set) var users: [String: AppUser] = [:]
     private(set) var followingIds: Set<String> = []
+    private(set) var blockedIds: Set<String> = []
     private(set) var todayAnswers: [Answer] = []
     private(set) var myAnswers: [Answer] = []
     private(set) var notifications: [AppNotification] = []
     private(set) var todayQuestion: DailyQuestion = MockData.questions[0]
+    private(set) var notificationsSeenAt: Date = .distantPast
 
     var remindersEnabled = true { didSet { persist(); NotificationScheduler.reschedule(store: self) } }
     var reminderTime: Date = Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: .now) ?? .now {
         didSet { persist(); NotificationScheduler.reschedule(store: self) }
     }
     var isPrivateAccount = false { didSet { persist() } }
+    /// Visibility pre-selected in the composer (remembers the last choice).
+    var defaultVisibility: AnswerVisibility = .everyone { didSet { persist() } }
 
-    private var isRestoring = false
-    nonisolated static let defaultsKey = "quesly.snapshot.v1"
+    @ObservationIgnored private var isRestoring = false
 
     init() {
         users = Dictionary(uniqueKeysWithValues: MockData.users.map { ($0.id, $0) })
+        followingIds = MockData.followingIds
         refreshDay()
         restore()
     }
@@ -47,12 +57,7 @@ final class AppStore {
         let question = Self.question(for: now)
         guard question.id != todayQuestion.id || todayAnswers.isEmpty else { return }
         todayQuestion = question
-        let saved = Set(todayAnswers.filter(\.isSaved).map(\.id))
-        todayAnswers = MockData.answers(for: question, now: now).map { answer in
-            var a = answer
-            if saved.contains(a.id) { a.isSaved = true }
-            return a
-        }
+        todayAnswers = MockData.answers(for: question, now: now)
         if notifications.isEmpty { notifications = MockData.notifications(now: now) }
     }
 
@@ -74,23 +79,37 @@ final class AppStore {
         return "\(max(1, Int(seconds) / 60))m"
     }
 
-    // MARK: Auth
+    // MARK: Auth & onboarding
 
     func signUp(username: String, email: String) {
         me.username = username.trimmingCharacters(in: .whitespaces)
         me.email = email.trimmingCharacters(in: .whitespaces)
         if myAnswers.isEmpty { myAnswers = MockData.myHistory() }
+        onboarding = .findFriends
         isSignedIn = true
         persist()
-        NotificationScheduler.requestAuthorization(store: self)
     }
 
     func signIn(email: String) {
         if !email.isEmpty { me.email = email }
         if myAnswers.isEmpty { myAnswers = MockData.myHistory() }
+        onboarding = .done
         isSignedIn = true
         persist()
-        NotificationScheduler.requestAuthorization(store: self)
+        NotificationScheduler.reschedule(store: self)
+    }
+
+    func finishFindFriends() {
+        onboarding = .notifications
+        persist()
+    }
+
+    /// Called from the priming screen; only then does iOS show the system prompt.
+    func finishNotificationPriming(enable: Bool) {
+        remindersEnabled = enable
+        if enable { NotificationScheduler.requestAuthorization(store: self) }
+        onboarding = .done
+        persist()
     }
 
     func signOut() {
@@ -103,6 +122,8 @@ final class AppStore {
         me = MockData.me
         myAnswers = []
         followingIds = MockData.followingIds
+        blockedIds = []
+        onboarding = .done
         isSignedIn = false
     }
 
@@ -114,8 +135,8 @@ final class AppStore {
 
     var hasAnsweredToday: Bool { todaysAnswer != nil }
 
-    func submitAnswer(_ text: String) {
-        let trimmed = String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(Self.maxAnswerLength))
+    func submitAnswer(_ text: String, visibility: AnswerVisibility? = nil) {
+        let trimmed = Self.clean(text)
         guard !trimmed.isEmpty, !hasAnsweredToday else { return }
         let answer = Answer(
             id: UUID().uuidString,
@@ -124,18 +145,40 @@ final class AppStore {
             authorId: me.id,
             text: trimmed,
             createdAt: .now,
-            isPinned: true
+            isPinned: true,
+            visibility: visibility ?? defaultVisibility
         )
+        if let visibility { defaultVisibility = visibility }
         myAnswers.insert(answer, at: 0)
         notifications.insert(.init(id: UUID().uuidString, kind: .posted, actorId: nil,
-                                   message: "Your new Answer was posted!", date: .now), at: 0)
+                                   message: "Your new answer was posted!", date: .now), at: 0)
         persist()
         NotificationScheduler.reschedule(store: self)
     }
 
+    /// Edits are allowed for a few minutes after posting (typos happen).
+    func editAnswer(_ id: String, text: String) {
+        let trimmed = Self.clean(text)
+        guard !trimmed.isEmpty, let i = myAnswers.firstIndex(where: { $0.id == id }),
+              myAnswers[i].isEditable() else { return }
+        myAnswers[i].text = trimmed
+        myAnswers[i].isEdited = true
+        persist()
+    }
+
+    private static func clean(_ text: String) -> String {
+        String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maxAnswerLength))
+    }
+
     func feed(_ scope: FeedScope) -> [Answer] {
-        var others = todayAnswers
-        if scope == .friends { others = others.filter { followingIds.contains($0.authorId) } }
+        var others = todayAnswers.filter { !blockedIds.contains($0.authorId) }
+        switch scope {
+        case .friends:
+            others = others.filter { followingIds.contains($0.authorId) }
+        case .world:
+            // Friends-only answers appear in World only for people who follow the author.
+            others = others.filter { $0.visibility == .everyone || followingIds.contains($0.authorId) }
+        }
         if let mine = todaysAnswer { return [mine] + others }
         return others
     }
@@ -145,17 +188,24 @@ final class AppStore {
         return todayAnswers.filter { $0.authorId == userId }
     }
 
-    var savedAnswers: [Answer] { (todayAnswers + myAnswers).filter(\.isSaved) }
+    func answer(_ id: String) -> Answer? {
+        myAnswers.first { $0.id == id } ?? todayAnswers.first { $0.id == id }
+    }
+
+    var savedAnswers: [Answer] {
+        (todayAnswers + myAnswers).filter { $0.isSaved && !blockedIds.contains($0.authorId) }
+    }
 
     func user(_ id: String) -> AppUser? { id == me.id ? me : users[id] }
 
-    func toggleReaction(_ kind: ReactionKind, on answerId: String) {
+    /// Sets the viewer's reaction. Picking the current reaction again removes it.
+    func react(_ kind: ReactionKind, on answerId: String) {
         mutateAnswer(answerId) { a in
-            if a.myReactions.contains(kind) {
-                a.myReactions.remove(kind)
-                a.reactions[kind] = max(0, a.count(kind) - 1)
+            if let old = a.myReaction { a.reactions[old] = max(0, a.count(old) - 1) }
+            if a.myReaction == kind {
+                a.myReaction = nil
             } else {
-                a.myReactions.insert(kind)
+                a.myReaction = kind
                 a.reactions[kind] = a.count(kind) + 1
             }
         }
@@ -191,12 +241,83 @@ final class AppStore {
         persist()
     }
 
-    var followingUsers: [AppUser] { followingIds.compactMap { users[$0] }.sorted { $0.username < $1.username } }
-    /// Mock: everyone who is not followed back is shown as a follower.
-    var followerUsers: [AppUser] { users.values.sorted { $0.username < $1.username } }
+    var followingUsers: [AppUser] {
+        followingIds.compactMap { users[$0] }.sorted { $0.username.lowercased() < $1.username.lowercased() }
+    }
+
+    /// Mock: people who appear in notifications as followers plus a few others.
+    var followerUsers: [AppUser] {
+        users.values.filter { !blockedIds.contains($0.id) }.sorted { $0.username.lowercased() < $1.username.lowercased() }
+    }
+
+    /// People you don't follow yet, most active first.
+    var suggestedUsers: [AppUser] {
+        users.values
+            .filter { !followingIds.contains($0.id) && !blockedIds.contains($0.id) }
+            .sorted { $0.followers > $1.followers }
+    }
+
+    func searchUsers(_ query: String) -> [AppUser] {
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !q.isEmpty else { return [] }
+        return users.values
+            .filter { $0.username.lowercased().contains(q) && !blockedIds.contains($0.id) }
+            .sorted { $0.username < $1.username }
+    }
 
     func updateProfile(_ updated: AppUser) {
         me = updated
+        persist()
+    }
+
+    // MARK: Moderation
+
+    func report(_ answerId: String, reason: ReportReason) {
+        // TODO: send to moderation API. Locally we just hide nothing — the answer stays until reviewed.
+        _ = (answerId, reason)
+    }
+
+    func block(_ userId: String) {
+        blockedIds.insert(userId)
+        followingIds.remove(userId)
+        persist()
+    }
+
+    func unblock(_ userId: String) {
+        blockedIds.remove(userId)
+        persist()
+    }
+
+    // MARK: Notifications
+
+    /// Reactions on the same answer are collapsed into a single row ("Anna and 3 others…").
+    var groupedNotifications: [NotificationGroup] {
+        var groups: [NotificationGroup] = []
+        var indexByAnswer: [String: Int] = [:]
+        for n in notifications.sorted(by: { $0.date > $1.date }) {
+            if let actor = n.actorId, blockedIds.contains(actor) { continue }
+            if n.kind == .reaction, let answerId = n.answerId {
+                if let i = indexByAnswer[answerId] {
+                    if let actor = n.actorId, !groups[i].actorIds.contains(actor) { groups[i].actorIds.append(actor) }
+                    if let r = n.reaction, !groups[i].reactions.contains(r) { groups[i].reactions.append(r) }
+                    continue
+                }
+                indexByAnswer[answerId] = groups.count
+            }
+            groups.append(NotificationGroup(
+                id: n.id, kind: n.kind, actorIds: n.actorId.map { [$0] } ?? [],
+                reactions: n.reaction.map { [$0] } ?? [], answerId: n.answerId,
+                message: n.message, date: n.date))
+        }
+        return groups
+    }
+
+    var unreadNotifications: Int {
+        groupedNotifications.filter { $0.date > notificationsSeenAt }.count
+    }
+
+    func markNotificationsSeen() {
+        notificationsSeenAt = .now
         persist()
     }
 
@@ -223,7 +344,7 @@ final class AppStore {
     }
 
     private var reactedCount: Int {
-        todayAnswers.filter { !$0.myReactions.isEmpty }.count
+        todayAnswers.filter { $0.myReaction != nil }.count
     }
 
     var achievements: [Achievement] {
@@ -238,17 +359,17 @@ final class AppStore {
             .init(id: "vibe", title: "Vibe Connector", subtitle: "Invited 10 friends to join Quesly",
                   symbol: "hand.wave.fill", color: Color(hex: 0xE84FA5), progress: 7, goal: 10),
             .init(id: "streak14", title: "Steady Flow", subtitle: "You answered 14 days in a row",
-                  symbol: "14.circle.fill", color: Color(hex: 0x8CA6C9), progress: min(streak, 14), goal: 14),
+                  symbol: "14.circle.fill", color: Color(hex: 0x6F8FC0), progress: min(streak, 14), goal: 14),
             .init(id: "weekend", title: "Weekend Reflector", subtitle: "Answered on 5 different weekends",
                   symbol: "leaf.fill", color: Color(hex: 0xB0643A), progress: min(weekendsAnswered, 5), goal: 5),
             .init(id: "voice", title: "Thoughtful Voice", subtitle: "Answered 30 questions total",
-                  symbol: "30.circle.fill", color: Color(hex: 0xB8B8B8), progress: min(answered, 30), goal: 30),
+                  symbol: "30.circle.fill", color: Color(hex: 0x3BA3A0), progress: min(answered, 30), goal: 30),
             .init(id: "support", title: "Community Supporter", subtitle: "Reacted to 100 different people's answers",
-                  symbol: "heart.fill", color: Color(hex: 0xB8B8B8), progress: min(reactedCount, 100), goal: 100),
+                  symbol: "heart.fill", color: Color(hex: 0xE5484D), progress: min(reactedCount, 100), goal: 100),
             .init(id: "story", title: "Storyteller", subtitle: "Shared 10 answers to your stories",
-                  symbol: "square.and.arrow.up.fill", color: Color(hex: 0xB8B8B8), progress: 0, goal: 10),
+                  symbol: "square.and.arrow.up.fill", color: Color(hex: 0x9B5CF6), progress: 0, goal: 10),
             .init(id: "early", title: "Early Adopter", subtitle: "Joined Quesly in its first year",
-                  symbol: "sparkles", color: Color(hex: 0xB8B8B8), progress: 1, goal: 1),
+                  symbol: "sparkles", color: Color(hex: 0x07583D), progress: 1, goal: 1),
         ]
     }
 
@@ -256,24 +377,30 @@ final class AppStore {
 
     private struct Snapshot: Codable {
         var isSignedIn: Bool
+        var onboarding: OnboardingStep
         var me: AppUser
         var followingIds: Set<String>
+        var blockedIds: Set<String>
         var myAnswers: [Answer]
         var savedIds: Set<String>
-        var reactions: [String: Set<ReactionKind>]
+        var reactions: [String: ReactionKind]
         var remindersEnabled: Bool
         var reminderTime: Date
         var isPrivateAccount: Bool
+        var defaultVisibility: AnswerVisibility
+        var notificationsSeenAt: Date
     }
 
     private func persist() {
         guard !isRestoring else { return }
-        var reactions: [String: Set<ReactionKind>] = [:]
-        for a in todayAnswers where !a.myReactions.isEmpty { reactions[a.id] = a.myReactions }
+        var reactions: [String: ReactionKind] = [:]
+        for a in todayAnswers { if let r = a.myReaction { reactions[a.id] = r } }
         let snapshot = Snapshot(
-            isSignedIn: isSignedIn, me: me, followingIds: followingIds, myAnswers: myAnswers,
+            isSignedIn: isSignedIn, onboarding: onboarding, me: me, followingIds: followingIds,
+            blockedIds: blockedIds, myAnswers: myAnswers,
             savedIds: Set(todayAnswers.filter(\.isSaved).map(\.id)), reactions: reactions,
-            remindersEnabled: remindersEnabled, reminderTime: reminderTime, isPrivateAccount: isPrivateAccount
+            remindersEnabled: remindersEnabled, reminderTime: reminderTime, isPrivateAccount: isPrivateAccount,
+            defaultVisibility: defaultVisibility, notificationsSeenAt: notificationsSeenAt
         )
         if let data = try? JSONEncoder().encode(snapshot) {
             UserDefaults.standard.set(data, forKey: Self.defaultsKey)
@@ -284,25 +411,27 @@ final class AppStore {
         isRestoring = true
         defer { isRestoring = false }
         guard let data = UserDefaults.standard.data(forKey: Self.defaultsKey),
-              let s = try? JSONDecoder().decode(Snapshot.self, from: data) else {
-            followingIds = MockData.followingIds
-            return
-        }
+              let s = try? JSONDecoder().decode(Snapshot.self, from: data) else { return }
         isSignedIn = s.isSignedIn
+        onboarding = s.onboarding
         me = s.me
         followingIds = s.followingIds
+        blockedIds = s.blockedIds
         myAnswers = s.myAnswers
         remindersEnabled = s.remindersEnabled
         reminderTime = s.reminderTime
         isPrivateAccount = s.isPrivateAccount
+        defaultVisibility = s.defaultVisibility
+        notificationsSeenAt = s.notificationsSeenAt
         for i in todayAnswers.indices {
             let id = todayAnswers[i].id
             todayAnswers[i].isSaved = s.savedIds.contains(id)
-            if let mine = s.reactions[id] {
-                for kind in mine where !todayAnswers[i].myReactions.contains(kind) {
-                    todayAnswers[i].reactions[kind] = todayAnswers[i].count(kind) + 1
-                }
-                todayAnswers[i].myReactions = mine
+            let seeded = todayAnswers[i].myReaction
+            let restored = s.reactions[id]
+            if seeded != restored {
+                if let old = seeded { todayAnswers[i].reactions[old] = max(0, todayAnswers[i].count(old) - 1) }
+                if let new = restored { todayAnswers[i].reactions[new] = todayAnswers[i].count(new) + 1 }
+                todayAnswers[i].myReaction = restored
             }
         }
     }

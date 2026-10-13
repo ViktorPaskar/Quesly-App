@@ -4,42 +4,58 @@ struct WelcomeView: View {
     @State private var authMode: AuthView.Mode?
     @State private var appeared = false
 
+    private let features: [(String, String, String)] = [
+        ("sun.max.fill", "1 question every 24h", "A new story prompt every morning"),
+        ("globe.europe.africa.fill", "World & Friends feeds", "See how people answer, near and far"),
+        ("heart.fill", "Positive reactions only", "No dislikes. No hate. Just good vibes"),
+        ("square.and.arrow.up.fill", "Instant story export", "Share your answer to IG & TikTok"),
+    ]
+
     var body: some View {
         ZStack {
-            BrandGradientBackground(animate: appeared)
+            BrandGradientBackground(animate: true)
 
             VStack(spacing: 0) {
                 Spacer()
-                QueslyLogo(height: 40, background: .clear)
+                QueslyLogo(height: 42, background: .clear)
+                    .opacity(appeared ? 1 : 0)
+                    .scaleEffect(appeared ? 1 : 0.9)
                 Text("ONE QUESTION A DAY.\nMILLIONS OF STORIES")
-                    .font(.quesly(14, .bold))
+                    .font(.quesly(15, .bold))
+                    .tracking(0.8)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.white)
                     .padding(.top, 14)
+                    .opacity(appeared ? 1 : 0)
                 Spacer()
 
-                VStack(alignment: .leading, spacing: 14) {
-                    feature("questionmark.bubble.fill", "1 question every 24h")
-                    feature("globe.europe.africa.fill", "World & Friends feeds")
-                    feature("heart.fill", "Positive emojis only")
-                    feature("square.and.arrow.up.fill", "Instant story export")
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(Array(features.enumerated()), id: \.offset) { index, f in
+                        feature(f.0, f.1, f.2)
+                            .opacity(appeared ? 1 : 0)
+                            .offset(x: appeared ? 0 : -24)
+                            .animation(.qSmooth.delay(0.25 + Double(index) * 0.08), value: appeared)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 32)
                 .padding(.bottom, 36)
 
-                VStack(spacing: 12) {
-                    LimeButton(title: "Get started") { authMode = .signUp }
+                VStack(spacing: 6) {
+                    LimeButton(title: "Get started", systemImage: "arrow.right") { authMode = .signUp }
                     Button("I already have an account") { authMode = .signIn }
-                        .font(.quesly(15, .medium))
+                        .font(.quesly(16, .medium))
                         .foregroundStyle(.white)
-                        .frame(height: 44)
+                        .frame(height: 48)
                 }
-                .padding(.horizontal, 32)
-                .padding(.bottom, 24)
+                .padding(.horizontal, 28)
+                .padding(.bottom, 16)
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 30)
+                .animation(.qSmooth.delay(0.6), value: appeared)
             }
-            .opacity(appeared ? 1 : 0)
-            .offset(y: appeared ? 0 : 20)
         }
-        .onAppear { withAnimation(.easeOut(duration: 0.6)) { appeared = true } }
+        .onAppear { withAnimation(.qSmooth) { appeared = true } }
         .sheet(item: $authMode) { mode in
             AuthView(mode: mode)
                 .presentationDetents([.large])
@@ -47,14 +63,17 @@ struct WelcomeView: View {
         }
     }
 
-    private func feature(_ symbol: String, _ title: String) -> some View {
-        HStack(spacing: 12) {
+    private func feature(_ symbol: String, _ title: String, _ subtitle: String) -> some View {
+        HStack(spacing: 14) {
             Image(systemName: symbol)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Color.qLime)
-                .frame(width: 34, height: 34)
-                .background(RoundedRectangle(cornerRadius: 9).fill(Color.qGreenDeep.opacity(0.7)))
-            Text(title).font(.quesly(16, .medium)).foregroundStyle(.white)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Color.qGreen)
+                .frame(width: 42, height: 42)
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.qLime))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.quesly(17, .semibold)).foregroundStyle(.white)
+                Text(subtitle).font(.quesly(14)).foregroundStyle(.white.opacity(0.75))
+            }
         }
     }
 }

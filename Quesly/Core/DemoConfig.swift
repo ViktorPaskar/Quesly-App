@@ -4,7 +4,9 @@ import Foundation
 /// `SIMCTL_CHILD_QUESLY_SCREEN=feed xcrun simctl launch booted app.quesly.ios`
 enum DemoConfig {
     enum Screen: String {
-        case welcome, question, composer, feed, friends, archive, notifications, profile, achievements, menu
+        case welcome, findFriends, notifyPrime, question, composer
+        case feed, friends, otherProfile, share
+        case discover, notifications, profile, saved, menu, achievements
     }
 
     static var screen: Screen? {
@@ -29,6 +31,11 @@ enum DemoConfig {
         switch screen {
         case .welcome:
             return
+        case .findFriends:
+            store.signUp(username: MockData.me.username, email: MockData.me.email)
+        case .notifyPrime:
+            store.signUp(username: MockData.me.username, email: MockData.me.email)
+            store.finishFindFriends()
         case .question, .composer:
             store.signIn(email: MockData.me.email)
         default:
@@ -39,9 +46,9 @@ enum DemoConfig {
 
     static var initialTab: MainTab {
         switch screen {
-        case .archive: return .archive
+        case .discover: return .discover
         case .notifications: return .notifications
-        case .profile, .achievements, .menu: return .profile
+        case .profile, .saved, .achievements, .menu: return .profile
         default: return .feed
         }
     }
@@ -50,6 +57,7 @@ enum DemoConfig {
         switch screen {
         case .achievements: return .achievements
         case .menu: return .menu
+        case .otherProfile: return .profile("u5")
         default: return nil
         }
     }
@@ -60,4 +68,6 @@ enum DemoConfig {
         return MockData.sampleAnswers[AppStore.question(for: .now).id] ?? ""
     }
     static var initialFeedScope: FeedScope { screen == .friends ? .friends : .world }
+    static var showsSavedTab: Bool { screen == .saved }
+    static var opensShareSheet: Bool { screen == .share }
 }

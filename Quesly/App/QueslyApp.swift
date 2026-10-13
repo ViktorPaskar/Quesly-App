@@ -37,6 +37,12 @@ struct RootView: View {
             Group {
                 if !store.isSignedIn {
                     WelcomeView()
+                } else if store.onboarding == .findFriends {
+                    NavigationStack { FindFriendsView().withQueslyRoutes().toolbar(.hidden, for: .navigationBar) }
+                        .transition(.move(edge: .trailing))
+                } else if store.onboarding == .notifications {
+                    NotificationPrimingView()
+                        .transition(.move(edge: .trailing))
                 } else if !store.hasAnsweredToday {
                     DailyQuestionView(onSubmitted: flashThenFeed)
                 } else {
@@ -53,9 +59,10 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.35), value: store.isSignedIn)
+        .animation(.qSmooth, value: store.onboarding)
         .animation(.easeInOut(duration: 0.35), value: store.hasAnsweredToday)
         .task {
-            try? await Task.sleep(for: .seconds(1.6))
+            try? await Task.sleep(for: .seconds(1.8))
             withAnimation(.easeInOut(duration: 0.5)) { showSplash = false }
         }
     }
@@ -63,7 +70,7 @@ struct RootView: View {
     private func flashThenFeed() {
         showLimeFlash = true
         Task {
-            try? await Task.sleep(for: .seconds(0.9))
+            try? await Task.sleep(for: .seconds(1.6))
             withAnimation(.easeInOut(duration: 0.4)) { showLimeFlash = false }
         }
     }

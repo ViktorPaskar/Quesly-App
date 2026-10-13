@@ -4,15 +4,23 @@ struct FeedView: View {
     @Environment(AppStore.self) private var store
     @State private var scope: FeedScope = DemoConfig.initialFeedScope
     @State private var showQuestion = false
+    var onDiscover: () -> Void = {}
 
     var body: some View {
         let answers = store.feed(scope)
         VStack(spacing: 0) {
-            QueslyLogo(height: 18, markColor: .qInk, textColor: .qInk, background: .white)
-                .padding(.top, 6)
-                .padding(.bottom, 14)
+            ZStack {
+                QueslyLogo(height: 20, markColor: .qInk, textColor: .qInk, background: .white)
+                HStack {
+                    Spacer()
+                    StreakChip(days: store.streak)
+                }
+                .padding(.horizontal, 16)
+            }
+            .frame(height: 48)
 
             UnderlineTabs(items: FeedScope.allCases, selection: $scope, title: \.rawValue)
+                .padding(.top, 4)
 
             TodayQuestionBanner(question: store.todayQuestion) {
                 if !store.hasAnsweredToday { showQuestion = true }
@@ -23,24 +31,39 @@ struct FeedView: View {
                     if !store.hasAnsweredToday {
                         AnswerPrompt { showQuestion = true }
                     }
-                    ForEach(answers) { answer in
+                    ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
                         AnswerCard(answer: answer)
-                        Divider().padding(.leading, 16)
+                            .staggeredAppear(index)
+                        Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 74)
                     }
-                    if answers.isEmpty {
-                        ContentUnavailableView(
-                            "No answers yet",
-                            systemImage: "person.2",
-                            description: Text(scope == .friends
-                                              ? "Follow people from the World feed to see their stories here."
-                                              : "Be the first to answer today's question.")
-                        )
-                        .padding(.top, 40)
+                    if scope == .friends && answers.filter({ $0.authorId != store.me.id }).isEmpty {
+                        EmptyStateView(symbol: "person.2.wave.2.fill",
+                                       title: "Your friends are quiet",
+                                       message: "None of the people you follow answered yet. Invite friends or discover new people.") {
+                            VStack(spacing: 10) {
+                                ShareLink(item: Invite.text(for: store.me.username)) {
+                                    Label("Invite friends", systemImage: "paperplane.fill")
+                                        .font(.quesly(16, .semibold))
+                                        .foregroundStyle(.white)
+                                        .frame(maxWidth: .infinity).frame(height: 50)
+                                        .background(Capsule().fill(Color.qGreen))
+                                }
+                                .buttonStyle(.pressable)
+                                Button("Discover people", action: onDiscover)
+                                    .font(.quesly(16, .medium))
+                                    .foregroundStyle(Color.qGreen)
+                                    .frame(height: 44)
+                            }
+                        }
                     }
                 }
                 .padding(.bottom, 12)
+                .animation(.qSmooth, value: scope)
             }
-            .refreshable { store.refreshDay() }
+            .refreshable {
+                try? await Task.sleep(for: .milliseconds(600))
+                store.refreshDay()
+            }
         }
         .background(Color.white)
         .toolbar(.hidden, for: .navigationBar)
@@ -48,6 +71,35 @@ struct FeedView: View {
             DailyQuestionView(onSubmitted: { showQuestion = false },
                               onClose: { showQuestion = false })
         }
+    }
+}
+
+/// 🔥 streak counter in the feed header — a gentle nudge to come back tomorrow.
+struct StreakChip: View {
+    let days: Int
+    @State private var flicker = false
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "flame.fill")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(LinearGradient(colors: [Color(hex: 0xFFC233), .qFlame],
+                                                startPoint: .top, endPoint: .bottom))
+                .scaleEffect(flicker ? 1.12 : 0.95, anchor: .bottom)
+                .symbolEffect(.bounce, value: days)
+            Text("\(days)")
+                .font(.quesly(15, .bold))
+                .foregroundStyle(Color.qInk)
+                .contentTransition(.numericText())
+        }
+        .padding(.horizontal, 10)
+        .frame(height: 32)
+        .background(Capsule().fill(Color(hex: 0xFFF1E6)))
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { flicker = true }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(days) day streak")
     }
 }
 
@@ -59,27 +111,27 @@ struct TodayQuestionBanner: View {
         Button(action: onTap) {
             HStack(alignment: .center, spacing: 12) {
                 QueslyMark(color: .qGreen, cutout: .qLime)
-                    .frame(width: 22)
-                    .frame(width: 40, height: 40)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.qLime))
+                    .frame(width: 24)
+                    .frame(width: 44, height: 44)
+                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.qLime))
 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text("Today's Question")
-                            .font(.quesly(10, .medium))
+                            .font(.quesly(13, .semibold))
                             .foregroundStyle(Color.qLime)
                         Spacer()
                         TimelineView(.periodic(from: .now, by: 60)) { ctx in
-                            HStack(spacing: 3) {
-                                Text("Left \(AppStore.timeLeftString(now: ctx.date))")
-                                Image(systemName: "clock.fill").font(.system(size: 8))
+                            HStack(spacing: 4) {
+                                Image(systemName: "clock.fill").font(.system(size: 10))
+                                Text("\(AppStore.timeLeftString(now: ctx.date)) left")
                             }
-                            .font(.quesly(10))
-                            .foregroundStyle(.white.opacity(0.6))
+                            .font(.quesly(13, .medium))
+                            .foregroundStyle(.white.opacity(0.75))
                         }
                     }
                     Text(question.text.uppercased())
-                        .font(.quesly(13, .bold))
+                        .font(.quesly(15, .bold))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
@@ -103,22 +155,22 @@ private struct AnswerPrompt: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("You haven't answered yet")
-                        .font(.quesly(14, .semibold))
+                        .font(.quesly(16, .semibold))
                         .foregroundStyle(Color.qGreen)
                     Text("Share your story to join today's conversation")
-                        .font(.quesly(12))
+                        .font(.quesly(14))
                         .foregroundStyle(Color.qGreen.opacity(0.8))
                 }
                 Spacer()
                 Image(systemName: "arrow.right.circle.fill")
-                    .font(.system(size: 26))
+                    .font(.system(size: 28))
                     .foregroundStyle(Color.qGreen)
             }
-            .padding(14)
-            .background(RoundedRectangle(cornerRadius: 14).fill(Color.qLime))
+            .padding(16)
+            .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.qLime))
             .padding(16)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
     }
 }
 

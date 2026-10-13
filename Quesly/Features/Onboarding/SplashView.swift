@@ -3,60 +3,84 @@ import SwiftUI
 /// Animated green-lime gradient splash from the prototype.
 struct SplashView: View {
     @State private var animate = false
+    @State private var showTagline = false
 
     var body: some View {
         ZStack {
             BrandGradientBackground(animate: animate)
-            VStack(spacing: 10) {
-                QueslyLogo(height: 34, background: .clear)
+            VStack(spacing: 12) {
+                QueslyLogo(height: 38, background: .clear, animateDots: true)
+                    .scaleEffect(animate ? 1 : 0.85)
+                    .opacity(animate ? 1 : 0)
                 Text("ONE QUESTION A DAY. MILLIONS OF STORIES")
-                    .font(.quesly(10, .bold))
-                    .tracking(0.6)
+                    .font(.quesly(11, .bold))
+                    .tracking(1.2)
                     .foregroundStyle(.white)
+                    .opacity(showTagline ? 1 : 0)
+                    .offset(y: showTagline ? 0 : 8)
             }
-            .scaleEffect(animate ? 1 : 0.92)
-            .opacity(animate ? 1 : 0)
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.8)) { animate = true }
+            withAnimation(.spring(response: 0.7, dampingFraction: 0.7)) { animate = true }
+            withAnimation(.easeOut(duration: 0.5).delay(0.35)) { showTagline = true }
         }
     }
 }
 
+/// Living brand gradient: soft lime and green blobs drifting over the brand green.
 struct BrandGradientBackground: View {
     var animate: Bool
+    @State private var drift = false
 
     var body: some View {
         ZStack {
             Color.qGreen
-            RadialGradient(colors: [Color.qLime.opacity(0.85), .clear],
-                           center: animate ? .topTrailing : .top,
-                           startRadius: 0, endRadius: 420)
-            RadialGradient(colors: [Color.qGreenLight.opacity(0.9), .clear],
-                           center: animate ? .bottomLeading : .bottom,
-                           startRadius: 0, endRadius: 460)
-            RadialGradient(colors: [Color.qGreenDeep.opacity(0.9), .clear],
-                           center: .center, startRadius: 0, endRadius: 260)
+            Circle()
+                .fill(Color.qLime.opacity(0.75))
+                .frame(width: 420, height: 420)
+                .blur(radius: 90)
+                .offset(x: drift ? 120 : 60, y: drift ? -300 : -220)
+            Circle()
+                .fill(Color.qGreenLight.opacity(0.9))
+                .frame(width: 460, height: 460)
+                .blur(radius: 100)
+                .offset(x: drift ? -140 : -60, y: drift ? 320 : 240)
+            Circle()
+                .fill(Color.qGreenDeep.opacity(0.85))
+                .frame(width: 300, height: 300)
+                .blur(radius: 80)
         }
         .ignoresSafeArea()
-        .animation(.easeInOut(duration: 2.4), value: animate)
+        .onAppear {
+            guard animate else { return }
+            withAnimation(.easeInOut(duration: 6).repeatForever(autoreverses: true)) { drift = true }
+        }
     }
 }
 
-/// Lime flash with the mark, shown after submitting an answer (frame 6 of the demo).
+/// Lime flash with the mark + confetti, shown right after submitting an answer.
 struct LimeTransitionView: View {
     @State private var pop = false
 
     var body: some View {
         ZStack {
             Color.qLime.ignoresSafeArea()
-            QueslyMark(color: .qGreen)
-                .frame(width: 80)
-                .scaleEffect(pop ? 1 : 0.6)
-                .opacity(pop ? 1 : 0)
+            ConfettiView()
+                .ignoresSafeArea()
+            VStack(spacing: 18) {
+                QueslyMark(color: .qGreen, animateDots: true)
+                    .frame(width: 84)
+                    .scaleEffect(pop ? 1 : 0.4)
+                Text("Answer posted!")
+                    .font(.quesly(24, .bold))
+                    .foregroundStyle(Color.qGreen)
+                    .opacity(pop ? 1 : 0)
+                    .offset(y: pop ? 0 : 12)
+            }
         }
+        .sensoryFeedback(.success, trigger: pop)
         .onAppear {
-            withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) { pop = true }
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.55)) { pop = true }
         }
     }
 }

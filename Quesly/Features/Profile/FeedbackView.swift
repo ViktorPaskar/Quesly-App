@@ -14,14 +14,17 @@ struct FeedbackView: View {
             VStack(spacing: 24) {
                 VStack(spacing: 14) {
                     Text("How would you rate your experience\nwith Quesly?")
-                        .font(.quesly(14, .medium))
+                        .font(.quesly(16, .medium))
                         .multilineTextAlignment(.center)
-                    HStack(spacing: 14) {
+                    HStack(spacing: 6) {
                         ForEach(1...5, id: \.self) { i in
                             Button { rating = i } label: {
                                 Image(systemName: "star.fill")
                                     .font(.system(size: 30))
                                     .foregroundStyle(i <= rating ? Color.qGreen : Color.qLine)
+                                    .scaleEffect(i <= rating ? 1.1 : 1)
+                                    .animation(.qSpring.delay(Double(i) * 0.04), value: rating)
+                                    .frame(width: 44, height: 44)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("\(i) stars")
@@ -32,7 +35,7 @@ struct FeedbackView: View {
                 Divider()
 
                 VStack(spacing: 14) {
-                    Text("What would you like to see improved?").font(.quesly(14, .medium))
+                    Text("What would you like to see improved?").font(.quesly(16, .medium))
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 10) {
                         ForEach(allTopics, id: \.self) { topic in
                             let on = topics.contains(topic)
@@ -40,12 +43,12 @@ struct FeedbackView: View {
                                 if on { topics.remove(topic) } else { topics.insert(topic) }
                             } label: {
                                 Text(topic)
-                                    .font(.quesly(11, .medium))
+                                    .font(.quesly(13, .medium))
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.8)
                                     .foregroundStyle(on ? .white : Color.qGreen)
                                     .frame(maxWidth: .infinity)
-                                    .frame(height: 32)
+                                    .frame(height: 40)
                                     .background(Capsule().fill(on ? Color.qGreen : .white))
                                     .overlay(Capsule().stroke(Color.qGreen, lineWidth: 1))
                             }
@@ -56,9 +59,9 @@ struct FeedbackView: View {
                 Divider()
 
                 VStack(spacing: 12) {
-                    Text("Anything else you'd like to tell us? (not required)").font(.quesly(14, .medium))
+                    Text("Anything else you'd like to tell us? (not required)").font(.quesly(16, .medium))
                     TextField("Start typing here", text: $message, axis: .vertical)
-                        .font(.quesly(14))
+                        .font(.quesly(16))
                         .lineLimit(8...12)
                         .padding(12)
                         .background(RoundedRectangle(cornerRadius: 10).stroke(Color.qLine))

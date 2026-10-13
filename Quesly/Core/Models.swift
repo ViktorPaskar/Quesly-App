@@ -35,6 +35,16 @@ enum BadgeTier: String, Codable, CaseIterable {
         case .green: return Color(hex: 0x6CC417)
         }
     }
+
+    var symbol: String {
+        switch self {
+        case .gold: return "crown.fill"
+        case .red: return "flame.fill"
+        case .purple: return "sparkles"
+        case .blue: return "bolt.fill"
+        case .green: return "leaf.fill"
+        }
+    }
 }
 
 // MARK: - Question
@@ -48,40 +58,42 @@ struct DailyQuestion: Identifiable, Codable, Hashable {
 
 // MARK: - Answer
 
+/// Positive-only reactions. One reaction per person per answer (like iMessage tapbacks).
 enum ReactionKind: String, Codable, CaseIterable, Identifiable {
-    case love, fire, smile, clap
+    case love, fire, haha, touched
 
     var id: String { rawValue }
 
-    var symbol: String {
+    var emoji: String {
         switch self {
-        case .love: return "heart"
-        case .fire: return "flame"
-        case .smile: return "face.smiling"
-        case .clap: return "hands.clap"
+        case .love: return "❤️"
+        case .fire: return "🔥"
+        case .haha: return "😂"
+        case .touched: return "🥹"
         }
     }
 
-    var filledSymbol: String {
+    var label: String {
         switch self {
-        case .love: return "heart.fill"
-        case .fire: return "flame.fill"
-        case .smile: return "face.smiling.inverse"
-        case .clap: return "hands.clap.fill"
-        }
-    }
-
-    var color: Color {
-        switch self {
-        case .love: return .qHeart
-        case .fire: return .qFire
-        case .smile: return .qSmile
-        case .clap: return .qClap
+        case .love: return "Love"
+        case .fire: return "Fire"
+        case .haha: return "Haha"
+        case .touched: return "Touched"
         }
     }
 }
 
+enum AnswerVisibility: String, Codable, CaseIterable, Identifiable {
+    case everyone, friends
+    var id: String { rawValue }
+
+    var title: String { self == .everyone ? "Everyone" : "Friends" }
+    var symbol: String { self == .everyone ? "globe.europe.africa.fill" : "person.2.fill" }
+}
+
 struct Answer: Identifiable, Codable, Hashable {
+    static let editWindow: TimeInterval = 5 * 60
+
     var id: String
     var questionId: String
     var questionText: String
@@ -89,11 +101,20 @@ struct Answer: Identifiable, Codable, Hashable {
     var text: String
     var createdAt: Date
     var reactions: [ReactionKind: Int] = [:]
-    var myReactions: Set<ReactionKind> = []
+    var myReaction: ReactionKind? = nil
     var isSaved: Bool = false
     var isPinned: Bool = false
+    var visibility: AnswerVisibility = .everyone
+    var isEdited: Bool = false
 
     func count(_ kind: ReactionKind) -> Int { reactions[kind, default: 0] }
+    var totalReactions: Int { reactions.values.reduce(0, +) }
+    /// Reaction kinds ordered by popularity, for the author's summary chip.
+    var topReactions: [ReactionKind] {
+        ReactionKind.allCases.filter { count($0) > 0 }.sorted { count($0) > count($1) }
+    }
+
+    func isEditable(now: Date = .now) -> Bool { now.timeIntervalSince(createdAt) < Self.editWindow }
 }
 
 // MARK: - Notifications
@@ -104,6 +125,19 @@ struct AppNotification: Identifiable, Codable, Hashable {
     var id: String
     var kind: Kind
     var actorId: String?
+    var message: String
+    var date: Date
+    var answerId: String? = nil
+    var reaction: ReactionKind? = nil
+}
+
+/// Several reactions on the same answer collapsed into one row.
+struct NotificationGroup: Identifiable, Hashable {
+    var id: String
+    var kind: AppNotification.Kind
+    var actorIds: [String]
+    var reactions: [ReactionKind]
+    var answerId: String?
     var message: String
     var date: Date
 }
@@ -122,4 +156,17 @@ struct Achievement: Identifiable, Hashable {
     var isSpecial: Bool = false
 
     var isUnlocked: Bool { progress >= goal }
+}
+
+// MARK: - Moderation
+
+enum ReportReason: String, CaseIterable, Identifiable {
+    case bullying = "Bullying or harassment"
+    case hate = "Hate speech or symbols"
+    case selfHarm = "Self-harm or suicide"
+    case sexual = "Nudity or sexual content"
+    case spam = "Spam or scam"
+    case other = "Something else"
+
+    var id: String { rawValue }
 }

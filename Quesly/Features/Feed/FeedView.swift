@@ -130,7 +130,7 @@ struct TodayQuestionBanner: View {
                         .lineLimit(2)
                 }
             }
-            .padding(.horizontal, DS.Space.screen)
+            .padding(.horizontal, DS.Space.m)
             .padding(.vertical, 16)
             .frame(maxWidth: .infinity)
             .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qGreen))

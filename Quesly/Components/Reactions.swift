@@ -43,12 +43,11 @@ struct ReactionControl: View {
                         .font(.quesly(14, .semibold))
                         .foregroundStyle(Color.qGreen)
                 } else {
-                    Image(systemName: "face.smiling")
-                        .font(.system(size: 20, weight: .medium))
+                    Icon(.smiley, size: 22)
                         .overlay(alignment: .topTrailing) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundStyle(Color.qGreen, .white)
+                            Icon(.plusCircleFill, size: 11)
+                                .foregroundStyle(Color.qGreen)
+                                .background(Circle().fill(Color.qField).padding(1))
                                 .offset(x: 4, y: -3)
                         }
                     Text("React")
@@ -77,8 +76,7 @@ struct ReactionControl: View {
                 }
             }
             Button { isTrayOpen = false } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .bold))
+                Icon(.xBold, size: 14)
                     .foregroundStyle(Color.qGray)
                     .frame(width: 32, height: 44)
             }
@@ -126,7 +124,7 @@ struct ReactionSummary: View {
     var body: some View {
         HStack(spacing: 6) {
             if answer.totalReactions == 0 {
-                Image(systemName: "eye.slash").font(.system(size: 12, weight: .semibold))
+                Icon(.eyeSlash, size: 15)
                 Text("No reactions yet").font(.quesly(13, .medium))
             } else {
                 HStack(spacing: -6) {
@@ -142,7 +140,7 @@ struct ReactionSummary: View {
                     .font(.quesly(14, .semibold))
                     .foregroundStyle(Color.qInk)
                     .contentTransition(.numericText())
-                Image(systemName: "lock.fill").font(.system(size: 9, weight: .bold))
+                Icon(.lockSimpleFill, size: 11)
                     .foregroundStyle(Color.qGray.opacity(0.7))
             }
         }

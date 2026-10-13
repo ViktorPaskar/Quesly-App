@@ -23,8 +23,7 @@ struct ShareStorySheet: View {
                 Text("Share as story").font(.quesly(20, .semibold))
                 Spacer()
                 Button { dismiss() } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 28))
+                    Icon(.xCircleFill, size: 30)
                         .foregroundStyle(Color.qGray.opacity(0.45))
                 }
                 .accessibilityLabel("Close")
@@ -66,7 +65,7 @@ struct ShareStorySheet: View {
             if let rendered {
                 ShareLink(item: Image(uiImage: rendered),
                           preview: SharePreview("My Quesly answer", image: Image(uiImage: rendered))) {
-                    Label("Share to stories", systemImage: "square.and.arrow.up")
+                    Label { Text("Share to stories") } icon: { Icon(.paperPlaneTiltFill, size: 20) }
                         .font(.quesly(17, .semibold))
                         .foregroundStyle(Color.qGreen)
                         .frame(maxWidth: .infinity)
@@ -78,11 +77,11 @@ struct ShareStorySheet: View {
                     UIImageWriteToSavedPhotosAlbum(rendered, nil, nil, nil)
                     withAnimation(.qSpring) { savedToPhotos = true }
                 } label: {
-                    Label(savedToPhotos ? "Saved to Photos" : "Save to Photos",
-                          systemImage: savedToPhotos ? "checkmark.circle.fill" : "arrow.down.circle")
+                    Label { Text(savedToPhotos ? "Saved to Photos" : "Save to Photos") } icon: {
+                        Icon(savedToPhotos ? .checkCircleFill : .downloadSimple, size: 20)
+                    }
                         .font(.quesly(16, .medium))
                         .foregroundStyle(Color.qGreen)
-                        .contentTransition(.symbolEffect(.replace))
                         .frame(height: 44)
                 }
                 .disabled(savedToPhotos)
@@ -139,8 +138,8 @@ struct StoryCard: View {
                     ZStack {
                         Circle()
                             .stroke(theme.arc, lineWidth: 64)
-                            .frame(width: 380, height: 380)
-                            .offset(x: 200, y: -300)
+                            .frame(width: 340, height: 340)
+                            .offset(x: 230, y: -340)
                         Circle()
                             .stroke(theme.arc.opacity(0.35), lineWidth: 2)
                             .frame(width: 520, height: 520)
@@ -194,8 +193,7 @@ struct StoryCard: View {
                 HStack(spacing: 8) {
                     Text("Answer yourself on Quesly")
                         .font(.custom("Outfit-SemiBold", fixedSize: 15))
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 13, weight: .bold))
+                    Icon(.arrowUpRightBold, size: 15)
                 }
                 .foregroundStyle(theme == .green ? Color.qGreen : Color.qLime)
                 .padding(.horizontal, 18)

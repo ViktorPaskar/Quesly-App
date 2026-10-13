@@ -46,7 +46,7 @@ struct DiscoverView: View {
                             }
                         }
                     } else if results.isEmpty {
-                        EmptyStateView(symbol: "magnifyingglass",
+                        EmptyStateView(icon: .magnifyingGlassBold,
                                        title: "No one found",
                                        message: "Nobody called “\(query)” yet. Invite them to Quesly!")
                     } else {

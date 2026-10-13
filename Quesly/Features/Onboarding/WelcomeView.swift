@@ -4,11 +4,11 @@ struct WelcomeView: View {
     @State private var authMode: AuthView.Mode?
     @State private var appeared = false
 
-    private let features: [(String, String, String)] = [
-        ("sun.max.fill", "1 question every 24h", "A new story prompt every morning"),
-        ("globe.europe.africa.fill", "World & Friends feeds", "See how people answer, near and far"),
-        ("heart.fill", "Positive reactions only", "No dislikes. No hate. Just good vibes"),
-        ("square.and.arrow.up.fill", "Instant story export", "Share your answer to IG & TikTok"),
+    private let features: [(Ph, String, String)] = [
+        (.sunFill, "1 question every 24h", "A new story prompt every morning"),
+        (.globeHemisphereWestFill, "World & Friends feeds", "See how people answer, near and far"),
+        (.heartFill, "Positive reactions only", "No dislikes. No hate. Just good vibes"),
+        (.paperPlaneTiltFill, "Instant story export", "Share your answer to IG & TikTok"),
     ]
 
     var body: some View {
@@ -42,7 +42,7 @@ struct WelcomeView: View {
                 .padding(.bottom, 36)
 
                 VStack(spacing: 6) {
-                    LimeButton(title: "Get started", systemImage: "arrow.right") { authMode = .signUp }
+                    LimeButton(title: "Get started", icon: .arrowRightBold) { authMode = .signUp }
                     Button("I already have an account") { authMode = .signIn }
                         .font(.quesly(16, .medium))
                         .foregroundStyle(.white)
@@ -63,10 +63,9 @@ struct WelcomeView: View {
         }
     }
 
-    private func feature(_ symbol: String, _ title: String, _ subtitle: String) -> some View {
+    private func feature(_ icon: Ph, _ title: String, _ subtitle: String) -> some View {
         HStack(spacing: 14) {
-            Image(systemName: symbol)
-                .font(.system(size: 17, weight: .semibold))
+            Icon(icon, size: 20)
                 .foregroundStyle(Color.qGreen)
                 .frame(width: 42, height: 42)
                 .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.qLime))

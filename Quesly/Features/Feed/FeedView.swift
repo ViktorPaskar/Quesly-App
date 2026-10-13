@@ -37,12 +37,12 @@ struct FeedView: View {
                         Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 74)
                     }
                     if scope == .friends && answers.filter({ $0.authorId != store.me.id }).isEmpty {
-                        EmptyStateView(symbol: "person.2.wave.2.fill",
+                        EmptyStateView(icon: .usersThreeFill,
                                        title: "Your friends are quiet",
                                        message: "None of the people you follow answered yet. Invite friends or discover new people.") {
                             VStack(spacing: 10) {
                                 ShareLink(item: Invite.text(for: store.me.username)) {
-                                    Label("Invite friends", systemImage: "paperplane.fill")
+                                    Label { Text("Invite friends") } icon: { Icon(.paperPlaneTiltFill, size: 18) }
                                         .font(.quesly(16, .semibold))
                                         .foregroundStyle(.white)
                                         .frame(maxWidth: .infinity).frame(height: 50)
@@ -81,12 +81,11 @@ struct StreakChip: View {
 
     var body: some View {
         HStack(spacing: 3) {
-            Image(systemName: "flame.fill")
-                .font(.system(size: 15, weight: .bold))
+            Icon(.fireFill, size: 18)
                 .foregroundStyle(LinearGradient(colors: [Color(hex: 0xFFC233), .qFlame],
                                                 startPoint: .top, endPoint: .bottom))
                 .scaleEffect(flicker ? 1.12 : 0.95, anchor: .bottom)
-                .symbolEffect(.bounce, value: days)
+                .pop(on: days)
             Text("\(days)")
                 .font(.quesly(15, .bold))
                 .foregroundStyle(Color.qInk)
@@ -123,7 +122,7 @@ struct TodayQuestionBanner: View {
                         Spacer()
                         TimelineView(.periodic(from: .now, by: 60)) { ctx in
                             HStack(spacing: 4) {
-                                Image(systemName: "clock.fill").font(.system(size: 10))
+                                Icon(.clock, size: 13)
                                 Text("\(AppStore.timeLeftString(now: ctx.date)) left")
                             }
                             .font(.quesly(13, .medium))
@@ -140,9 +139,24 @@ struct TodayQuestionBanner: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
-            .background(Color.qGreen)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(LinearGradient(colors: [.qGreen, .qGreenDeep], startPoint: .topLeading, endPoint: .bottomTrailing))
+            )
+            .overlay(alignment: .topTrailing) {
+                // Small lime arc echoing the brand.
+                Circle()
+                    .trim(from: 0.5, to: 0.75)
+                    .stroke(Color.qLime.opacity(0.25), style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    .frame(width: 90, height: 90)
+                    .offset(x: 50, y: 50)
+                    .allowsHitTesting(false)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
     }
 }
 
@@ -162,8 +176,10 @@ private struct AnswerPrompt: View {
                         .foregroundStyle(Color.qGreen.opacity(0.8))
                 }
                 Spacer()
-                Image(systemName: "arrow.right.circle.fill")
-                    .font(.system(size: 28))
+                Icon(.arrowRightBold, size: 18)
+                    .foregroundStyle(Color.qLime)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(Color.qGreen))
                     .foregroundStyle(Color.qGreen)
             }
             .padding(16)

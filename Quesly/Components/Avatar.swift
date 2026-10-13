@@ -21,7 +21,7 @@ struct Avatar: View {
             .frame(width: size, height: size)
             .overlay(alignment: .bottomTrailing) {
                 if showsBadge, let badge = user?.badge {
-                    HexBadge(color: badge.color, symbol: badge.symbol)
+                    HexBadge(color: badge.color, icon: badge.icon)
                         .frame(width: size * 0.3, height: size * 0.3)
                         .padding(3)
                         .background(Circle().fill(.white))

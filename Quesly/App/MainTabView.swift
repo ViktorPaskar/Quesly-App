@@ -3,19 +3,21 @@ import SwiftUI
 enum MainTab: CaseIterable {
     case feed, discover, notifications, profile
 
-    var symbol: String {
+    var icon: Ph {
         switch self {
-        case .feed: return "house"
-        case .discover: return "magnifyingglass"
-        case .notifications: return "bell"
-        case .profile: return "person"
+        case .feed: return .house
+        case .discover: return .magnifyingGlass
+        case .notifications: return .bell
+        case .profile: return .user
         }
     }
 
-    var activeSymbol: String {
+    var activeIcon: Ph {
         switch self {
-        case .discover: return "magnifyingglass"
-        default: return symbol + ".fill"
+        case .feed: return .houseFill
+        case .discover: return .magnifyingGlassBold
+        case .notifications: return .bellFill
+        case .profile: return .userFill
         }
     }
 
@@ -85,10 +87,9 @@ struct MainTabView: View {
                 let active = tab == t
                 Button { select(t) } label: {
                     VStack(spacing: 5) {
-                        Image(systemName: active ? t.activeSymbol : t.symbol)
-                            .font(.system(size: 21, weight: active ? .semibold : .regular))
-                            .foregroundStyle(active ? Color.qGreen : Color.qInk.opacity(0.75))
-                            .symbolEffect(.bounce, value: active)
+                        Icon(active ? t.activeIcon : t.icon, size: 27)
+                            .foregroundStyle(active ? Color.qGreen : Color.qInk.opacity(0.55))
+                            .pop(on: active)
                             .overlay(alignment: .topTrailing) {
                                 if t == .notifications && store.unreadNotifications > 0 && !active {
                                     Text("\(min(store.unreadNotifications, 9))")

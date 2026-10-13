@@ -3,7 +3,7 @@ import SwiftUI
 /// Lime pill CTA used on green screens ("Answer", "Submit").
 struct LimeButton: View {
     let title: String
-    var systemImage: String? = nil
+    var icon: Ph? = nil
     var isEnabled = true
     let action: () -> Void
 
@@ -11,7 +11,7 @@ struct LimeButton: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Text(title)
-                if let systemImage { Image(systemName: systemImage).font(.system(size: 15, weight: .bold)) }
+                if let icon { Icon(icon, size: 19) }
             }
             .font(.quesly(17, .bold))
             .foregroundStyle(Color.qGreen)
@@ -56,7 +56,7 @@ struct FollowPill: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 if isFollowing {
-                    Image(systemName: "checkmark").font(.system(size: compact ? 10 : 11, weight: .bold))
+                    Icon(.checkBold, size: compact ? 11 : 13)
                         .transition(.scale.combined(with: .opacity))
                 }
                 Text(isFollowing ? "Following" : "Follow")
@@ -122,8 +122,7 @@ struct BackHeader: View {
     var body: some View {
         HStack(spacing: 8) {
             Button { dismiss() } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .semibold))
+                Icon(.caretLeftBold, size: 22)
                     .foregroundStyle(Color.qInk)
                     .frame(width: 44, height: 44)
             }
@@ -197,7 +196,7 @@ enum RelativeTime {
 
 /// Friendly empty state with an optional action.
 struct EmptyStateView<Actions: View>: View {
-    let symbol: String
+    let icon: Ph
     let title: String
     let message: String
     @ViewBuilder var actions: () -> Actions
@@ -205,8 +204,7 @@ struct EmptyStateView<Actions: View>: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            Image(systemName: symbol)
-                .font(.system(size: 34, weight: .semibold))
+            Icon(icon, size: 38)
                 .foregroundStyle(Color.qGreen)
                 .frame(width: 84, height: 84)
                 .background(Circle().fill(Color.qLime))
@@ -227,8 +225,8 @@ struct EmptyStateView<Actions: View>: View {
 }
 
 extension EmptyStateView where Actions == EmptyView {
-    init(symbol: String, title: String, message: String) {
-        self.init(symbol: symbol, title: title, message: message) { EmptyView() }
+    init(icon: Ph, title: String, message: String) {
+        self.init(icon: icon, title: title, message: message) { EmptyView() }
     }
 }
 

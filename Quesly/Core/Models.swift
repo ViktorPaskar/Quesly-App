@@ -36,13 +36,13 @@ enum BadgeTier: String, Codable, CaseIterable {
         }
     }
 
-    var symbol: String {
+    var icon: Ph {
         switch self {
-        case .gold: return "crown.fill"
-        case .red: return "flame.fill"
-        case .purple: return "sparkles"
-        case .blue: return "bolt.fill"
-        case .green: return "leaf.fill"
+        case .gold: return .crownSimpleFill
+        case .red: return .fireFill
+        case .purple: return .sparkleFill
+        case .blue: return .lightningFill
+        case .green: return .leafFill
         }
     }
 }
@@ -88,7 +88,7 @@ enum AnswerVisibility: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var title: String { self == .everyone ? "Everyone" : "Friends" }
-    var symbol: String { self == .everyone ? "globe.europe.africa.fill" : "person.2.fill" }
+    var icon: Ph { self == .everyone ? .globeHemisphereWestFill : .usersFill }
 }
 
 struct Answer: Identifiable, Codable, Hashable {
@@ -148,7 +148,7 @@ struct Achievement: Identifiable, Hashable {
     var id: String
     var title: String
     var subtitle: String
-    var symbol: String
+    var icon: Ph
     var color: Color
     var progress: Int
     var goal: Int

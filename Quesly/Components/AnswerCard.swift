@@ -100,7 +100,7 @@ struct AnswerCard: View {
     private var header: some View {
         HStack(spacing: 6) {
             if answer.isPinned && isMine {
-                Image(systemName: "pin.fill").font(.system(size: 11)).foregroundStyle(Color.qGreen)
+                Icon(.pushPinFill, size: 13).foregroundStyle(Color.qGreen)
             }
             NavigationLink(value: Route.profile(answer.authorId)) {
                 Text(author?.username ?? "unknown")
@@ -110,14 +110,13 @@ struct AnswerCard: View {
             }
             .buttonStyle(.plain)
             if let badge = author?.badge {
-                HexBadge(color: badge.color, symbol: badge.symbol).frame(width: 16, height: 16)
+                HexBadge(color: badge.color, icon: badge.icon).frame(width: 16, height: 16)
             }
             Text(RelativeTime.short(answer.createdAt) + (answer.isEdited ? " · edited" : ""))
                 .font(.quesly(13)).foregroundStyle(Color.qGray)
                 .lineLimit(1)
             if answer.visibility == .friends {
-                Image(systemName: "person.2.fill")
-                    .font(.system(size: 10))
+                Icon(.usersFill, size: 13)
                     .foregroundStyle(Color.qGray)
                     .accessibilityLabel("Friends only")
             }
@@ -133,19 +132,18 @@ struct AnswerCard: View {
 
     private var moreMenu: some View {
         Menu {
-            Button { isSharing = true } label: { Label("Share as story", systemImage: "square.and.arrow.up") }
-            Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", systemImage: "doc.on.doc") }
+            Button { isSharing = true } label: { Label("Share as story", image: Ph.paperPlaneTilt.assetName) }
+            Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", image: Ph.copy.assetName) }
             if isMine {
                 if answer.isEditable() {
-                    Button { isEditing = true } label: { Label("Edit", systemImage: "pencil") }
+                    Button { isEditing = true } label: { Label("Edit", image: Ph.pencilSimple.assetName) }
                 }
-                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
+                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", image: Ph.trash.assetName) }
             } else {
-                Button(role: .destructive) { isReporting = true } label: { Label("Report or block", systemImage: "flag") }
+                Button(role: .destructive) { isReporting = true } label: { Label("Report or block", image: Ph.flag.assetName) }
             }
         } label: {
-            Image(systemName: "ellipsis")
-                .font(.system(size: 15, weight: .semibold))
+            Icon(.dotsThreeBold, size: 22)
                 .foregroundStyle(Color.qGray)
                 .frame(width: 36, height: 36)
                 .contentShape(Rectangle())
@@ -165,15 +163,15 @@ struct AnswerCard: View {
             Spacer(minLength: 0)
             if !isTrayOpen {
                 Group {
-                    iconButton(answer.isSaved ? "bookmark.fill" : "bookmark",
+                    iconButton(answer.isSaved ? .bookmarkSimpleFill : .bookmarkSimple,
                                tint: answer.isSaved ? .qGreen : .qGray,
                                label: answer.isSaved ? "Remove from saved" : "Save") {
                         withAnimation(.qSpring) { store.toggleSave(answer.id) }
                     }
-                    .symbolEffect(.bounce, value: answer.isSaved)
+                    .pop(on: answer.isSaved)
                     .sensoryFeedback(.selection, trigger: answer.isSaved)
 
-                    iconButton("square.and.arrow.up", tint: .qGray, label: "Share") { isSharing = true }
+                    iconButton(.paperPlaneTilt, tint: .qGray, label: "Share") { isSharing = true }
                 }
                 .transition(.opacity)
             }
@@ -181,10 +179,9 @@ struct AnswerCard: View {
         .animation(.qSpring, value: isTrayOpen)
     }
 
-    private func iconButton(_ symbol: String, tint: Color, label: String, action: @escaping () -> Void) -> some View {
+    private func iconButton(_ icon: Ph, tint: Color, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 19, weight: .regular))
+            Icon(icon, size: 23)
                 .foregroundStyle(tint)
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
@@ -228,7 +225,7 @@ struct EditAnswerSheet: View {
                 HStack {
                     TimelineView(.periodic(from: .now, by: 1)) { ctx in
                         let left = max(0, Int(Answer.editWindow - ctx.date.timeIntervalSince(answer.createdAt)))
-                        Label(String(format: "%d:%02d left to edit", left / 60, left % 60), systemImage: "timer")
+                        Label { Text(String(format: "%d:%02d left to edit", left / 60, left % 60)) } icon: { Icon(.timer, size: 16) }
                             .font(.quesly(13, .medium))
                             .foregroundStyle(left < 60 ? Color.qFlame : Color.qGray)
                             .monospacedDigit()
@@ -298,7 +295,7 @@ struct ReportSheet: View {
                         HStack {
                             Text(reason.rawValue).font(.quesly(16)).foregroundStyle(Color.qInk)
                             Spacer()
-                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                            Icon(.caretRightBold, size: 14)
                                 .foregroundStyle(Color.qGray)
                         }
                     }
@@ -311,7 +308,7 @@ struct ReportSheet: View {
             }
             Section {
                 Button(role: .destructive) { confirmBlock = true } label: {
-                    Label("Block @\(author?.username ?? "")", systemImage: "hand.raised.fill")
+                    Label { Text("Block @\(author?.username ?? "")") } icon: { Icon(.prohibitFill, size: 18) }
                         .font(.quesly(16, .medium))
                 }
             }
@@ -321,10 +318,9 @@ struct ReportSheet: View {
     private var thanks: some View {
         VStack(spacing: 16) {
             Spacer()
-            Image(systemName: "checkmark.shield.fill")
-                .font(.system(size: 52))
+            Icon(.shieldCheckFill, size: 60)
                 .foregroundStyle(Color.qGreen)
-                .symbolEffect(.bounce, value: sentReason)
+                .pop(on: sentReason)
             Text("Thanks for letting us know").font(.quesly(22, .semibold))
             Text("We'll review this answer. You can also block this person so you never see their answers again.")
                 .font(.quesly(15)).foregroundStyle(Color.qGray).multilineTextAlignment(.center)

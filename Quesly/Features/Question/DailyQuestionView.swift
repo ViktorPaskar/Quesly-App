@@ -36,7 +36,7 @@ struct DailyQuestionView: View {
                         Label {
                             Text("**\(AppStore.timeLeftString(now: context.date))** left until the next question")
                         } icon: {
-                            Image(systemName: "hourglass")
+                            Icon(.hourglassMediumFill, size: 14)
                         }
                         .font(.quesly(13))
                         .foregroundStyle(.white.opacity(0.85))
@@ -44,7 +44,7 @@ struct DailyQuestionView: View {
                     .padding(.bottom, 14)
                 }
                 LimeButton(title: isComposing ? "Submit" : "Answer",
-                           systemImage: isComposing ? "paperplane.fill" : "pencil",
+                           icon: isComposing ? .paperPlaneTiltFill : .pencilSimpleFill,
                            isEnabled: !isComposing || canSubmit) {
                     if isComposing {
                         submit()
@@ -85,8 +85,7 @@ struct DailyQuestionView: View {
                 HStack {
                     Spacer()
                     Button(action: onClose) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .semibold))
+                        Icon(.xBold, size: 20)
                             .foregroundStyle(.white.opacity(0.85))
                             .frame(width: 44, height: 44)
                     }
@@ -199,7 +198,7 @@ struct VisibilityPicker: View {
                 Button {
                     withAnimation(.qSpring) { selection = option }
                 } label: {
-                    Label(option.title, systemImage: option.symbol)
+                    Label { Text(option.title) } icon: { Icon(option.icon, size: 16) }
                         .font(.quesly(14, .semibold))
                         .foregroundStyle(on ? Color.qGreen : .white.opacity(0.85))
                         .padding(.horizontal, 16)

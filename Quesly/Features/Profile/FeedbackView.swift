@@ -19,8 +19,7 @@ struct FeedbackView: View {
                     HStack(spacing: 6) {
                         ForEach(1...5, id: \.self) { i in
                             Button { rating = i } label: {
-                                Image(systemName: "star.fill")
-                                    .font(.system(size: 30))
+                                Icon(.starFill, size: 32)
                                     .foregroundStyle(i <= rating ? Color.qGreen : Color.qLine)
                                     .scaleEffect(i <= rating ? 1.1 : 1)
                                     .animation(.qSpring.delay(Double(i) * 0.04), value: rating)

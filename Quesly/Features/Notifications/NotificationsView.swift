@@ -10,7 +10,7 @@ struct NotificationsView: View {
             Rectangle().fill(Color.qLine).frame(height: 1)
 
             if groups.isEmpty {
-                EmptyStateView(symbol: "bell.fill", title: "All caught up",
+                EmptyStateView(icon: .bellRingingFill, title: "All caught up",
                                message: "Reactions, new followers and badges will show up here.")
                 Spacer()
             } else {
@@ -81,8 +81,7 @@ struct NotificationsView: View {
                         .overlay(Circle().stroke(Color.qLine))
                         .offset(x: 4, y: 4)
                 } else if group.kind == .follow {
-                    Image(systemName: "person.fill.badge.plus")
-                        .font(.system(size: 10, weight: .bold))
+                    Icon(.userPlusFill, size: 12)
                         .foregroundStyle(Color.qLime)
                         .frame(width: 22, height: 22)
                         .background(Circle().fill(Color.qGreen))
@@ -91,8 +90,7 @@ struct NotificationsView: View {
                 }
             }
         case .badge:
-            Image(systemName: "rosette")
-                .font(.system(size: 18, weight: .semibold))
+            Icon(.medalFill, size: 22)
                 .foregroundStyle(Color.qGreen)
                 .frame(width: 40, height: 40)
                 .background(Circle().fill(Color.qLime))

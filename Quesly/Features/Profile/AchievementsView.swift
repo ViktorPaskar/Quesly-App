@@ -48,7 +48,7 @@ struct AchievementsView: View {
 
     private func row(_ item: Achievement) -> some View {
         HStack(spacing: 14) {
-            HexBadge(color: item.color, symbol: item.symbol, isLocked: item.progress == 0 && !item.isUnlocked)
+            HexBadge(color: item.color, icon: item.icon, isLocked: item.progress == 0 && !item.isUnlocked)
                 .frame(width: 52, height: 52)
 
             VStack(alignment: .leading, spacing: 3) {
@@ -74,10 +74,9 @@ struct AchievementsView: View {
             }
             Spacer(minLength: 0)
             if item.isUnlocked {
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 22))
+                Icon(.sealCheckFill, size: 26)
                     .foregroundStyle(Color.qGreen)
-                    .symbolEffect(.bounce, value: animateBars)
+                    .pop(on: animateBars)
                     .accessibilityLabel("Unlocked")
             }
         }

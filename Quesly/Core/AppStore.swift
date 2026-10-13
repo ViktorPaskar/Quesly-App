@@ -336,6 +336,21 @@ final class AppStore {
         return count
     }
 
+    struct WeekDay { let date: Date; let answered: Bool; let isToday: Bool }
+
+    /// Monday…Sunday of the current week with whether the user answered that day.
+    var currentWeek: [WeekDay] {
+        var cal = Calendar.current
+        cal.firstWeekday = 2
+        let today = cal.startOfDay(for: .now)
+        let start = cal.dateInterval(of: .weekOfYear, for: today)?.start ?? today
+        let answeredDays = Set(myAnswers.map { cal.startOfDay(for: $0.createdAt) })
+        return (0..<7).compactMap { offset in
+            guard let day = cal.date(byAdding: .day, value: offset, to: start) else { return nil }
+            return WeekDay(date: day, answered: answeredDays.contains(day), isToday: day == today)
+        }
+    }
+
     private var weekendsAnswered: Int {
         let cal = Calendar.current
         let weekends = myAnswers.filter { cal.isDateInWeekend($0.createdAt) }
@@ -351,25 +366,25 @@ final class AppStore {
         let answered = myAnswers.count
         return [
             .init(id: "crown", title: "The Crowned One", subtitle: "Given by Quesly for exceptional impact",
-                  symbol: "crown.fill", color: Color(hex: 0xE2A72E), progress: me.badge == .gold ? 1 : 0, goal: 1, isSpecial: true),
+                  icon: .crownSimpleFill, color: Color(hex: 0xE2A72E), progress: me.badge == .gold ? 1 : 0, goal: 1, isSpecial: true),
             .init(id: "first", title: "The First Step", subtitle: "You answered your first question",
-                  symbol: "figure.walk", color: Color(hex: 0x7ED321), progress: min(answered, 1), goal: 1),
+                  icon: .footprintsFill, color: Color(hex: 0x7ED321), progress: min(answered, 1), goal: 1),
             .init(id: "streak3", title: "Consistent Soul", subtitle: "You answered 3 days in a row",
-                  symbol: "3.circle.fill", color: Color(hex: 0xF5A623), progress: min(streak, 3), goal: 3),
+                  icon: .fireFill, color: Color(hex: 0xF5A623), progress: min(streak, 3), goal: 3),
             .init(id: "vibe", title: "Vibe Connector", subtitle: "Invited 10 friends to join Quesly",
-                  symbol: "hand.wave.fill", color: Color(hex: 0xE84FA5), progress: 7, goal: 10),
+                  icon: .handWavingFill, color: Color(hex: 0xE84FA5), progress: 7, goal: 10),
             .init(id: "streak14", title: "Steady Flow", subtitle: "You answered 14 days in a row",
-                  symbol: "14.circle.fill", color: Color(hex: 0x6F8FC0), progress: min(streak, 14), goal: 14),
+                  icon: .lightningFill, color: Color(hex: 0x6F8FC0), progress: min(streak, 14), goal: 14),
             .init(id: "weekend", title: "Weekend Reflector", subtitle: "Answered on 5 different weekends",
-                  symbol: "leaf.fill", color: Color(hex: 0xB0643A), progress: min(weekendsAnswered, 5), goal: 5),
+                  icon: .leafFill, color: Color(hex: 0xB0643A), progress: min(weekendsAnswered, 5), goal: 5),
             .init(id: "voice", title: "Thoughtful Voice", subtitle: "Answered 30 questions total",
-                  symbol: "30.circle.fill", color: Color(hex: 0x3BA3A0), progress: min(answered, 30), goal: 30),
+                  icon: .chatCircleTextFill, color: Color(hex: 0x3BA3A0), progress: min(answered, 30), goal: 30),
             .init(id: "support", title: "Community Supporter", subtitle: "Reacted to 100 different people's answers",
-                  symbol: "heart.fill", color: Color(hex: 0xE5484D), progress: min(reactedCount, 100), goal: 100),
+                  icon: .heartFill, color: Color(hex: 0xE5484D), progress: min(reactedCount, 100), goal: 100),
             .init(id: "story", title: "Storyteller", subtitle: "Shared 10 answers to your stories",
-                  symbol: "square.and.arrow.up.fill", color: Color(hex: 0x9B5CF6), progress: 0, goal: 10),
+                  icon: .shareNetworkFill, color: Color(hex: 0x9B5CF6), progress: 0, goal: 10),
             .init(id: "early", title: "Early Adopter", subtitle: "Joined Quesly in its first year",
-                  symbol: "sparkles", color: Color(hex: 0x07583D), progress: 1, goal: 1),
+                  icon: .sparkleFill, color: Color(hex: 0x07583D), progress: 1, goal: 1),
         ]
     }
 

@@ -4,11 +4,11 @@ struct ProfileMenuView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 10) {
-                row("Achievements", "rosette", Color(hex: 0xE2A72E), .achievements)
-                row("Invite Friends", "paperplane.fill", Color(hex: 0xE84FA5), .invite)
-                row("Settings", "gearshape.fill", .qGreen, .settings)
-                row("Blocked people", "hand.raised.fill", Color(hex: 0xE5484D), .blocked)
-                row("Feedback", "bubble.left.and.text.bubble.right.fill", Color(hex: 0x2D7BF0), .feedback)
+                row("Achievements", .medalFill, Color(hex: 0xE2A72E), .achievements)
+                row("Invite Friends", .paperPlaneTiltFill, Color(hex: 0xE84FA5), .invite)
+                row("Settings", .gearSixFill, .qGreen, .settings)
+                row("Blocked people", .prohibitFill, Color(hex: 0xE5484D), .blocked)
+                row("Feedback", .chatCircleTextFill, Color(hex: 0x2D7BF0), .feedback)
             }
             .padding(16)
         }
@@ -16,18 +16,16 @@ struct ProfileMenuView: View {
         .queslyBackHeader("Profile")
     }
 
-    private func row(_ title: String, _ symbol: String, _ tint: Color, _ route: Route) -> some View {
+    private func row(_ title: String, _ icon: Ph, _ tint: Color, _ route: Route) -> some View {
         NavigationLink(value: route) {
             HStack(spacing: 14) {
-                Image(systemName: symbol)
-                    .font(.system(size: 16, weight: .semibold))
+                Icon(icon, size: 20)
                     .foregroundStyle(.white)
                     .frame(width: 38, height: 38)
                     .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(tint))
                 Text(title).font(.quesly(17, .medium)).foregroundStyle(Color.qInk)
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                Icon(.caretRightBold, size: 16)
                     .foregroundStyle(Color.qGray.opacity(0.7))
             }
             .padding(.horizontal, 14)
@@ -45,7 +43,7 @@ struct InviteFriendsView: View {
     var body: some View {
         VStack(spacing: 18) {
             Spacer()
-            HexBadge(color: Color(hex: 0xE84FA5), symbol: "hand.wave.fill")
+            HexBadge(color: Color(hex: 0xE84FA5), icon: .handWavingFill)
                 .frame(width: 110)
                 .rotationEffect(.degrees(wave ? 8 : -8))
                 .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: wave)
@@ -68,7 +66,7 @@ struct InviteFriendsView: View {
 
             Spacer()
             ShareLink(item: Invite.text(for: store.me.username)) {
-                Label("Share invite link", systemImage: "paperplane.fill")
+                Label { Text("Share invite link") } icon: { Icon(.paperPlaneTiltFill, size: 20) }
                     .font(.quesly(17, .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -91,7 +89,7 @@ struct BlockedUsersView: View {
         let blocked = store.blockedIds.compactMap { store.user($0) }.sorted { $0.username < $1.username }
         Group {
             if blocked.isEmpty {
-                EmptyStateView(symbol: "hand.raised.fill", title: "No one blocked",
+                EmptyStateView(icon: .prohibitFill, title: "No one blocked",
                                message: "People you block won't appear in your feeds, and they won't know.")
                     .frame(maxHeight: .infinity, alignment: .top)
             } else {

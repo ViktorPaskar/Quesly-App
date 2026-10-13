@@ -90,7 +90,7 @@ struct AuthView: View {
                             .onSubmit(submit)
 
                             Button { showPassword.toggle() } label: {
-                                Image(systemName: showPassword ? "eye.slash" : "eye")
+                                Icon(showPassword ? .eyeSlash : .eye, size: 22)
                                     .foregroundStyle(Color.qGray)
                             }
                             .accessibilityLabel(showPassword ? "Hide password" : "Show password")
@@ -134,7 +134,7 @@ struct AuthView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { dismiss() } label: {
-                        Image(systemName: "xmark").foregroundStyle(Color.qInk)
+                        Icon(.xBold, size: 20).foregroundStyle(Color.qInk)
                     }
                     .accessibilityLabel("Close")
                 }
@@ -163,8 +163,8 @@ struct CheckboxToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         Button { configuration.isOn.toggle() } label: {
             HStack(alignment: .top, spacing: 10) {
-                Image(systemName: configuration.isOn ? "checkmark.square.fill" : "square")
-                    .font(.system(size: 20))
+                Icon(configuration.isOn ? .checkCircleFill : .checkBold, size: 22)
+                    .opacity(configuration.isOn ? 1 : 0.35)
                     .foregroundStyle(configuration.isOn ? Color.qGreen : Color.qGray)
                 configuration.label
                     .multilineTextAlignment(.leading)

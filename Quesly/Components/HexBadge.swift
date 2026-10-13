@@ -18,7 +18,7 @@ struct Hexagon: Shape {
 /// Hexagon medal used for user badges and achievements.
 struct HexBadge: View {
     var color: Color
-    var symbol: String
+    var icon: Ph
     var isLocked = false
 
     var body: some View {
@@ -31,8 +31,7 @@ struct HexBadge: View {
                 Hexagon()
                     .stroke(Color.white.opacity(0.55), lineWidth: max(1, s * 0.06))
                     .padding(s * 0.1)
-                Image(systemName: symbol)
-                    .font(.system(size: s * 0.36, weight: .bold))
+                Icon(icon, size: s * 0.42)
                     .foregroundStyle(.white.opacity(isLocked ? 0.9 : 1))
             }
             .frame(width: s, height: s)

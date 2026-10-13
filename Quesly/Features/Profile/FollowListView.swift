@@ -25,7 +25,7 @@ struct FollowListView: View {
                         PersonRow(user: user).staggeredAppear(index)
                     }
                     if filtered.isEmpty {
-                        EmptyStateView(symbol: "person.2.fill", title: "No one here yet",
+                        EmptyStateView(icon: .usersFill, title: "No one here yet",
                                        message: "Find people to follow in Discover.")
                     }
                 }

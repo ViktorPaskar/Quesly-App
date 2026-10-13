@@ -76,14 +76,12 @@ struct NotificationPrimingView: View {
                     .padding(.top, 20)
                 Spacer()
 
-                Image(systemName: "bell.badge.fill")
-                    .font(.system(size: 64, weight: .semibold))
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(Color.qLime, Color.qGreen)
+                Icon(.bellRingingFill, size: 70)
+                    .foregroundStyle(Color.qLime)
                     .frame(width: 140, height: 140)
                     .background(Circle().fill(Color.qLime.opacity(0.18)))
                     .background(Circle().fill(Color.qLime.opacity(0.08)).scaleEffect(ring ? 1.35 : 1))
-                    .symbolEffect(.bounce, options: .repeating.speed(0.5), value: ring)
+                    .rotationEffect(.degrees(ring ? 10 : -10), anchor: .top)
                     .onAppear {
                         ring = true
                     }
@@ -180,14 +178,14 @@ struct SearchField: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass").font(.system(size: 15, weight: .medium)).foregroundStyle(Color.qGray)
+            Icon(.magnifyingGlassBold, size: 18).foregroundStyle(Color.qGray)
             TextField(prompt, text: $text)
                 .font(.quesly(16))
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
             if !text.isEmpty {
                 Button { text = "" } label: {
-                    Image(systemName: "xmark.circle.fill").foregroundStyle(Color.qGray.opacity(0.6))
+                    Icon(.xCircleFill, size: 20).foregroundStyle(Color.qGray.opacity(0.6))
                 }
                 .accessibilityLabel("Clear search")
                 .transition(.scale.combined(with: .opacity))
@@ -213,7 +211,7 @@ struct PersonRow: View {
                         HStack(spacing: 5) {
                             Text(user.username).font(.quesly(16, .semibold)).foregroundStyle(Color.qInk)
                             if let badge = user.badge {
-                                HexBadge(color: badge.color, symbol: badge.symbol).frame(width: 15, height: 15)
+                                HexBadge(color: badge.color, icon: badge.icon).frame(width: 15, height: 15)
                             }
                         }
                         Text(user.bio.isEmpty ? "\(user.followers) followers" : user.bio)
@@ -253,8 +251,7 @@ struct InviteCard: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: "paperplane.fill")
-                .font(.system(size: 20, weight: .semibold))
+            Icon(.paperPlaneTiltFill, size: 22)
                 .foregroundStyle(Color.qLime)
                 .frame(width: 46, height: 46)
                 .background(Circle().fill(Color.qGreen))

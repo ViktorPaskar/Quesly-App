@@ -16,8 +16,7 @@ struct EditProfileView: View {
                 PhotosPicker(selection: $photoItem, matching: .images) {
                     Avatar(user: draft, size: 96)
                         .overlay(alignment: .bottomTrailing) {
-                            Image(systemName: "camera.fill")
-                                .font(.system(size: 11))
+                            Icon(.cameraFill, size: 14)
                                 .foregroundStyle(Color.qGray)
                                 .frame(width: 24, height: 24)
                                 .background(Circle().fill(.white))
@@ -56,7 +55,7 @@ struct EditProfileView: View {
                     HStack {
                         if showPassword { TextField("", text: $password) } else { SecureField("", text: $password) }
                         Button { showPassword.toggle() } label: {
-                            Image(systemName: showPassword ? "eye.slash" : "eye").foregroundStyle(Color.qGray)
+                            Icon(showPassword ? .eyeSlash : .eye, size: 22).foregroundStyle(Color.qGray)
                         }
                     }
                     .queslyField()

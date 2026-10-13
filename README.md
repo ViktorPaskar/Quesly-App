@@ -15,40 +15,40 @@
 
 | Экран | Что делает |
 |---|---|
-| Splash | Анимированный зелёно-лаймовый градиент с логотипом |
-| Welcome | Онбординг, «Get started» / «I already have an account» |
-| Sign Up / Sign In | Валидация полей, показ пароля, согласие с условиями |
-| Daily Question | Вопрос дня на весь экран с лаймовыми акцентами → «Answer» |
-| Answer | Карточка ответа, лимит 200 символов с кольцом прогресса, таймер до следующего вопроса → «Submit» → лаймовая вспышка |
-| Dual Feed | Вкладки World / Friends, баннер «Today's Question» с обратным отсчётом, pull-to-refresh |
-| Reactions | Только позитивные: ❤️ 🔥 🙂 👏, тактильный отклик, анимация |
-| Share | Экспорт ответа в карточку для сторис 9:16 (Instagram / TikTok) + сохранение в Фото |
-| Archive | Your Answers / Saved Answers (закладки) |
-| Notifications | Реакции, подписки, новые бейджи, «Your new Answer was posted!» |
-| Profile | Шапка с паттерном, статистика (ответы, подписки, подписчики, серия), история ответов |
-| Чужой профиль | Follow / Followed |
-| Edit Profile | Никнейм, email, телефон, город, пароль, «About» |
-| Following / Followers | Поиск, подписка/отписка |
-| Profile menu | Achievements, Invite Friends, Settings, Feedback |
-| Achievements | Гексагональные бейджи, прогресс считается из реальных данных (серия, кол-во ответов и т.д.) |
-| Settings | Ежедневное напоминание (локальные уведомления) с выбором времени, приватный аккаунт, выход, удаление аккаунта |
-| Feedback | Звёзды, теги, текст |
+| Splash | Живой градиент, «прыгающие» точки логотипа |
+| Welcome | Онбординг с анимированным появлением преимуществ |
+| Sign Up / Sign In | Валидация, показ пароля, согласие с условиями |
+| Find your people | Шаг онбординга: поиск и подписка на людей, приглашение друзей — лента Friends не пустая с первого дня |
+| Notification priming | Объясняем, зачем уведомления, **до** системного запроса (выше доля согласий) |
+| Daily Question | Вопрос появляется по словам, ключевые слова — лаймом |
+| Answer | Карточка ответа, лимит 200 символов, выбор «Everyone / Friends», тряска при ошибке, конфетти после отправки |
+| Feed | World / Friends, крупный текст ответов, баннер вопроса дня, 🔥 серия в шапке, пустые состояния с приглашением |
+| Reactions | Одна кнопка → лоток из 4 эмодзи ❤️ 🔥 😂 🥹, двойной тап = ❤️, разлетающиеся эмодзи. **Счётчики видит только автор** |
+| Follow | Кнопка «Follow» рядом с именем вместо непонятного «+» |
+| Edit / Report / Block | Редактирование ответа 5 минут после публикации; жалоба с причинами; блокировка; список заблокированных |
+| Share | Карточка для сторис 9:16 в трёх темах (Green / Lime / Light) с фирменной дугой из питч-дека |
+| Discover | Поиск людей, рекомендации, приглашение (заменил вкладку Archive) |
+| Notifications | Группировка: «Anna и ещё 3 отреагировали ❤️🔥 на твой ответ» + цитата ответа, непрочитанные подсвечены, бейдж на вкладке |
+| Profile | Вкладки Answers / Saved, статистика с серией 🔥, Follow / Following |
+| Achievements | Общий прогресс, анимированные полоски |
+| Settings, Feedback, Invite | Напоминание, приватность, выход/удаление; отзыв; приглашение |
 
-Состояние (вход, ответы, закладки, реакции, подписки, профиль) сохраняется между запусками. Новый вопрос появляется каждый день в полночь.
+Шрифт — **Outfit** (SIL Open Font License, лежит в `Quesly/Resources/Fonts`). Поменять шрифт можно в одном месте — `Font.quesly` в `Core/Theme.swift`.
 
 ## Структура
 
 ```
 Quesly/
   App/          QueslyApp (корневой флоу), MainTabView (таббар + навигация)
-  Core/         Theme (цвета/шрифты), Models, AppStore (состояние), MockData, NotificationScheduler
-  Components/   Logo, Avatar, HexBadge, AnswerCard, кнопки, табы
-  Features/     Onboarding, Question, Feed, Archive, Notifications, Profile, Share
+  Core/         Theme (цвета, шрифты, анимации), Models, AppStore (состояние), MockData, NotificationScheduler, DemoConfig (режим скриншотов)
+  Components/   Logo, Avatar, HexBadge, AnswerCard, Reactions (лоток эмодзи, конфетти), кнопки, табы
+  Features/     Onboarding, Question, Feed, Discover, Notifications, Profile, Share
+  Resources/    Fonts (Outfit)
 ```
 
 ## Что нужно доделать до App Store
 
 - **Бэкенд.** Сейчас данные — моки в `Core/MockData.swift`, вся логика собрана в `Core/AppStore.swift`: методы `signUp`, `submitAnswer`, `toggleReaction`, `toggleFollow` и т.д. нужно заменить вызовами API (Firebase / Supabase / свой сервер). AI-генерация вопроса дня — тоже на стороне сервера.
-- **Ассеты из Figma.** Логотип-вордмарк сейчас набран системным шрифтом: экспортируйте SVG из Figma в `Assets.xcassets` и подставьте в `Components/QueslyLogo.swift`. Фирменный шрифт подключается в одном месте — `Font.quesly` в `Core/Theme.swift`. Аватары генерируются из инициалов, пока нет загрузки фото.
+- **Ассеты из Figma.** Логотип-вордмарк сейчас набран шрифтом Outfit Black: экспортируйте SVG из Figma в `Assets.xcassets` и подставьте в `Components/QueslyLogo.swift`. Аватары генерируются из инициалов, пока нет загрузки фото.
 - **Push-уведомления** с сервера (сейчас только локальное ежедневное напоминание).
 - **Модерация** ответов: кнопка Report уже есть в меню «…».

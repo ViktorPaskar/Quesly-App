@@ -57,7 +57,9 @@ enum DemoConfig {
         switch screen {
         case .achievements: return .achievements
         case .menu: return .menu
-        case .otherProfile: return .profile("u5")
+        case .otherProfile:
+            let first = MockData.answers(for: AppStore.question(for: .now)).first
+            return .profile(first?.authorId ?? "u5")
         default: return nil
         }
     }

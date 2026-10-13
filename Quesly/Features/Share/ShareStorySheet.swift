@@ -134,15 +134,20 @@ struct StoryCard: View {
     var body: some View {
         ZStack {
             theme.background
-            // Brand arc (top-right), as on the pitch deck.
-            Circle()
-                .stroke(theme.arc, lineWidth: 64)
-                .frame(width: 380, height: 380)
-                .offset(x: 200, y: -300)
-            Circle()
-                .stroke(theme.arc.opacity(0.35), lineWidth: 2)
-                .frame(width: 520, height: 520)
-                .offset(x: -230, y: 360)
+                .overlay {
+                    // Brand arc (top-right), as on the pitch deck. In an overlay so it can't widen the layout.
+                    ZStack {
+                        Circle()
+                            .stroke(theme.arc, lineWidth: 64)
+                            .frame(width: 380, height: 380)
+                            .offset(x: 200, y: -300)
+                        Circle()
+                            .stroke(theme.arc.opacity(0.35), lineWidth: 2)
+                            .frame(width: 520, height: 520)
+                            .offset(x: -230, y: 360)
+                    }
+                }
+                .clipped()
 
             VStack(alignment: .leading, spacing: 0) {
                 QueslyLogo(height: 18, markColor: theme == .lime ? .qGreen : .qLime, textColor: theme.ink,

@@ -33,23 +33,27 @@ struct BrandGradientBackground: View {
     @State private var drift = false
 
     var body: some View {
-        ZStack {
-            Color.qGreen
-            Circle()
-                .fill(Color.qLime.opacity(0.75))
-                .frame(width: 420, height: 420)
-                .blur(radius: 90)
-                .offset(x: drift ? 120 : 60, y: drift ? -300 : -220)
-            Circle()
-                .fill(Color.qGreenLight.opacity(0.9))
-                .frame(width: 460, height: 460)
-                .blur(radius: 100)
-                .offset(x: drift ? -140 : -60, y: drift ? 320 : 240)
-            Circle()
-                .fill(Color.qGreenDeep.opacity(0.85))
-                .frame(width: 300, height: 300)
-                .blur(radius: 80)
-        }
+        // The blobs live in an overlay so their size never affects the layout of the screen.
+        Color.qGreen
+            .overlay {
+                ZStack {
+                    Circle()
+                        .fill(Color.qLime.opacity(0.75))
+                        .frame(width: 420, height: 420)
+                        .blur(radius: 90)
+                        .offset(x: drift ? 120 : 60, y: drift ? -300 : -220)
+                    Circle()
+                        .fill(Color.qGreenLight.opacity(0.9))
+                        .frame(width: 460, height: 460)
+                        .blur(radius: 100)
+                        .offset(x: drift ? -140 : -60, y: drift ? 320 : 240)
+                    Circle()
+                        .fill(Color.qGreenDeep.opacity(0.85))
+                        .frame(width: 300, height: 300)
+                        .blur(radius: 80)
+                }
+            }
+            .clipped()
         .ignoresSafeArea()
         .onAppear {
             guard animate else { return }

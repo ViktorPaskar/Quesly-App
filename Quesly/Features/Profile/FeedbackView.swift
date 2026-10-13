@@ -12,11 +12,11 @@ struct FeedbackView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                VStack(spacing: 14) {
+                VStack(spacing: 16) {
                     Text("How would you rate your experience\nwith Quesly?")
-                        .font(.quesly(16, .medium))
+                        .font(.ui(16, .medium))
                         .multilineTextAlignment(.center)
-                    HStack(spacing: 6) {
+                    HStack(spacing: 8) {
                         ForEach(1...5, id: \.self) { i in
                             Button { rating = i } label: {
                                 Icon(.starFill, size: 32)
@@ -33,8 +33,8 @@ struct FeedbackView: View {
                 }
                 Divider()
 
-                VStack(spacing: 14) {
-                    Text("What would you like to see improved?").font(.quesly(16, .medium))
+                VStack(spacing: 16) {
+                    Text("What would you like to see improved?").font(.ui(16, .medium))
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 10) {
                         ForEach(allTopics, id: \.self) { topic in
                             let on = topics.contains(topic)
@@ -42,7 +42,7 @@ struct FeedbackView: View {
                                 if on { topics.remove(topic) } else { topics.insert(topic) }
                             } label: {
                                 Text(topic)
-                                    .font(.quesly(13, .medium))
+                                    .font(.ui(13, .medium))
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.8)
                                     .foregroundStyle(on ? .white : Color.qGreen)
@@ -58,12 +58,12 @@ struct FeedbackView: View {
                 Divider()
 
                 VStack(spacing: 12) {
-                    Text("Anything else you'd like to tell us? (not required)").font(.quesly(16, .medium))
+                    Text("Anything else you'd like to tell us? (not required)").font(.ui(16, .medium))
                     TextField("Start typing here", text: $message, axis: .vertical)
-                        .font(.quesly(16))
+                        .font(.ui(16))
                         .lineLimit(8...12)
                         .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 10).stroke(Color.qLine))
+                        .background(RoundedRectangle(cornerRadius: DS.Radius.m).stroke(Color.qLine))
                 }
 
                 GreenButton(title: "Send", isEnabled: rating > 0) { sent = true }
@@ -71,7 +71,7 @@ struct FeedbackView: View {
             .padding(20)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.white)
+        .background(Color.qBackground)
         .queslyBackHeader("Feedback")
         .alert("Thank you! 💚", isPresented: $sent) {
             Button("Done") { dismiss() }

@@ -18,9 +18,9 @@ struct ShareStorySheet: View {
     var body: some View {
         let card = StoryCard(answer: answer, author: store.user(answer.authorId), theme: theme)
 
-        VStack(spacing: 18) {
+        VStack(spacing: 20) {
             HStack {
-                Text("Share as story").font(.quesly(20, .semibold))
+                Text("Share as story").font(.ui(20, .semibold))
                 Spacer()
                 Button { dismiss() } label: {
                     Icon(.xCircleFill, size: 30)
@@ -33,8 +33,8 @@ struct ShareStorySheet: View {
                 .frame(width: Self.canvas.width, height: Self.canvas.height)
                 .scaleEffect(0.72)
                 .frame(width: Self.canvas.width * 0.72, height: Self.canvas.height * 0.72)
-                .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-                .shadow(color: .black.opacity(0.18), radius: 20, y: 10)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).stroke(Color.qLine, lineWidth: 1))
                 .rotation3DEffect(.degrees(appeared ? 0 : 12), axis: (x: 1, y: 0, z: 0))
                 .scaleEffect(appeared ? 1 : 0.9)
                 .opacity(appeared ? 1 : 0)
@@ -66,7 +66,7 @@ struct ShareStorySheet: View {
                 ShareLink(item: Image(uiImage: rendered),
                           preview: SharePreview("My Quesly answer", image: Image(uiImage: rendered))) {
                     Label { Text("Share to stories") } icon: { Icon(.paperPlaneTiltFill, size: 20) }
-                        .font(.quesly(17, .semibold))
+                        .font(.ui(17, .semibold))
                         .foregroundStyle(Color.qGreen)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
@@ -80,7 +80,7 @@ struct ShareStorySheet: View {
                     Label { Text(savedToPhotos ? "Saved to Photos" : "Save to Photos") } icon: {
                         Icon(savedToPhotos ? .checkCircleFill : .downloadSimple, size: 20)
                     }
-                        .font(.quesly(16, .medium))
+                        .font(.ui(16, .medium))
                         .foregroundStyle(Color.qGreen)
                         .frame(height: 44)
                 }
@@ -159,13 +159,13 @@ struct StoryCard: View {
                     .font(.custom("Outfit-Bold", fixedSize: 12))
                     .tracking(1.2)
                     .foregroundStyle(theme == .green ? Color.qLime : Color.qGreen.opacity(0.75))
-                    .padding(.bottom, 10)
+                    .padding(.bottom, 12)
                 Text(answer.questionText.uppercased())
                     .font(.custom("Outfit-ExtraBold", fixedSize: 26))
                     .foregroundStyle(theme.ink)
                     .lineSpacing(1)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.bottom, 22)
+                    .padding(.bottom, 24)
 
                 VStack(alignment: .leading, spacing: 16) {
                     Text(answer.text)
@@ -173,7 +173,7 @@ struct StoryCard: View {
                         .foregroundStyle(Color.qInk)
                         .lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
-                    HStack(spacing: 10) {
+                    HStack(spacing: 12) {
                         Avatar(user: author, size: 30)
                         Text("@\(author?.username ?? "")")
                             .font(.custom("Outfit-SemiBold", fixedSize: 15))
@@ -185,8 +185,7 @@ struct StoryCard: View {
                     }
                 }
                 .padding(20)
-                .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(.white))
-                .shadow(color: .black.opacity(0.12), radius: 18, y: 8)
+                .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(.white))
 
                 Spacer()
 
@@ -196,7 +195,7 @@ struct StoryCard: View {
                     Icon(.arrowUpRightBold, size: 15)
                 }
                 .foregroundStyle(theme == .green ? Color.qGreen : Color.qLime)
-                .padding(.horizontal, 18)
+                .padding(.horizontal, 20)
                 .frame(height: 42)
                 .background(Capsule().fill(theme == .green ? Color.qLime : Color.qGreen))
                 .padding(.bottom, 52)

@@ -3,7 +3,7 @@ import SwiftUI
 /// Lime pill CTA used on green screens ("Answer", "Submit").
 struct LimeButton: View {
     let title: String
-    var icon: Ph? = nil
+    var icon: QIcon? = nil
     var isEnabled = true
     let action: () -> Void
 
@@ -13,12 +13,11 @@ struct LimeButton: View {
                 Text(title)
                 if let icon { Icon(icon, size: 19) }
             }
-            .font(.quesly(17, .bold))
+            .font(.ui(17, .bold))
             .foregroundStyle(Color.qGreen)
             .frame(maxWidth: .infinity)
             .frame(height: 54)
             .background(Capsule().fill(Color.qLime.opacity(isEnabled ? 1 : 0.4)))
-            .shadow(color: Color.qLime.opacity(isEnabled ? 0.35 : 0), radius: 16, y: 6)
         }
         .buttonStyle(.pressable)
         .disabled(!isEnabled)
@@ -35,7 +34,7 @@ struct GreenButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.quesly(17, .semibold))
+                .font(.ui(17, .semibold))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
@@ -61,7 +60,7 @@ struct FollowPill: View {
                 }
                 Text(isFollowing ? "Following" : "Follow")
             }
-            .font(.quesly(compact ? 12 : 13, .semibold))
+            .font(.ui(compact ? 13 : 15, .semibold))
             .foregroundStyle(isFollowing ? Color.qGreen : .white)
             .padding(.horizontal, compact ? 10 : 14)
             .frame(height: compact ? 26 : 32)
@@ -90,9 +89,9 @@ struct UnderlineTabs<T: Hashable & Identifiable>: View {
                 Button {
                     withAnimation(.qSpring) { selection = item }
                 } label: {
-                    VStack(spacing: 10) {
+                    VStack(spacing: 12) {
                         Text(title(item))
-                            .font(.quesly(15, isActive ? .semibold : .medium))
+                            .font(.ui(15, isActive ? .semibold : .medium))
                             .foregroundStyle(isActive ? activeColor : Color.qGray)
                         ZStack {
                             Capsule().fill(Color.qLine).frame(height: 1)
@@ -127,12 +126,12 @@ struct BackHeader: View {
                     .frame(width: 44, height: 44)
             }
             .accessibilityLabel("Back")
-            Text(title).font(.quesly(20, .semibold)).foregroundStyle(Color.qInk)
+            Text(title).font(.ui(20, .semibold)).foregroundStyle(Color.qInk)
             Spacer()
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 2)
-        .background(Color.white)
+        .background(Color.qBackground)
         .overlay(alignment: .bottom) { Rectangle().fill(Color.qLine).frame(height: 1) }
     }
 }
@@ -144,7 +143,7 @@ struct TitleHeader<Trailing: View>: View {
 
     var body: some View {
         ZStack {
-            Text(title).font(.quesly(20, .semibold)).foregroundStyle(Color.qInk)
+            Text(title).font(.ui(20, .semibold)).foregroundStyle(Color.qInk)
             HStack { Spacer(); trailing() }
         }
         .padding(.horizontal, 16)
@@ -196,27 +195,23 @@ enum RelativeTime {
 
 /// Friendly empty state with an optional action.
 struct EmptyStateView<Actions: View>: View {
-    let icon: Ph
+    let icon: QIcon
     let title: String
     let message: String
     @ViewBuilder var actions: () -> Actions
-    @State private var bob = false
 
     var body: some View {
-        VStack(spacing: 14) {
-            Icon(icon, size: 38)
-                .foregroundStyle(Color.qGreen)
-                .frame(width: 84, height: 84)
-                .background(Circle().fill(Color.qLime))
-                .offset(y: bob ? -4 : 4)
-                .animation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true), value: bob)
-                .onAppear { bob = true }
-            Text(title).font(.quesly(20, .semibold)).foregroundStyle(Color.qInk)
+        VStack(spacing: 16) {
+            Icon(icon, size: 30)
+                .foregroundStyle(Color.qBrandText)
+                .frame(width: 72, height: 72)
+                .background(Circle().fill(Color.qMint))
+            Text(title).font(.ui(20, .semibold)).foregroundStyle(Color.qInk)
             Text(message)
-                .font(.quesly(15))
+                .font(.ui(15))
                 .foregroundStyle(Color.qGray)
                 .multilineTextAlignment(.center)
-            actions().padding(.top, 6)
+            actions().padding(.top, 8)
         }
         .padding(.horizontal, 36)
         .padding(.vertical, 40)
@@ -225,7 +220,7 @@ struct EmptyStateView<Actions: View>: View {
 }
 
 extension EmptyStateView where Actions == EmptyView {
-    init(icon: Ph, title: String, message: String) {
+    init(icon: QIcon, title: String, message: String) {
         self.init(icon: icon, title: title, message: message) { EmptyView() }
     }
 }

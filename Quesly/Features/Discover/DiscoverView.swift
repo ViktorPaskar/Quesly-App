@@ -12,7 +12,7 @@ struct DiscoverView: View {
         VStack(spacing: 0) {
             TitleHeader(title: "Discover")
             SearchField(text: $query, prompt: "Search people")
-                .padding(.horizontal, 16)
+                .padding(.horizontal, DS.Space.screen)
                 .padding(.bottom, 8)
 
             ScrollView {
@@ -27,13 +27,13 @@ struct DiscoverView: View {
                         if !store.followingUsers.isEmpty {
                             SectionLabel("You follow").padding(.top, 8)
                             ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 14) {
+                                HStack(spacing: 16) {
                                     ForEach(store.followingUsers) { user in
                                         NavigationLink(value: Route.profile(user.id)) {
-                                            VStack(spacing: 6) {
+                                            VStack(spacing: 8) {
                                                 Avatar(user: user, size: 58)
                                                 Text(user.username)
-                                                    .font(.quesly(12, .medium))
+                                                    .font(.ui(12, .medium))
                                                     .foregroundStyle(Color.qInk)
                                                     .lineLimit(1)
                                                     .frame(width: 70)
@@ -46,20 +46,20 @@ struct DiscoverView: View {
                             }
                         }
                     } else if results.isEmpty {
-                        EmptyStateView(icon: .magnifyingGlassBold,
+                        EmptyStateView(icon: .magnifyingGlass,
                                        title: "No one found",
                                        message: "Nobody called “\(query)” yet. Invite them to Quesly!")
                     } else {
                         ForEach(results) { user in PersonRow(user: user) }
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, DS.Space.screen)
                 .padding(.bottom, 16)
                 .animation(.qSmooth, value: query.isEmpty)
             }
             .scrollDismissesKeyboard(.immediately)
         }
-        .background(Color.white)
+        .background(Color.qBackground)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             // Snapshot so followed people don't vanish mid-scroll.

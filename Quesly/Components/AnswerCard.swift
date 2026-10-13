@@ -45,7 +45,7 @@ struct AnswerCard: View {
                 VStack(alignment: .leading, spacing: 8) {
                     if showsAuthor { header }
                     Text(answer.text)
-                        .font(.quesly(18, relativeTo: .body))
+                        .font(.ui(18))
                         .lineSpacing(3)
                         .foregroundStyle(Color.qInk)
                         .fixedSize(horizontal: false, vertical: true)
@@ -57,10 +57,10 @@ struct AnswerCard: View {
                 }
             }
         }
-        .padding(.horizontal, 18)
+        .padding(.horizontal, DS.Space.screen)
         .padding(.top, 16)
-        .padding(.bottom, 10)
-        .background(Color.white)
+        .padding(.bottom, 12)
+        .background(Color.qBackground)
         .sheet(isPresented: $isSharing) {
             ShareStorySheet(answer: answer)
                 .presentationDetents([.large])
@@ -81,30 +81,30 @@ struct AnswerCard: View {
     private var questionLine: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text("Q")
-                .font(.quesly(11, .bold))
+                .font(.ui(11, .bold))
                 .foregroundStyle(Color.qLime)
                 .frame(width: 18, height: 18)
-                .background(RoundedRectangle(cornerRadius: 5).fill(Color.qGreen))
+                .background(RoundedRectangle(cornerRadius: DS.Radius.s).fill(Color.qGreen))
             Text(answer.questionText)
-                .font(.quesly(14, .semibold))
+                .font(.ui(14, .semibold))
                 .foregroundStyle(Color.qGreen)
                 .lineLimit(2)
             Spacer(minLength: 8)
             if !showsAuthor {
                 Text(RelativeTime.dayLabel(answer.createdAt))
-                    .font(.quesly(13)).foregroundStyle(Color.qGray)
+                    .font(.ui(13)).foregroundStyle(Color.qGray)
             }
         }
     }
 
     private var header: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             if answer.isPinned && isMine {
                 Icon(.pushPinFill, size: 13).foregroundStyle(Color.qGreen)
             }
             NavigationLink(value: Route.profile(answer.authorId)) {
                 Text(author?.username ?? "unknown")
-                    .font(.quesly(16, .semibold))
+                    .font(.ui(16, .semibold))
                     .foregroundStyle(isMine ? Color.qGreen : Color.qInk)
                     .lineLimit(1)
             }
@@ -113,7 +113,7 @@ struct AnswerCard: View {
                 HexBadge(color: badge.color, icon: badge.icon).frame(width: 16, height: 16)
             }
             Text(RelativeTime.short(answer.createdAt) + (answer.isEdited ? " · edited" : ""))
-                .font(.quesly(13)).foregroundStyle(Color.qGray)
+                .font(.ui(13)).foregroundStyle(Color.qGray)
                 .lineLimit(1)
             if answer.visibility == .friends {
                 Icon(.usersFill, size: 13)
@@ -132,15 +132,15 @@ struct AnswerCard: View {
 
     private var moreMenu: some View {
         Menu {
-            Button { isSharing = true } label: { Label("Share as story", image: Ph.paperPlaneTilt.assetName) }
-            Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", image: Ph.copy.assetName) }
+            Button { isSharing = true } label: { Label("Share as story", systemImage: QIcon.paperPlaneTilt.rawValue) }
+            Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", systemImage: QIcon.copy.rawValue) }
             if isMine {
                 if answer.isEditable() {
-                    Button { isEditing = true } label: { Label("Edit", image: Ph.pencilSimple.assetName) }
+                    Button { isEditing = true } label: { Label("Edit", systemImage: QIcon.pencilSimple.rawValue) }
                 }
-                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", image: Ph.trash.assetName) }
+                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: QIcon.trash.rawValue) }
             } else {
-                Button(role: .destructive) { isReporting = true } label: { Label("Report or block", image: Ph.flag.assetName) }
+                Button(role: .destructive) { isReporting = true } label: { Label("Report or block", systemImage: QIcon.flag.rawValue) }
             }
         } label: {
             Icon(.dotsThreeBold, size: 22)
@@ -179,7 +179,7 @@ struct AnswerCard: View {
         .animation(.qSpring, value: isTrayOpen)
     }
 
-    private func iconButton(_ icon: Ph, tint: Color, label: String, action: @escaping () -> Void) -> some View {
+    private func iconButton(_ icon: QIcon, tint: Color, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Icon(icon, size: 23)
                 .foregroundStyle(tint)
@@ -210,15 +210,15 @@ struct EditAnswerSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 16) {
                 Text(answer.questionText.uppercased())
-                    .font(.quesly(14, .bold))
+                    .font(.ui(14, .bold))
                     .foregroundStyle(Color.qGreen)
                 TextEditor(text: $text)
-                    .font(.quesly(18))
+                    .font(.ui(18))
                     .scrollContentBackground(.hidden)
-                    .padding(10)
-                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.qField))
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
                     .onChange(of: text) { _, new in
                         if new.count > AppStore.maxAnswerLength { text = String(new.prefix(AppStore.maxAnswerLength)) }
                     }
@@ -226,13 +226,13 @@ struct EditAnswerSheet: View {
                     TimelineView(.periodic(from: .now, by: 1)) { ctx in
                         let left = max(0, Int(Answer.editWindow - ctx.date.timeIntervalSince(answer.createdAt)))
                         Label { Text(String(format: "%d:%02d left to edit", left / 60, left % 60)) } icon: { Icon(.timer, size: 16) }
-                            .font(.quesly(13, .medium))
+                            .font(.ui(13, .medium))
                             .foregroundStyle(left < 60 ? Color.qFlame : Color.qGray)
                             .monospacedDigit()
                     }
                     Spacer()
                     Text("\(text.count)/\(AppStore.maxAnswerLength)")
-                        .font(.quesly(13, .medium)).foregroundStyle(Color.qGray).monospacedDigit()
+                        .font(.ui(13, .medium)).foregroundStyle(Color.qGray).monospacedDigit()
                 }
                 GreenButton(title: "Save changes", isEnabled: !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                             && answer.isEditable()) {
@@ -293,7 +293,7 @@ struct ReportSheet: View {
                         sentReason = reason
                     } label: {
                         HStack {
-                            Text(reason.rawValue).font(.quesly(16)).foregroundStyle(Color.qInk)
+                            Text(reason.rawValue).font(.ui(16)).foregroundStyle(Color.qInk)
                             Spacer()
                             Icon(.caretRightBold, size: 14)
                                 .foregroundStyle(Color.qGray)
@@ -301,15 +301,15 @@ struct ReportSheet: View {
                     }
                 }
             } header: {
-                Text("Why are you reporting this?").font(.quesly(13, .medium))
+                Text("Why are you reporting this?").font(.ui(13, .medium))
             } footer: {
                 Text("Reports are anonymous. Quesly is a kind place — we review every report.")
-                    .font(.quesly(13))
+                    .font(.ui(13))
             }
             Section {
                 Button(role: .destructive) { confirmBlock = true } label: {
                     Label { Text("Block @\(author?.username ?? "")") } icon: { Icon(.prohibitFill, size: 18) }
-                        .font(.quesly(16, .medium))
+                        .font(.ui(16, .medium))
                 }
             }
         }
@@ -321,19 +321,19 @@ struct ReportSheet: View {
             Icon(.shieldCheckFill, size: 60)
                 .foregroundStyle(Color.qGreen)
                 .pop(on: sentReason)
-            Text("Thanks for letting us know").font(.quesly(22, .semibold))
+            Text("Thanks for letting us know").font(.ui(22, .semibold))
             Text("We'll review this answer. You can also block this person so you never see their answers again.")
-                .font(.quesly(15)).foregroundStyle(Color.qGray).multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
+                .font(.ui(15)).foregroundStyle(Color.qGray).multilineTextAlignment(.center)
+                .padding(.horizontal, DS.Space.screen)
             Spacer()
             Button(role: .destructive) { confirmBlock = true } label: {
                 Text("Block @\(author?.username ?? "")")
-                    .font(.quesly(16, .semibold))
+                    .font(.ui(16, .semibold))
                     .frame(maxWidth: .infinity).frame(height: 50)
                     .background(Capsule().stroke(Color.red.opacity(0.5)))
             }
-            .padding(.horizontal, 24)
-            GreenButton(title: "Done") { dismiss() }.padding(.horizontal, 24).padding(.bottom, 12)
+            .padding(.horizontal, DS.Space.screen)
+            GreenButton(title: "Done") { dismiss() }.padding(.horizontal, DS.Space.screen).padding(.bottom, 12)
         }
     }
 }

@@ -3,7 +3,7 @@ import SwiftUI
 struct ProfileMenuView: View {
     var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            VStack(spacing: 12) {
                 row("Achievements", .medalFill, Color(hex: 0xE2A72E), .achievements)
                 row("Invite Friends", .paperPlaneTiltFill, Color(hex: 0xE84FA5), .invite)
                 row("Settings", .gearSixFill, .qGreen, .settings)
@@ -12,25 +12,25 @@ struct ProfileMenuView: View {
             }
             .padding(16)
         }
-        .background(Color.white)
+        .background(Color.qBackground)
         .queslyBackHeader("Profile")
     }
 
-    private func row(_ title: String, _ icon: Ph, _ tint: Color, _ route: Route) -> some View {
+    private func row(_ title: String, _ icon: QIcon, _ tint: Color, _ route: Route) -> some View {
         NavigationLink(value: route) {
-            HStack(spacing: 14) {
+            HStack(spacing: 16) {
                 Icon(icon, size: 20)
                     .foregroundStyle(.white)
                     .frame(width: 38, height: 38)
-                    .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(tint))
-                Text(title).font(.quesly(17, .medium)).foregroundStyle(Color.qInk)
+                    .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(tint))
+                Text(title).font(.ui(17, .medium)).foregroundStyle(Color.qInk)
                 Spacer()
                 Icon(.caretRightBold, size: 16)
                     .foregroundStyle(Color.qGray.opacity(0.7))
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 16)
             .frame(height: 62)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.qField))
+            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
         }
         .buttonStyle(.pressable)
     }
@@ -38,28 +38,24 @@ struct ProfileMenuView: View {
 
 struct InviteFriendsView: View {
     @Environment(AppStore.self) private var store
-    @State private var wave = false
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 20) {
             Spacer()
             HexBadge(color: Color(hex: 0xE84FA5), icon: .handWavingFill)
                 .frame(width: 110)
-                .rotationEffect(.degrees(wave ? 8 : -8))
-                .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: wave)
-                .onAppear { wave = true }
             Text("Invite your friends")
-                .font(.quesly(28, .bold))
+                .font(.display(28, .bold))
                 .foregroundStyle(Color.qInk)
             Text("Quesly is better with people you care about. Invite 10 friends to unlock the **Vibe Connector** badge.")
-                .font(.quesly(16))
+                .font(.ui(16))
                 .foregroundStyle(Color.qGray)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
             VStack(spacing: 8) {
                 ProgressView(value: 7, total: 10).tint(Color(hex: 0xE84FA5))
-                Text("7 of 10 friends joined").font(.quesly(14, .medium)).foregroundStyle(Color.qGray)
+                Text("7 of 10 friends joined").font(.ui(14, .medium)).foregroundStyle(Color.qGray)
             }
             .padding(.horizontal, 48)
             .padding(.top, 8)
@@ -67,17 +63,17 @@ struct InviteFriendsView: View {
             Spacer()
             ShareLink(item: Invite.text(for: store.me.username)) {
                 Label { Text("Share invite link") } icon: { Icon(.paperPlaneTiltFill, size: 20) }
-                    .font(.quesly(17, .semibold))
+                    .font(.ui(17, .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)
                     .background(Capsule().fill(Color.qGreen))
             }
             .buttonStyle(.pressable)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, DS.Space.screen)
             .padding(.bottom, 24)
         }
-        .background(Color.white)
+        .background(Color.qBackground)
         .queslyBackHeader("Invite Friends")
     }
 }
@@ -98,23 +94,23 @@ struct BlockedUsersView: View {
                         ForEach(blocked) { user in
                             HStack(spacing: 12) {
                                 Avatar(user: user, size: 44)
-                                Text(user.username).font(.quesly(16, .semibold))
+                                Text(user.username).font(.ui(16, .semibold))
                                 Spacer()
                                 Button("Unblock") { withAnimation(.qSmooth) { store.unblock(user.id) } }
-                                    .font(.quesly(14, .semibold))
+                                    .font(.ui(14, .semibold))
                                     .foregroundStyle(Color.qGreen)
-                                    .padding(.horizontal, 14)
+                                    .padding(.horizontal, 16)
                                     .frame(height: 34)
                                     .background(Capsule().fill(Color.qMint))
                             }
                             .padding(.vertical, 8)
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, DS.Space.screen)
                 }
             }
         }
-        .background(Color.white)
+        .background(Color.qBackground)
         .queslyBackHeader("Blocked people")
     }
 }

@@ -15,7 +15,7 @@ struct FeedView: View {
                     Spacer()
                     StreakChip(days: store.streak)
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, DS.Space.screen)
             }
             .frame(height: 48)
 
@@ -34,23 +34,23 @@ struct FeedView: View {
                     ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
                         AnswerCard(answer: answer)
                             .staggeredAppear(index)
-                        Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 74)
+                        Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 76)
                     }
                     if scope == .friends && answers.filter({ $0.authorId != store.me.id }).isEmpty {
                         EmptyStateView(icon: .usersThreeFill,
                                        title: "Your friends are quiet",
                                        message: "None of the people you follow answered yet. Invite friends or discover new people.") {
-                            VStack(spacing: 10) {
+                            VStack(spacing: 12) {
                                 ShareLink(item: Invite.text(for: store.me.username)) {
                                     Label { Text("Invite friends") } icon: { Icon(.paperPlaneTiltFill, size: 18) }
-                                        .font(.quesly(16, .semibold))
+                                        .font(.ui(16, .semibold))
                                         .foregroundStyle(.white)
                                         .frame(maxWidth: .infinity).frame(height: 50)
                                         .background(Capsule().fill(Color.qGreen))
                                 }
                                 .buttonStyle(.pressable)
                                 Button("Discover people", action: onDiscover)
-                                    .font(.quesly(16, .medium))
+                                    .font(.ui(16, .medium))
                                     .foregroundStyle(Color.qGreen)
                                     .frame(height: 44)
                             }
@@ -65,7 +65,7 @@ struct FeedView: View {
                 store.refreshDay()
             }
         }
-        .background(Color.white)
+        .background(Color.qBackground)
         .toolbar(.hidden, for: .navigationBar)
         .fullScreenCover(isPresented: $showQuestion) {
             DailyQuestionView(onSubmitted: { showQuestion = false },
@@ -77,26 +77,20 @@ struct FeedView: View {
 /// 🔥 streak counter in the feed header — a gentle nudge to come back tomorrow.
 struct StreakChip: View {
     let days: Int
-    @State private var flicker = false
 
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 4) {
             Icon(.fireFill, size: 18)
-                .foregroundStyle(LinearGradient(colors: [Color(hex: 0xFFC233), .qFlame],
-                                                startPoint: .top, endPoint: .bottom))
-                .scaleEffect(flicker ? 1.12 : 0.95, anchor: .bottom)
+                .foregroundStyle(Color.qFlame)
                 .pop(on: days)
             Text("\(days)")
-                .font(.quesly(15, .bold))
+                .font(.ui(15, .bold))
                 .foregroundStyle(Color.qInk)
                 .contentTransition(.numericText())
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 12)
         .frame(height: 32)
-        .background(Capsule().fill(Color(hex: 0xFFF1E6)))
-        .onAppear {
-            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { flicker = true }
-        }
+        .background(Capsule().fill(Color.qField))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(days) day streak")
     }
@@ -112,12 +106,12 @@ struct TodayQuestionBanner: View {
                 QueslyMark(color: .qGreen, cutout: .qLime)
                     .frame(width: 24)
                     .frame(width: 44, height: 44)
-                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.qLime))
+                    .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qLime))
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text("Today's Question")
-                            .font(.quesly(13, .semibold))
+                            .font(.ui(13, .semibold))
                             .foregroundStyle(Color.qLime)
                         Spacer()
                         TimelineView(.periodic(from: .now, by: 60)) { ctx in
@@ -125,36 +119,23 @@ struct TodayQuestionBanner: View {
                                 Icon(.clock, size: 13)
                                 Text("\(AppStore.timeLeftString(now: ctx.date)) left")
                             }
-                            .font(.quesly(13, .medium))
+                            .font(.ui(13, .medium))
                             .foregroundStyle(.white.opacity(0.75))
                         }
                     }
                     Text(question.text.uppercased())
-                        .font(.quesly(15, .bold))
+                        .font(.ui(15, .bold))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, DS.Space.screen)
+            .padding(.vertical, 16)
             .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(LinearGradient(colors: [.qGreen, .qGreenDeep], startPoint: .topLeading, endPoint: .bottomTrailing))
-            )
-            .overlay(alignment: .topTrailing) {
-                // Small lime arc echoing the brand.
-                Circle()
-                    .trim(from: 0.5, to: 0.75)
-                    .stroke(Color.qLime.opacity(0.25), style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                    .frame(width: 90, height: 90)
-                    .offset(x: 50, y: 50)
-                    .allowsHitTesting(false)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qGreen))
+            .padding(.horizontal, DS.Space.screen)
+            .padding(.vertical, 12)
         }
         .buttonStyle(.pressable)
     }
@@ -169,10 +150,10 @@ private struct AnswerPrompt: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("You haven't answered yet")
-                        .font(.quesly(16, .semibold))
+                        .font(.ui(16, .semibold))
                         .foregroundStyle(Color.qGreen)
                     Text("Share your story to join today's conversation")
-                        .font(.quesly(14))
+                        .font(.ui(14))
                         .foregroundStyle(Color.qGreen.opacity(0.8))
                 }
                 Spacer()
@@ -183,7 +164,7 @@ private struct AnswerPrompt: View {
                     .foregroundStyle(Color.qGreen)
             }
             .padding(16)
-            .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.qLime))
+            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qLime))
             .padding(16)
         }
         .buttonStyle(.pressable)

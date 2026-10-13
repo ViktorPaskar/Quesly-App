@@ -16,31 +16,31 @@ struct FindFriendsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 StepDots(current: 0, total: 2)
                 Text("Find your people")
-                    .font(.quesly(30, .bold))
+                    .font(.display(30, .bold))
                     .foregroundStyle(Color.qInk)
                 Text("Quesly is better with friends. Follow a few people to fill your Friends feed.")
-                    .font(.quesly(16))
+                    .font(.ui(16))
                     .foregroundStyle(Color.qGray)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, DS.Space.screen)
             .padding(.top, 20)
 
             SearchField(text: $query, prompt: "Search by nickname")
-                .padding(.horizontal, 24)
+                .padding(.horizontal, DS.Space.screen)
                 .padding(.vertical, 16)
 
             ScrollView {
                 LazyVStack(spacing: 0) {
                     if query.isEmpty {
                         InviteCard(username: store.me.username)
-                            .padding(.horizontal, 24)
+                            .padding(.horizontal, DS.Space.screen)
                             .padding(.bottom, 12)
-                        SectionLabel("Suggested for you").padding(.horizontal, 24)
+                        SectionLabel("Suggested for you").padding(.horizontal, DS.Space.screen)
                     }
                     ForEach(Array(shown.enumerated()), id: \.element.id) { index, user in
                         PersonRow(user: user)
-                            .padding(.horizontal, 24)
+                            .padding(.horizontal, DS.Space.screen)
                             .staggeredAppear(index)
                     }
                 }
@@ -51,12 +51,12 @@ struct FindFriendsView: View {
             GreenButton(title: count > 0 ? "Continue · \(count) following" : "Continue") {
                 withAnimation(.qSmooth) { store.finishFindFriends() }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, DS.Space.screen)
             .padding(.vertical, 12)
             .contentTransition(.numericText())
             .animation(.qSpring, value: count)
         }
-        .background(Color.white)
+        .background(Color.qBackground)
         .onAppear { if people.isEmpty { people = store.suggestedUsers + store.followingUsers } }
     }
 }
@@ -64,7 +64,6 @@ struct FindFriendsView: View {
 /// Onboarding step 2: explain *why* before the iOS permission prompt (much higher opt-in).
 struct NotificationPrimingView: View {
     @Environment(AppStore.self) private var store
-    @State private var ring = false
 
     var body: some View {
         ZStack {
@@ -72,7 +71,7 @@ struct NotificationPrimingView: View {
             VStack(spacing: 0) {
                 StepDots(current: 1, total: 2, onDark: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, DS.Space.screen)
                     .padding(.top, 20)
                 Spacer()
 
@@ -80,42 +79,36 @@ struct NotificationPrimingView: View {
                     .foregroundStyle(Color.qLime)
                     .frame(width: 140, height: 140)
                     .background(Circle().fill(Color.qLime.opacity(0.18)))
-                    .background(Circle().fill(Color.qLime.opacity(0.08)).scaleEffect(ring ? 1.35 : 1))
-                    .rotationEffect(.degrees(ring ? 10 : -10), anchor: .top)
-                    .onAppear {
-                        ring = true
-                    }
-                    .animation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true), value: ring)
 
                 Text("Never miss\ntoday's question")
-                    .font(.quesly(32, .bold))
+                    .font(.display(32, .bold))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.white)
                     .padding(.top, 36)
                 Text("We'll send one gentle reminder a day — when the new question drops. No spam, promise.")
-                    .font(.quesly(16))
+                    .font(.ui(16))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.white.opacity(0.8))
                     .padding(.horizontal, 36)
                     .padding(.top, 12)
 
                 NotificationPreview()
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, DS.Space.screen)
                     .padding(.top, 28)
 
                 Spacer()
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     LimeButton(title: "Turn on notifications") {
                         withAnimation(.qSmooth) { store.finishNotificationPriming(enable: true) }
                     }
                     Button("Not now") {
                         withAnimation(.qSmooth) { store.finishNotificationPriming(enable: false) }
                     }
-                    .font(.quesly(16, .medium))
+                    .font(.ui(16, .medium))
                     .foregroundStyle(.white.opacity(0.85))
                     .frame(height: 48)
                 }
-                .padding(.horizontal, 28)
+                .padding(.horizontal, DS.Space.screen)
                 .padding(.bottom, 12)
             }
         }
@@ -131,21 +124,20 @@ private struct NotificationPreview: View {
             QueslyMark(color: .qLime, cutout: .qGreen)
                 .frame(width: 20)
                 .frame(width: 38, height: 38)
-                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.qGreen))
+                .background(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill(Color.qGreen))
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
-                    Text("QUESLY").font(.quesly(12, .semibold)).foregroundStyle(Color.qGray)
+                    Text("QUESLY").font(.ui(12, .semibold)).foregroundStyle(Color.qGray)
                     Spacer()
-                    Text("now").font(.quesly(12)).foregroundStyle(Color.qGray)
+                    Text("now").font(.ui(12)).foregroundStyle(Color.qGray)
                 }
-                Text("Today's question is here ✨").font(.quesly(15, .semibold)).foregroundStyle(Color.qInk)
-                Text("What tiny moment made your week better?").font(.quesly(14)).foregroundStyle(Color.qInk.opacity(0.8))
+                Text("Today's question is here ✨").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
+                Text("What tiny moment made your week better?").font(.ui(14)).foregroundStyle(Color.qInk.opacity(0.8))
                     .lineLimit(1)
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(.white.opacity(0.95)))
-        .shadow(color: .black.opacity(0.2), radius: 20, y: 10)
+        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(.white.opacity(0.95)))
         .offset(y: shown ? 0 : -30)
         .opacity(shown ? 1 : 0)
         .onAppear { withAnimation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.4)) { shown = true } }
@@ -159,7 +151,7 @@ struct StepDots: View {
     var onDark = false
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             ForEach(0..<total, id: \.self) { i in
                 Capsule()
                     .fill(i == current ? (onDark ? Color.qLime : Color.qGreen) : (onDark ? Color.white.opacity(0.3) : Color.qLine))
@@ -177,10 +169,10 @@ struct SearchField: View {
     var prompt: String = "Search"
 
     var body: some View {
-        HStack(spacing: 10) {
-            Icon(.magnifyingGlassBold, size: 18).foregroundStyle(Color.qGray)
+        HStack(spacing: 12) {
+            Icon(.magnifyingGlass, size: 18).foregroundStyle(Color.qGray)
             TextField(prompt, text: $text)
-                .font(.quesly(16))
+                .font(.ui(16))
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
             if !text.isEmpty {
@@ -191,9 +183,9 @@ struct SearchField: View {
                 .transition(.scale.combined(with: .opacity))
             }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 16)
         .frame(height: 46)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.qField))
+        .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
         .animation(.qSpring, value: text.isEmpty)
     }
 }
@@ -208,14 +200,14 @@ struct PersonRow: View {
                 HStack(spacing: 12) {
                     Avatar(user: user, size: 46)
                     VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: 5) {
-                            Text(user.username).font(.quesly(16, .semibold)).foregroundStyle(Color.qInk)
+                        HStack(spacing: 4) {
+                            Text(user.username).font(.ui(16, .semibold)).foregroundStyle(Color.qInk)
                             if let badge = user.badge {
                                 HexBadge(color: badge.color, icon: badge.icon).frame(width: 15, height: 15)
                             }
                         }
                         Text(user.bio.isEmpty ? "\(user.followers) followers" : user.bio)
-                            .font(.quesly(14))
+                            .font(.ui(14))
                             .foregroundStyle(Color.qGray)
                             .lineLimit(1)
                     }
@@ -237,7 +229,7 @@ struct SectionLabel: View {
 
     var body: some View {
         Text(title.uppercased())
-            .font(.quesly(13, .semibold))
+            .font(.ui(13, .semibold))
             .tracking(0.6)
             .foregroundStyle(Color.qGray)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -250,27 +242,27 @@ struct InviteCard: View {
     let username: String
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 16) {
             Icon(.paperPlaneTiltFill, size: 22)
-                .foregroundStyle(Color.qLime)
-                .frame(width: 46, height: 46)
-                .background(Circle().fill(Color.qGreen))
+                .foregroundStyle(Color.qBrandText)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(Color.qBackground))
             VStack(alignment: .leading, spacing: 2) {
-                Text("Invite your friends").font(.quesly(16, .semibold)).foregroundStyle(Color.qGreen)
-                Text("Answer together every day").font(.quesly(14)).foregroundStyle(Color.qGreen.opacity(0.8))
+                Text("Invite your friends").font(.ui(16, .semibold)).foregroundStyle(Color.qInk)
+                Text("Answer together every day").font(.ui(14)).foregroundStyle(Color.qGray)
             }
             Spacer()
             ShareLink(item: Invite.text(for: username)) {
                 Text("Invite")
-                    .font(.quesly(14, .semibold))
-                    .foregroundStyle(Color.qLime)
+                    .font(.ui(14, .semibold))
+                    .foregroundStyle(.white)
                     .padding(.horizontal, 16)
                     .frame(height: 34)
                     .background(Capsule().fill(Color.qGreen))
             }
             .buttonStyle(.pressable)
         }
-        .padding(14)
-        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.qLime))
+        .padding(16)
+        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qMint))
     }
 }

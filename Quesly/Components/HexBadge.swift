@@ -18,7 +18,7 @@ struct Hexagon: Shape {
 /// Hexagon medal used for user badges and achievements.
 struct HexBadge: View {
     var color: Color
-    var icon: Ph
+    var icon: QIcon
     var isLocked = false
 
     var body: some View {
@@ -26,16 +26,11 @@ struct HexBadge: View {
             let s = min(geo.size.width, geo.size.height)
             let tint = isLocked ? Color(hex: 0xC8C8C8) : color
             ZStack {
-                Hexagon()
-                    .fill(LinearGradient(colors: [tint.opacity(0.75), tint], startPoint: .top, endPoint: .bottom))
-                Hexagon()
-                    .stroke(Color.white.opacity(0.55), lineWidth: max(1, s * 0.06))
-                    .padding(s * 0.1)
+                Hexagon().fill(tint)
                 Icon(icon, size: s * 0.42)
                     .foregroundStyle(.white.opacity(isLocked ? 0.9 : 1))
             }
             .frame(width: s, height: s)
-            .shadow(color: tint.opacity(0.35), radius: s * 0.06, y: s * 0.04)
         }
         .aspectRatio(1, contentMode: .fit)
         .accessibilityHidden(true)

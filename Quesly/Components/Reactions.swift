@@ -6,6 +6,7 @@ struct ReactionControl: View {
     @Binding var isTrayOpen: Bool
     let onPick: (ReactionKind) -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var burst: ReactionKind?
     @State private var burstTrigger = 0
 
@@ -20,7 +21,7 @@ struct ReactionControl: View {
             }
         }
         .overlay(alignment: .bottomLeading) {
-            if let burst {
+            if let burst, !reduceMotion {
                 EmojiBurst(emoji: burst.emoji, trigger: burstTrigger)
                     .offset(x: 6, y: -14)
                     .allowsHitTesting(false)
@@ -33,14 +34,14 @@ struct ReactionControl: View {
         Button {
             isTrayOpen = true
         } label: {
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 if let mine = answer.myReaction {
                     Text(mine.emoji)
                         .font(.system(size: 22))
                         .id(mine)
                         .transition(.scale(scale: 0.2).combined(with: .opacity))
                     Text(mine.label)
-                        .font(.quesly(14, .semibold))
+                        .font(.ui(14, .semibold))
                         .foregroundStyle(Color.qGreen)
                 } else {
                     Icon(.smiley, size: 22)
@@ -51,7 +52,7 @@ struct ReactionControl: View {
                                 .offset(x: 4, y: -3)
                         }
                     Text("React")
-                        .font(.quesly(14, .medium))
+                        .font(.ui(14, .medium))
                 }
             }
             .foregroundStyle(Color.qGray)
@@ -82,7 +83,7 @@ struct ReactionControl: View {
             }
             .accessibilityLabel("Close reactions")
         }
-        .padding(.leading, 6)
+        .padding(.leading, 8)
         .padding(.trailing, 2)
         .background(
             Capsule().fill(.white)
@@ -122,10 +123,10 @@ struct ReactionSummary: View {
     let answer: Answer
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             if answer.totalReactions == 0 {
                 Icon(.eyeSlash, size: 15)
-                Text("No reactions yet").font(.quesly(13, .medium))
+                Text("No reactions yet").font(.ui(13, .medium))
             } else {
                 HStack(spacing: -6) {
                     ForEach(answer.topReactions.prefix(3)) { kind in
@@ -137,7 +138,7 @@ struct ReactionSummary: View {
                     }
                 }
                 Text("\(answer.totalReactions)")
-                    .font(.quesly(14, .semibold))
+                    .font(.ui(14, .semibold))
                     .foregroundStyle(Color.qInk)
                     .contentTransition(.numericText())
                 Icon(.lockSimpleFill, size: 11)
@@ -145,7 +146,7 @@ struct ReactionSummary: View {
             }
         }
         .foregroundStyle(Color.qGray)
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 12)
         .frame(height: 36)
         .background(Capsule().fill(Color.qField))
         .accessibilityElement(children: .ignore)

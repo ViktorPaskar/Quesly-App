@@ -4,7 +4,7 @@ struct WelcomeView: View {
     @State private var authMode: AuthView.Mode?
     @State private var appeared = false
 
-    private let features: [(Ph, String, String)] = [
+    private let features: [(QIcon, String, String)] = [
         (.sunFill, "1 question every 24h", "A new story prompt every morning"),
         (.globeHemisphereWestFill, "World & Friends feeds", "See how people answer, near and far"),
         (.heartFill, "Positive reactions only", "No dislikes. No hate. Just good vibes"),
@@ -21,11 +21,11 @@ struct WelcomeView: View {
                     .opacity(appeared ? 1 : 0)
                     .scaleEffect(appeared ? 1 : 0.9)
                 Text("ONE QUESTION A DAY.\nMILLIONS OF STORIES")
-                    .font(.quesly(15, .bold))
+                    .font(.ui(15, .bold))
                     .tracking(0.8)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.white)
-                    .padding(.top, 14)
+                    .padding(.top, 16)
                     .opacity(appeared ? 1 : 0)
                 Spacer()
 
@@ -41,14 +41,14 @@ struct WelcomeView: View {
                 .padding(.horizontal, 32)
                 .padding(.bottom, 36)
 
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     LimeButton(title: "Get started", icon: .arrowRightBold) { authMode = .signUp }
                     Button("I already have an account") { authMode = .signIn }
-                        .font(.quesly(16, .medium))
+                        .font(.ui(16, .medium))
                         .foregroundStyle(.white)
                         .frame(height: 48)
                 }
-                .padding(.horizontal, 28)
+                .padding(.horizontal, DS.Space.screen)
                 .padding(.bottom, 16)
                 .opacity(appeared ? 1 : 0)
                 .offset(y: appeared ? 0 : 30)
@@ -63,15 +63,15 @@ struct WelcomeView: View {
         }
     }
 
-    private func feature(_ icon: Ph, _ title: String, _ subtitle: String) -> some View {
-        HStack(spacing: 14) {
+    private func feature(_ icon: QIcon, _ title: String, _ subtitle: String) -> some View {
+        HStack(spacing: 16) {
             Icon(icon, size: 20)
                 .foregroundStyle(Color.qGreen)
                 .frame(width: 42, height: 42)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.qLime))
+                .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qLime))
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.quesly(17, .semibold)).foregroundStyle(.white)
-                Text(subtitle).font(.quesly(14)).foregroundStyle(.white.opacity(0.75))
+                Text(title).font(.ui(17, .semibold)).foregroundStyle(.white)
+                Text(subtitle).font(.ui(14)).foregroundStyle(.white.opacity(0.75))
             }
         }
     }

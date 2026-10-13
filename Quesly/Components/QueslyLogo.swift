@@ -39,6 +39,7 @@ private struct BouncingDot: View {
     let size: CGFloat
     let index: Int
     let isActive: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var up = false
 
     var body: some View {
@@ -47,7 +48,7 @@ private struct BouncingDot: View {
             .frame(width: size, height: size)
             .scaleEffect(up ? 1.25 : 1)
             .onAppear {
-                guard isActive else { return }
+                guard isActive, !reduceMotion else { return }
                 withAnimation(.easeInOut(duration: 0.45).repeatForever(autoreverses: true).delay(Double(index) * 0.15)) {
                     up = true
                 }

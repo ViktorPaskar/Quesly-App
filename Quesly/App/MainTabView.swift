@@ -3,7 +3,7 @@ import SwiftUI
 enum MainTab: CaseIterable {
     case feed, discover, notifications, profile
 
-    var icon: Ph {
+    var icon: QIcon {
         switch self {
         case .feed: return .house
         case .discover: return .magnifyingGlass
@@ -12,10 +12,10 @@ enum MainTab: CaseIterable {
         }
     }
 
-    var activeIcon: Ph {
+    var activeIcon: QIcon {
         switch self {
         case .feed: return .houseFill
-        case .discover: return .magnifyingGlassBold
+        case .discover: return .magnifyingGlass
         case .notifications: return .bellFill
         case .profile: return .userFill
         }
@@ -86,25 +86,25 @@ struct MainTabView: View {
             ForEach(MainTab.allCases, id: \.self) { t in
                 let active = tab == t
                 Button { select(t) } label: {
-                    VStack(spacing: 5) {
-                        Icon(active ? t.activeIcon : t.icon, size: 27)
-                            .foregroundStyle(active ? Color.qGreen : Color.qInk.opacity(0.55))
+                    VStack(spacing: 4) {
+                        Icon(active ? t.activeIcon : t.icon, size: 25, weight: active ? .semibold : .regular)
+                            .foregroundStyle(active ? Color.qBrandText : Color.qGray)
                             .pop(on: active)
                             .overlay(alignment: .topTrailing) {
                                 if t == .notifications && store.unreadNotifications > 0 && !active {
                                     Text("\(min(store.unreadNotifications, 9))")
-                                        .font(.custom("Outfit-Bold", fixedSize: 10))
-                                        .foregroundStyle(Color.qGreen)
-                                        .frame(minWidth: 16, minHeight: 16)
-                                        .background(Circle().fill(Color.qLime))
-                                        .overlay(Circle().stroke(.white, lineWidth: 1.5))
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundStyle(.white)
+                                        .frame(minWidth: 17, minHeight: 17)
+                                        .background(Circle().fill(Color.qFlame))
+                                        .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
                                         .offset(x: 8, y: -6)
                                         .transition(.scale)
                                 }
                             }
                         ZStack {
                             if active {
-                                Capsule().fill(Color.qGreen)
+                                Capsule().fill(Color.qBrandText)
                                     .frame(width: 18, height: 4)
                                     .matchedGeometryEffect(id: "tabIndicator", in: ns)
                             }
@@ -121,7 +121,7 @@ struct MainTabView: View {
             }
         }
         .animation(.qSpring, value: tab)
-        .background(Color.white.ignoresSafeArea(edges: .bottom))
+        .background(Color.qBackground.ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) { Rectangle().fill(Color.qLine).frame(height: 1) }
         .sensoryFeedback(.selection, trigger: tab)
     }

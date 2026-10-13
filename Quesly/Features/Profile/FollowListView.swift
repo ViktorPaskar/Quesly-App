@@ -29,11 +29,11 @@ struct FollowListView: View {
                                        message: "Find people to follow in Discover.")
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, DS.Space.screen)
             }
             .scrollDismissesKeyboard(.immediately)
         }
-        .background(Color.white)
+        .background(Color.qBackground)
         .queslyBackHeader(kind == .following ? "Following" : "Followers")
         .onAppear {
             if people.isEmpty {

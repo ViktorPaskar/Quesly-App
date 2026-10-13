@@ -18,16 +18,21 @@ struct NotificationsView: View {
                     LazyVStack(spacing: 0) {
                         ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
                             row(group)
-                                .padding(.horizontal, 16)
+                                .padding(.horizontal, DS.Space.screen)
                                 .padding(.vertical, 12)
-                                .background(group.date > store.notificationsSeenAt ? Color.qMint.opacity(0.6) : .white)
+                                .overlay(alignment: .leading) {
+                                    if group.date > store.notificationsSeenAt {
+                                        Circle().fill(Color.qGreen).frame(width: 8, height: 8).padding(.leading, 6)
+                                            .accessibilityLabel("Unread")
+                                    }
+                                }
                                 .staggeredAppear(index)
                         }
                     }
                 }
             }
         }
-        .background(Color.white)
+        .background(Color.qBackground)
         .toolbar(.hidden, for: .navigationBar)
         .onDisappear { store.markNotificationsSeen() }
     }
@@ -39,17 +44,17 @@ struct NotificationsView: View {
             leading(group, actors: actors)
             VStack(alignment: .leading, spacing: 4) {
                 title(group, actors: actors)
-                    .font(.quesly(15))
+                    .font(.ui(15))
                     .foregroundStyle(Color.qInk)
                     .fixedSize(horizontal: false, vertical: true)
                 if let answerId = group.answerId, let answer = store.answer(answerId) {
                     Text("“\(answer.text)”")
-                        .font(.quesly(14))
+                        .font(.ui(14))
                         .foregroundStyle(Color.qGray)
                         .lineLimit(1)
                 }
                 Text(RelativeTime.short(group.date))
-                    .font(.quesly(13))
+                    .font(.ui(13))
                     .foregroundStyle(Color.qGray)
             }
             Spacer(minLength: 8)
@@ -105,7 +110,7 @@ struct NotificationsView: View {
     private func title(_ group: NotificationGroup, actors: [AppUser]) -> Text {
         func bold(_ s: String) -> AttributedString {
             var a = AttributedString(s)
-            a.font = .quesly(15, .semibold)
+            a.font = .ui(15, .semibold)
             return a
         }
         var text = AttributedString()

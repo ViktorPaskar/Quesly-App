@@ -14,14 +14,14 @@ struct DailyQuestionView: View {
     @State private var revealed = 0
     @State private var shake = 0
     @FocusState private var editorFocused: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var question: DailyQuestion { store.todayQuestion }
     private var words: [String] { question.text.uppercased().split(separator: " ").map(String.init) }
 
     var body: some View {
         ZStack {
-            BrandGradientBackground(animate: false)
-            Color.qGreen.opacity(0.55).ignoresSafeArea()
+            Color.qGreen.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 header
@@ -30,7 +30,7 @@ struct DailyQuestionView: View {
                 Spacer(minLength: 16)
                 if isComposing {
                     VisibilityPicker(selection: $visibility)
-                        .padding(.bottom, 14)
+                        .padding(.bottom, 16)
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
                     TimelineView(.periodic(from: .now, by: 60)) { context in
                         Label {
@@ -38,10 +38,10 @@ struct DailyQuestionView: View {
                         } icon: {
                             Icon(.hourglassMediumFill, size: 14)
                         }
-                        .font(.quesly(13))
+                        .font(.ui(13))
                         .foregroundStyle(.white.opacity(0.85))
                     }
-                    .padding(.bottom, 14)
+                    .padding(.bottom, 16)
                 }
                 LimeButton(title: isComposing ? "Submit" : "Answer",
                            icon: isComposing ? .paperPlaneTiltFill : .pencilSimpleFill,
@@ -53,8 +53,8 @@ struct DailyQuestionView: View {
                         editorFocused = true
                     }
                 }
-                .padding(.horizontal, 40)
-                .padding(.bottom, 12)
+                .padding(.horizontal, DS.Space.screen)
+                .padding(.bottom, DS.Space.s)
                 .modifier(ShakeEffect(shakes: CGFloat(shake)))
             }
         }
@@ -71,11 +71,11 @@ struct DailyQuestionView: View {
 
     private var header: some View {
         ZStack {
-            VStack(spacing: 14) {
+            VStack(spacing: 16) {
                 QueslyLogo(height: 18, background: .clear)
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     Text("TODAY'S QUESTION")
-                        .font(.quesly(12, .bold))
+                        .font(.ui(12, .bold))
                         .tracking(1)
                         .foregroundStyle(Color.qLime)
                     Capsule().fill(Color.qLime).frame(width: 110, height: 2)
@@ -100,15 +100,14 @@ struct DailyQuestionView: View {
     /// Question appears word by word; highlighted words glow lime.
     private var questionText: some View {
         let highlighted = Set(question.highlights.flatMap { $0.uppercased().split(separator: " ").map(String.init) })
-        return WrappingHStack(spacing: 10, lineSpacing: 6) {
+        return WrappingHStack(spacing: 12, lineSpacing: 6) {
             ForEach(Array(words.enumerated()), id: \.offset) { index, word in
                 Text(word)
-                    .font(.quesly(36, .bold, relativeTo: .largeTitle))
+                    .font(.display(36, .bold))
                     .foregroundStyle(highlighted.contains(word) ? Color.qLime : .white)
-                    .opacity(index < revealed ? 1 : 0)
-                    .offset(y: index < revealed ? 0 : 14)
-                    .blur(radius: index < revealed ? 0 : 6)
-                    .animation(.qSmooth.delay(0.2 + Double(index) * 0.09), value: revealed)
+                    .opacity(index < revealed || reduceMotion ? 1 : 0)
+                    .offset(y: index < revealed || reduceMotion ? 0 : 10)
+                    .animation(.qSmooth.delay(0.15 + Double(index) * 0.06), value: revealed)
             }
         }
         .padding(.horizontal, 32)
@@ -120,24 +119,24 @@ struct DailyQuestionView: View {
     private var composer: some View {
         VStack(spacing: 0) {
             Text(question.text.uppercased())
-                .font(.quesly(17, .bold))
+                .font(.ui(17, .bold))
                 .foregroundStyle(Color.qGreen)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(18)
-                .padding(.bottom, 14)
+                .padding(20)
+                .padding(.bottom, 16)
                 .background(Color.qLime)
 
             ZStack(alignment: .topLeading) {
                 if text.isEmpty {
                     Text("Be honest, keep it short…")
-                        .font(.quesly(18))
+                        .font(.ui(18))
                         .foregroundStyle(Color.qGray)
-                        .padding(.horizontal, 5)
+                        .padding(.horizontal, 4)
                         .padding(.vertical, 8)
                         .allowsHitTesting(false)
                 }
                 TextEditor(text: $text)
-                    .font(.quesly(18))
+                    .font(.ui(18))
                     .lineSpacing(3)
                     .foregroundStyle(Color.qInk)
                     .scrollContentBackground(.hidden)
@@ -149,7 +148,7 @@ struct DailyQuestionView: View {
                         }
                     }
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 16)
             .padding(.top, 8)
             .frame(height: 190)
 
@@ -157,7 +156,7 @@ struct DailyQuestionView: View {
                 CharacterRing(progress: Double(text.count) / Double(AppStore.maxAnswerLength))
                     .frame(width: 16, height: 16)
                 Text("\(text.count)/\(AppStore.maxAnswerLength)")
-                    .font(.quesly(13, .medium))
+                    .font(.ui(13, .medium))
                     .foregroundStyle(text.count >= AppStore.maxAnswerLength ? Color.qFlame : Color.qGray)
                     .monospacedDigit()
                     .contentTransition(.numericText())
@@ -165,10 +164,9 @@ struct DailyQuestionView: View {
             }
             .padding(16)
         }
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: .black.opacity(0.18), radius: 24, y: 12)
-        .padding(.horizontal, 24)
+        .background(Color.qBackground)
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
+        .padding(.horizontal, DS.Space.screen)
         .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity).combined(with: .scale(scale: 0.9)),
                                 removal: .opacity))
     }
@@ -199,7 +197,7 @@ struct VisibilityPicker: View {
                     withAnimation(.qSpring) { selection = option }
                 } label: {
                     Label { Text(option.title) } icon: { Icon(option.icon, size: 16) }
-                        .font(.quesly(14, .semibold))
+                        .font(.ui(14, .semibold))
                         .foregroundStyle(on ? Color.qGreen : .white.opacity(0.85))
                         .padding(.horizontal, 16)
                         .frame(height: 38)

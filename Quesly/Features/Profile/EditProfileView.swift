@@ -44,12 +44,12 @@ struct EditProfileView: View {
                     TextField("City, Country", text: $draft.location)
                 }
 
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("Password").font(.quesly(13)).foregroundStyle(Color.qGray)
+                        Text("Password").font(.ui(13)).foregroundStyle(Color.qGray)
                         Spacer()
                         Button("Change your password") {}
-                            .font(.quesly(13, .medium))
+                            .font(.ui(13, .medium))
                             .foregroundStyle(Color.qGreen)
                     }
                     HStack {
@@ -61,13 +61,13 @@ struct EditProfileView: View {
                     .queslyField()
                 }
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("About").font(.quesly(13)).foregroundStyle(Color.qGray)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("About").font(.ui(13)).foregroundStyle(Color.qGray)
                     TextField("Tell people about yourself", text: $draft.bio, axis: .vertical)
                         .lineLimit(3...6)
-                        .font(.quesly(16))
-                        .padding(14)
-                        .background(RoundedRectangle(cornerRadius: 10).stroke(Color.qLine))
+                        .font(.ui(16))
+                        .padding(16)
+                        .background(RoundedRectangle(cornerRadius: DS.Radius.m).stroke(Color.qLine))
                 }
 
                 GreenButton(title: "Save", isEnabled: draft.username.count >= 3) {
@@ -76,11 +76,11 @@ struct EditProfileView: View {
                 }
                 .padding(.top, 8)
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, DS.Space.screen)
             .padding(.bottom, 32)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.white)
+        .background(Color.qBackground)
         .queslyBackHeader("Edit Profile")
         .onAppear {
             guard !loaded else { return }
@@ -90,8 +90,8 @@ struct EditProfileView: View {
     }
 
     private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.quesly(13)).foregroundStyle(Color.qGray)
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(.ui(13)).foregroundStyle(Color.qGray)
             content().queslyField()
         }
     }

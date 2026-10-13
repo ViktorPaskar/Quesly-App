@@ -9,21 +9,18 @@ struct Avatar: View {
     var body: some View {
         let hue = user?.avatarHue ?? 0.4
         Circle()
-            .fill(LinearGradient(
-                colors: [Color(hue: hue, saturation: 0.32, brightness: 0.98),
-                         Color(hue: hue, saturation: 0.62, brightness: 0.72)],
-                startPoint: .topLeading, endPoint: .bottomTrailing))
+            .fill(Color(hue: hue, saturation: 0.22, brightness: 0.93))
             .overlay(
                 Text(user?.initials ?? "?")
-                    .font(.custom("Outfit-SemiBold", fixedSize: size * 0.38))
-                    .foregroundStyle(.white)
+                    .font(.system(size: size * 0.36, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color(hue: hue, saturation: 0.65, brightness: 0.42))
             )
             .frame(width: size, height: size)
             .overlay(alignment: .bottomTrailing) {
                 if showsBadge, let badge = user?.badge {
                     HexBadge(color: badge.color, icon: badge.icon)
                         .frame(width: size * 0.3, height: size * 0.3)
-                        .padding(3)
+                        .padding(4)
                         .background(Circle().fill(.white))
                         .offset(x: -size * 0.01, y: -size * 0.01)
                 }

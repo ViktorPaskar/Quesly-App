@@ -36,17 +36,17 @@ struct AuthView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 20) {
                     QueslyLogo(height: 22, markColor: .qGreen, textColor: .qGreen, background: .white)
                         .padding(.top, 8)
 
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 8) {
                         Text(mode == .signUp ? "Create your account" : "Welcome back")
-                            .font(.quesly(26, .bold)).foregroundStyle(Color.qInk)
+                            .font(.display(26, .bold)).foregroundStyle(Color.qInk)
                         Text(mode == .signUp
                              ? "One question a day. Join millions of stories."
                              : "Today's question is waiting for you.")
-                            .font(.quesly(15)).foregroundStyle(Color.qGray)
+                            .font(.ui(15)).foregroundStyle(Color.qGray)
                     }
 
                     if mode == .signUp {
@@ -101,17 +101,17 @@ struct AuthView: View {
                     if mode == .signUp {
                         Toggle(isOn: $acceptedTerms) {
                             Text("I agree to the Terms of Service and Privacy Policy")
-                                .font(.quesly(13)).foregroundStyle(Color.qInk)
+                                .font(.ui(13)).foregroundStyle(Color.qInk)
                         }
                         .toggleStyle(CheckboxToggleStyle())
                     } else {
                         Button("Forgot password?") {}
-                            .font(.quesly(13, .medium))
+                            .font(.ui(13, .medium))
                             .foregroundStyle(Color.qGreen)
                     }
 
                     GreenButton(title: mode == .signUp ? "Sign Up" : "Sign In", isEnabled: canSubmit, action: submit)
-                        .padding(.top, 6)
+                        .padding(.top, 8)
 
                     HStack {
                         Spacer()
@@ -124,13 +124,13 @@ struct AuthView: View {
                         .fontWeight(.semibold)
                         Spacer()
                     }
-                    .font(.quesly(14))
+                    .font(.ui(14))
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, DS.Space.screen)
                 .padding(.bottom, 32)
             }
             .scrollDismissesKeyboard(.interactively)
-            .background(Color.white)
+            .background(Color.qBackground)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { dismiss() } label: {
@@ -152,8 +152,8 @@ struct AuthView: View {
     }
 
     private func labeled<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.quesly(12)).foregroundStyle(Color.qGray)
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(.ui(12)).foregroundStyle(Color.qGray)
             content()
         }
     }
@@ -162,7 +162,7 @@ struct AuthView: View {
 struct CheckboxToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         Button { configuration.isOn.toggle() } label: {
-            HStack(alignment: .top, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
                 Icon(configuration.isOn ? .checkCircleFill : .checkBold, size: 22)
                     .opacity(configuration.isOn ? 1 : 0.35)
                     .foregroundStyle(configuration.isOn ? Color.qGreen : Color.qGray)

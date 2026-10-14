@@ -12,14 +12,12 @@ struct WelcomeView: View {
 
             VStack(spacing: 0) {
                 // The cards are an overlay so their (very tall, looping) content never pushes the buttons off screen.
-                Color.clear
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .overlay(alignment: .top) {
-                        FloatingAnswers(answers: store.todayAnswers)
-                            .opacity(appeared ? 1 : 0)
-                            .animation(.qSmooth.delay(0.2), value: appeared)
-                    }
-                    .clipped()
+                GeometryReader { geo in
+                    FloatingAnswers(answers: store.todayAnswers)
+                        .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
+                        .opacity(appeared ? 1 : 0)
+                        .animation(.qSmooth.delay(0.2), value: appeared)
+                }
 
                 brand
             }
@@ -95,7 +93,7 @@ private struct FloatingAnswers: View {
             }
             .padding(.horizontal, DS.Space.screen)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
         .clipped()
         .mask(
             LinearGradient(stops: [

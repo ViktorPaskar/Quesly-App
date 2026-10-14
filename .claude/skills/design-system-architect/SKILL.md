@@ -30,6 +30,7 @@ The design system is the single source of truth. Screens consume tokens and comp
 | `qField` | Fields, chips, neutral cards | #F3F5F4 / #1E2220 |
 | `qLine` | Separators, outlines | #E9ECEA / #2A2E2C |
 | `qMint` | Selected/brand-tinted fill on neutral | #EAF4EE / #16302A |
+| `qIce` / `qIceSoft` | Streak freeze ❄️ icon / its fill | #2F7FE0 / #7DB8FF · #E6F0FC / #16263B |
 | `qBrandText` | Brand green used as text/icon on neutral bg | #07583D / #7FD49B |
 
 Data colors (badge tiers, achievement colors) live in models, not in views.
@@ -42,9 +43,10 @@ Data colors (badge tiers, achievement colors) live in models, not in views.
 4. **Every component documents** (doc comment): purpose, variants, states, and accessibility behaviour.
 5. **Typography:** `Font.ui(size, weight)` snaps to the iOS text-style scale; `Font.display` is Outfit and reserved for: question text, onboarding/hero titles, the "caught up" title, story card, logo. Max 3 sizes per screen.
 6. **Radii:** s for chips/small controls, m for buttons/fields/rows, l for cards/sheets. Capsules for pills.
-7. **Elevation:** flat by default. Shadow allowed only for floating UI (reaction tray, popovers) — `radius ≤ 12, opacity ≤ 0.12`.
-8. **Motion tokens only** (`qSpring`, `qSmooth`); decorative/looping motion must honour Reduce Motion.
-9. **Dark mode readiness:** feature code uses semantic colors; `Color.white` only for text/icons on brand-green or for the exported story card. The app currently forces light mode (`.preferredColorScheme(.light)` in `QueslyApp.swift`); remove that only after a dark-mode visual-qa pass.
+7. **Documented exceptions:** the widget target (`QueslyWidget/`, `Shared/QuestionWidgetViews.swift`) can't see app tokens — it uses `WidgetPalette` and literal SF Symbol names; the Welcome screen's floating cards use a `LinearGradient` *mask* to fade at the edges (functional, not decoration).
+8. **Elevation:** flat by default. Shadow allowed only for floating UI (reaction tray, popovers) — `radius ≤ 12, opacity ≤ 0.12`.
+9. **Motion tokens only** (`qSpring`, `qSmooth`); decorative/looping motion must honour Reduce Motion.
+10. **Dark mode readiness:** feature code uses semantic colors; `Color.white` only for text/icons on brand-green or for the exported story card. Dark mode is on and covered by the `dark-*` screenshot pass.
 
 ## Consistency audit (run before/after any system change)
 

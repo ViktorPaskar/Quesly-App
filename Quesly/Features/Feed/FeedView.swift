@@ -53,6 +53,12 @@ struct FeedView: View {
                         if !store.hasAnsweredToday {
                             AnswerPrompt { showQuestion = true }
                         }
+                        if store.freezeJustUsed != nil {
+                            FreezeUsedNote(streak: store.streak) {
+                                withAnimation(.qSmooth) { store.freezeJustUsed = nil }
+                            }
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
                         if let error = store.feedError {
                             ErrorStateView(message: error) {
                                 Task { await store.reloadFeed() }
@@ -164,6 +170,44 @@ struct FeedView: View {
         revealCount = .max
         try? await Task.sleep(for: .seconds(1.6))
         withAnimation(.qSmooth) { highlightsMine = false }
+    }
+}
+
+/// One-time note after a streak freeze covered a missed day.
+private struct FreezeUsedNote: View {
+    let streak: Int
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: DS.Space.s) {
+            Icon(.snowflake, size: 18, weight: .semibold)
+                .foregroundStyle(Color.qIce)
+                .frame(width: 40, height: 40)
+                .background(Circle().fill(Color.qBackground))
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Streak saved")
+                    .font(.ui(16, .semibold))
+                    .foregroundStyle(Color.qInk)
+                Text("You missed yesterday, so a streak freeze kept your \(streak)-day streak alive.")
+                    .font(.ui(15))
+                    .foregroundStyle(Color.qGray)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+            Button(action: onDismiss) {
+                Icon(.xBold, size: 14)
+                    .foregroundStyle(Color.qGray)
+                    .frame(width: DS.hitTarget, height: DS.hitTarget)
+                    .contentShape(Rectangle())
+            }
+            .padding(.trailing, -DS.Space.s)
+            .padding(.top, -DS.Space.s)
+            .accessibilityLabel("Dismiss")
+        }
+        .padding(DS.Space.m)
+        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qIceSoft))
+        .padding(.horizontal, DS.Space.screen)
+        .padding(.top, DS.Space.s)
     }
 }
 

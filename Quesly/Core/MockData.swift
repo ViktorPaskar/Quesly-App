@@ -2,18 +2,10 @@ import Foundation
 
 /// Seed content mirroring the Figma prototype. Replace with API calls once the backend exists.
 enum MockData {
-    static let questions: [DailyQuestion] = [
-        .init(id: "q-dayoff", text: "If you only had one day off, what would you do?", highlights: ["day off,", "you do?"]),
-        .init(id: "q-happy", text: "What's a small thing that makes you happy every day?", highlights: ["happy"]),
-        .init(id: "q-live", text: "If you could live anywhere in the world, where would it be?", highlights: ["anywhere", "world,"]),
-        .init(id: "q-power", text: "If you had one superpower, what would it be?", highlights: ["superpower,"]),
-        .init(id: "q-advice", text: "What's the best advice you've ever received?", highlights: ["best advice"]),
-        .init(id: "q-song", text: "Which song always puts you in a good mood?", highlights: ["song", "good mood?"]),
-        .init(id: "q-proud", text: "What's something you're quietly proud of?", highlights: ["proud"]),
-        .init(id: "q-tiny", text: "What tiny moment made your week better?", highlights: ["tiny moment"]),
-        .init(id: "q-learn", text: "What's one skill you'd love to learn this year?", highlights: ["skill"]),
-        .init(id: "q-meal", text: "What meal feels like home to you?", highlights: ["home"]),
-    ]
+    /// Shared with the widget (`Shared/QuestionBank.swift`), so both show the same question for a date.
+    static let questions: [DailyQuestion] = QuestionBank.items.map {
+        DailyQuestion(id: $0.id, text: $0.text, highlights: $0.highlights)
+    }
 
     static let me = AppUser(
         id: "me",
@@ -164,19 +156,30 @@ enum MockData {
     ]
 
     /// Past answers of `me` for the previous days' questions, shown in Profile.
+    /// Days (ago) the seed user answered — a believable month for the Memories calendar.
+    /// Day 4 is missing but covered by a streak freeze (`frozenDaysAgo`), so the streak runs back to day 8.
+    static let answeredDaysAgo = [1, 2, 3, 5, 6, 7, 8, 11, 12, 13, 14, 16, 17, 18, 19, 20, 22, 23, 26, 27, 29]
+    static let frozenDaysAgo = [4]
+
     static func myHistory(now: Date = .now) -> [Answer] {
         let cal = Calendar.current
         let reactions: [[ReactionKind: Int]] = [
             [.love: 14, .fire: 22, .haha: 3, .touched: 7],
             [.love: 2, .fire: 31, .haha: 12, .touched: 5],
             [.love: 68, .fire: 15, .haha: 1, .touched: 10],
+            [.love: 9, .fire: 4, .touched: 2],
         ]
-        return (1...3).map { daysAgo in
+        return answeredDaysAgo.enumerated().map { index, daysAgo in
             let date = cal.date(byAdding: .day, value: -daysAgo, to: now) ?? now
             let q = AppStore.question(for: date)
             return Answer(id: "h\(daysAgo)", questionId: q.id, questionText: q.text, authorId: "me",
-                          text: sampleAnswers[q.id] ?? "", createdAt: date, reactions: reactions[daysAgo - 1])
+                          text: sampleAnswers[q.id] ?? "", createdAt: date, reactions: reactions[min(index, reactions.count - 1)])
         }
+    }
+
+    static func myFrozenDays(now: Date = .now) -> Set<Date> {
+        let cal = Calendar.current
+        return Set(frozenDaysAgo.compactMap { cal.date(byAdding: .day, value: -$0, to: cal.startOfDay(for: now)) })
     }
 
     static func notifications(now: Date = .now) -> [AppNotification] {

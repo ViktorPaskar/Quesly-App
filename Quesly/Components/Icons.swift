@@ -38,6 +38,7 @@ enum QIcon: String {
     case globeHemisphereWestFill = "globe.europe.africa.fill"
     case usersFill = "person.2.fill", usersThreeFill = "person.3.fill", userPlusFill = "person.badge.plus"
     case pushPinFill = "pin.fill", fireFill = "flame.fill"
+    case snowflake = "snowflake", calendar = "calendar", info = "info.circle"
     case sealCheckFill = "checkmark.seal.fill", shieldCheckFill = "checkmark.shield.fill"
     case starFill = "star.fill", sunFill = "sun.max.fill", sparkleFill = "sparkles"
     case medalFill = "medal.fill", crownSimpleFill = "crown.fill"

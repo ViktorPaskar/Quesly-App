@@ -50,12 +50,12 @@ jobs:
             xcrun simctl io "$DEVICE" screenshot "screenshots/$2.png"
           }
           i=1
-          for screen in welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile saved settings editProfile achievements; do
+          for screen in welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile memory saved settings editProfile achievements freezeUsed widgets; do
             shoot $screen "$(printf '%02d' $i)-$screen"; i=$((i+1))
           done
           # Dark appearance pass
           xcrun simctl ui "$DEVICE" appearance dark || true
-          for screen in question feed story reactions discover notifications profile settings; do
+          for screen in question feed story reactions discover notifications profile memory settings widgets; do
             shoot $screen "dark-$screen"
           done
           xcrun simctl ui "$DEVICE" appearance light || true

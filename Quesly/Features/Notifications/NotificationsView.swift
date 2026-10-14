@@ -5,16 +5,12 @@ struct NotificationsView: View {
 
     var body: some View {
         let groups = store.groupedNotifications
-        VStack(spacing: 0) {
-            TitleHeader(title: "Notifications")
-            Rectangle().fill(Color.qLine).frame(height: 1)
-
+        // Native large title that collapses on scroll.
+        ScrollView {
             if groups.isEmpty {
                 EmptyStateView(icon: .bellRingingFill, title: "All caught up",
                                message: "Reactions, new followers and badges will show up here.")
-                Spacer()
             } else {
-                ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
                             row(group)
@@ -29,11 +25,11 @@ struct NotificationsView: View {
                                 .staggeredAppear(index)
                         }
                     }
-                }
             }
         }
         .background(Color.qBackground)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle("Notifications")
+        .navigationBarTitleDisplayMode(.large)
         .onDisappear { store.markNotificationsSeen() }
     }
 

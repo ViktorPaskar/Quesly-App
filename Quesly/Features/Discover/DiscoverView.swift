@@ -9,13 +9,8 @@ struct DiscoverView: View {
 
     var body: some View {
         let results = store.searchUsers(query)
-        VStack(spacing: 0) {
-            TitleHeader(title: "Discover")
-            SearchField(text: $query, prompt: "Search people")
-                .padding(.horizontal, DS.Space.screen)
-                .padding(.bottom, 8)
-
-            ScrollView {
+        // Native large title that collapses on scroll, with the system search bar under it.
+        ScrollView {
                 LazyVStack(spacing: 0) {
                     if query.isEmpty {
                         InviteCard(username: store.me.username)
@@ -56,11 +51,12 @@ struct DiscoverView: View {
                 .padding(.horizontal, DS.Space.screen)
                 .padding(.bottom, 16)
                 .animation(.qSmooth, value: query.isEmpty)
-            }
-            .scrollDismissesKeyboard(.immediately)
         }
+        .scrollDismissesKeyboard(.immediately)
         .background(Color.qBackground)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle("Discover")
+        .navigationBarTitleDisplayMode(.large)
+        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search people")
         .onAppear {
             // Snapshot so followed people don't vanish mid-scroll.
             if suggestions.isEmpty { suggestions = store.suggestedUsers }

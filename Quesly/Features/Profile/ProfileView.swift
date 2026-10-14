@@ -175,7 +175,7 @@ struct ProfileHeader: View {
             actions
 
             if isMe {
-                StreakWeekCard(streak: streak)
+                MemoriesCard()
                 BadgesStrip()
             }
         }
@@ -278,59 +278,6 @@ struct AvatarRing: View {
     }
 }
 
-/// Streak with the last 7 days (rolling, so the dots always agree with the number).
-struct StreakWeekCard: View {
-    @Environment(AppStore.self) private var store
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let streak: Int
-    @State private var appeared = false
-
-    var body: some View {
-        let days = store.lastSevenDays
-        VStack(alignment: .leading, spacing: DS.Space.m) {
-            HStack(alignment: .firstTextBaseline, spacing: DS.Space.xs) {
-                Icon(.fireFill, size: 20).foregroundStyle(Color.qFlame)
-                Text("\(streak)-day streak")
-                    .font(.ui(17, .semibold))
-                    .foregroundStyle(Color.qInk)
-                Spacer()
-                Text(store.hasAnsweredToday ? "See you tomorrow" : "Answer today to keep it")
-                    .font(.ui(13))
-                    .foregroundStyle(Color.qGray)
-            }
-            HStack(spacing: 0) {
-                ForEach(Array(days.enumerated()), id: \.offset) { index, day in
-                    VStack(spacing: DS.Space.xs) {
-                        ZStack {
-                            Circle().fill(day.answered ? Color.qGreen : Color.qLine)
-                            if day.answered {
-                                Icon(.checkBold, size: 13).foregroundStyle(.white)
-                            }
-                        }
-                        .frame(width: 30, height: 30)
-                        .overlay {
-                            if day.isToday {
-                                Circle().stroke(Color.qGreen, lineWidth: 2).padding(-4)
-                            }
-                        }
-                        .scaleEffect(appeared || reduceMotion ? 1 : 0.4)
-                        .animation(.qSpring.delay(0.1 + Double(index) * 0.04), value: appeared)
-                        Text(day.isToday ? "Today" : day.date.formatted(.dateTime.weekday(.narrow)))
-                            .font(.ui(12, day.isToday ? .semibold : .regular))
-                            .foregroundStyle(day.isToday ? Color.qInk : Color.qGray)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(day.date.formatted(.dateTime.weekday(.wide))), \(day.answered ? "answered" : "not answered")")
-                }
-            }
-        }
-        .padding(DS.Space.m)
-        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qField))
-        .onAppear { appeared = true }
-    }
-}
-
 /// Horizontal strip of badges with a link to all achievements.
 struct BadgesStrip: View {
     @Environment(AppStore.self) private var store
@@ -365,7 +312,7 @@ struct BadgesStrip: View {
                                     .multilineTextAlignment(.center)
                                     .lineLimit(2)
                                     .fixedSize(horizontal: false, vertical: true)
-                                    .frame(width: 76, alignment: .top)
+                                    .frame(width: 84, alignment: .top)
                             }
                         }
                         .buttonStyle(.pressable)

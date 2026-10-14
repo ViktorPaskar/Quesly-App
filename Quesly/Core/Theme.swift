@@ -47,6 +47,9 @@ extension Color {
     /// Brand acid lime — accent on green surfaces only (fails contrast as text on white).
     static let qLime = Color(hex: 0xD4FF00)
     static let qFlame = Color(hex: 0xFF6A1A)
+    /// Streak freeze ❄️ (icon/text) and its soft fill.
+    static let qIce = Color(light: 0x2F7FE0, dark: 0x7DB8FF)
+    static let qIceSoft = Color(light: 0xE6F0FC, dark: 0x16263B)
 
     // Semantic roles (adapt to light / dark)
     /// Primary text.

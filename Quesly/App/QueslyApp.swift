@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 @main
 struct QueslyApp: App {
@@ -6,6 +7,7 @@ struct QueslyApp: App {
     @State private var network = NetworkMonitor()
 
     init() {
+        Self.styleNavigationBars()
         DemoConfig.resetPersistedState()
         let store = AppStore()
         DemoConfig.apply(to: store)
@@ -13,6 +15,23 @@ struct QueslyApp: App {
     }
 
     @Environment(\.scenePhase) private var scenePhase
+
+    /// Large titles (Discover, Notifications) in the brand display face; collapsed titles stay SF Pro.
+    private static func styleNavigationBars() {
+        let edge = UINavigationBarAppearance()
+        edge.configureWithTransparentBackground()
+        let standard = UINavigationBarAppearance()
+        standard.configureWithDefaultBackground()
+        if let outfit = UIFont(name: "Outfit-Bold", size: 34) {
+            let large = UIFontMetrics(forTextStyle: .largeTitle).scaledFont(for: outfit)
+            edge.largeTitleTextAttributes = [.font: large]
+            standard.largeTitleTextAttributes = [.font: large]
+        }
+        let bar = UINavigationBar.appearance()
+        bar.standardAppearance = standard
+        bar.compactAppearance = standard
+        bar.scrollEdgeAppearance = edge
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -36,7 +55,9 @@ struct RootView: View {
     var body: some View {
         ZStack {
             Group {
-                if !store.isSignedIn {
+                if DemoConfig.showsWidgetGallery {
+                    WidgetGalleryView()
+                } else if !store.isSignedIn {
                     WelcomeView()
                 } else if store.onboarding == .findFriends {
                     NavigationStack { FindFriendsView().withQueslyRoutes().toolbar(.hidden, for: .navigationBar) }

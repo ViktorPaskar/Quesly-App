@@ -16,9 +16,11 @@ description: Screenshot-based visual QA for Quesly. Use after any UI change, bef
 
 `Quesly/Core/DemoConfig.swift` maps `QUESLY_SCREEN=<name>` (DEBUG builds only) to seeded state + initial tab/route/sheet. The workflow loops over a list of names (`for screen in …` in the workflow). Current set:
 
-`welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile saved settings editProfile achievements`
+`welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile memory saved settings editProfile achievements freezeUsed widgets`
 
-Extra passes (same run): **`dark-<screen>.png`** (Dark appearance: question, feed, story, reactions, discover, notifications, profile, settings) and **`xl-<screen>.png`** (Dynamic Type *accessibility-extra-large*: feed, profile, settings). Review them with the same checklist; dark mode and large text are only "supported" once these pass.
+Extra passes (same run): **`dark-<screen>.png`** (Dark appearance: question, feed, story, reactions, discover, notifications, profile, memory, settings, widgets) and **`xl-<screen>.png`** (Dynamic Type *accessibility-extra-large*: feed, profile, settings). Review them with the same checklist; dark mode and large text are only "supported" once these pass.
+
+Home/Lock Screen widgets can't be screenshotted on the simulator Home Screen; the `widgets` screen renders the same `Shared/` widget views at real sizes instead.
 
 **When you add a screen or a meaningful state** (empty, error, sheet, tray open…): add a `DemoConfig.Screen` case, wire it (tab/route/sheet), and append the name to the workflow loop. Otherwise it cannot be verified.
 

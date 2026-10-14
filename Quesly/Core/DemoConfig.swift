@@ -6,7 +6,8 @@ enum DemoConfig {
     enum Screen: String {
         case welcome, findFriends, notifyPrime, question, composer
         case feed, feedEnd, feedError, offline, tray, friends, otherProfile, share, reactions, story
-        case discover, notifications, profile, saved, menu, settings, editProfile, achievements
+        case discover, notifications, profile, memory, saved, menu, settings, editProfile, achievements
+        case freezeUsed, widgets
     }
 
     static var screen: Screen? {
@@ -41,6 +42,9 @@ enum DemoConfig {
         default:
             store.signIn(email: MockData.me.email)
             store.submitAnswer(MockData.sampleAnswers[store.todayQuestion.id] ?? "")
+            if screen == .freezeUsed {
+                store.freezeJustUsed = Calendar.current.date(byAdding: .day, value: -1, to: .now)
+            }
         }
     }
 
@@ -48,7 +52,7 @@ enum DemoConfig {
         switch screen {
         case .discover: return .discover
         case .notifications: return .notifications
-        case .profile, .saved, .achievements, .menu, .settings, .editProfile: return .profile
+        case .profile, .memory, .saved, .achievements, .menu, .settings, .editProfile: return .profile
         default: return .feed
         }
     }
@@ -76,6 +80,8 @@ enum DemoConfig {
     static var opensShareSheet: Bool { screen == .share }
     static var opensReactionsSheet: Bool { screen == .reactions }
     static var opensStory: Bool { screen == .story }
+    static var opensMemory: Bool { screen == .memory }
+    static var showsWidgetGallery: Bool { screen == .widgets }
     static var scrollsFeedToEnd: Bool { screen == .feedEnd }
     static var forcesOffline: Bool { screen == .offline }
     static var forcedFeedError: String? { screen == .feedError ? "We couldn't load today's answers." : nil }

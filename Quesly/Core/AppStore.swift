@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import Observation
+import WidgetKit
 
 enum FeedScope: String, CaseIterable, Identifiable {
     case world = "World"
@@ -18,7 +19,7 @@ enum OnboardingStep: String, Codable {
 @Observable
 final class AppStore {
     nonisolated static let maxAnswerLength = 200
-    nonisolated static let defaultsKey = "quesly.snapshot.v2"
+    nonisolated static let defaultsKey = "quesly.snapshot.v3"
 
     // MARK: State
 
@@ -51,6 +52,14 @@ final class AppStore {
 
     /// When the feed should play its "unlocked" moment (set right after posting). Transient.
     var unlockCelebrationAt: Date?
+    /// Days kept alive by a streak freeze (start of day).
+    private(set) var frozenDays: Set<Date> = []
+    /// Freezes in stock: one is earned every 7-day streak, at most `maxFreezes`.
+    private(set) var streakFreezes = 1
+    nonisolated static let maxFreezes = 2
+    /// Set when a freeze was spent automatically; the feed shows a one-time note.
+    var freezeJustUsed: Date?
+
     /// Friends whose answer was opened in the stories viewer today. Transient.
     private(set) var seenStoryAuthorIds: Set<String> = []
 
@@ -61,6 +70,7 @@ final class AppStore {
         followingIds = MockData.followingIds
         refreshDay()
         restore()
+        applyStreakFreezeIfNeeded()
         myPhoto = Self.loadPhoto()
         if let error = DemoConfig.forcedFeedError { feedError = error }
     }
@@ -122,24 +132,21 @@ final class AppStore {
         todayQuestion = question
         todayAnswers = MockData.answers(for: question, now: now)
         if notifications.isEmpty { notifications = MockData.notifications(now: now) }
+        applyStreakFreezeIfNeeded(now: now)
+        publishWidget()
     }
 
     nonisolated static func question(for date: Date) -> DailyQuestion {
-        let day = Calendar.current.ordinality(of: .day, in: .era, for: date) ?? 0
-        return MockData.questions[day % MockData.questions.count]
+        MockData.questions[QuestionBank.index(for: date)]
     }
 
     nonisolated static func nextQuestionDate(after date: Date = .now) -> Date {
-        let cal = Calendar.current
-        return cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: date)) ?? date
+        QuestionBank.nextQuestionDate(after: date)
     }
 
     /// "14h" / "35m" until the next question drops.
     nonisolated static func timeLeftString(now: Date = .now) -> String {
-        let seconds = max(0, nextQuestionDate(after: now).timeIntervalSince(now))
-        let hours = Int(seconds) / 3600
-        if hours >= 1 { return "\(hours)h" }
-        return "\(max(1, Int(seconds) / 60))m"
+        QuestionBank.timeLeftString(now: now)
     }
 
     // MARK: Auth & onboarding
@@ -147,7 +154,7 @@ final class AppStore {
     func signUp(username: String, email: String) {
         me.username = username.trimmingCharacters(in: .whitespaces)
         me.email = email.trimmingCharacters(in: .whitespaces)
-        if myAnswers.isEmpty { myAnswers = MockData.myHistory() }
+        seedHistoryIfNeeded()
         onboarding = .findFriends
         isSignedIn = true
         persist()
@@ -155,11 +162,17 @@ final class AppStore {
 
     func signIn(email: String) {
         if !email.isEmpty { me.email = email }
-        if myAnswers.isEmpty { myAnswers = MockData.myHistory() }
+        seedHistoryIfNeeded()
         onboarding = .done
         isSignedIn = true
         persist()
         NotificationScheduler.reschedule(store: self)
+    }
+
+    private func seedHistoryIfNeeded() {
+        guard myAnswers.isEmpty else { return }
+        myAnswers = MockData.myHistory()
+        frozenDays = MockData.myFrozenDays()
     }
 
     func finishFindFriends() {
@@ -185,6 +198,8 @@ final class AppStore {
         removePhoto()
         me = MockData.me
         myAnswers = []
+        frozenDays = []
+        streakFreezes = 1
         followingIds = MockData.followingIds
         blockedIds = []
         onboarding = .done
@@ -215,6 +230,8 @@ final class AppStore {
         if let visibility { defaultVisibility = visibility }
         draft = ""
         myAnswers.insert(answer, at: 0)
+        // Every full week of answers earns a freeze for a future missed day.
+        if streak > 0, streak % 7 == 0, streakFreezes < Self.maxFreezes { streakFreezes += 1 }
         notifications.insert(.init(id: UUID().uuidString, kind: .posted, actorId: nil,
                                    message: "Your new answer was posted!", date: .now), at: 0)
         persist()
@@ -440,29 +457,56 @@ final class AppStore {
 
     // MARK: Stats & achievements
 
+    /// Consecutive answered days ending today (or yesterday). Frozen days keep the chain but don't count.
     var streak: Int {
         let cal = Calendar.current
-        let days = Set(myAnswers.map { cal.startOfDay(for: $0.createdAt) })
+        let days = answeredDays
         var day = cal.startOfDay(for: .now)
         if !days.contains(day) { day = cal.date(byAdding: .day, value: -1, to: day) ?? day }
         var count = 0
-        while days.contains(day) {
-            count += 1
+        while days.contains(day) || frozenDays.contains(day) {
+            if days.contains(day) { count += 1 }
             day = cal.date(byAdding: .day, value: -1, to: day) ?? day
         }
         return count
     }
 
-    struct WeekDay { let date: Date; let answered: Bool; let isToday: Bool }
-
-    /// The last 7 days ending today, with whether the user answered each day.
-    var lastSevenDays: [WeekDay] {
+    var answeredDays: Set<Date> {
         let cal = Calendar.current
-        let today = cal.startOfDay(for: .now)
-        let answeredDays = Set(myAnswers.map { cal.startOfDay(for: $0.createdAt) })
-        return (0..<7).reversed().compactMap { back in
-            guard let day = cal.date(byAdding: .day, value: -back, to: today) else { return nil }
-            return WeekDay(date: day, answered: answeredDays.contains(day), isToday: back == 0)
+        return Set(myAnswers.map { cal.startOfDay(for: $0.createdAt) })
+    }
+
+    /// If yesterday was missed but the day before kept the streak alive, spend a freeze on yesterday.
+    func applyStreakFreezeIfNeeded(now: Date = .now) {
+        let cal = Calendar.current
+        guard isSignedIn, streakFreezes > 0,
+              let yesterday = cal.date(byAdding: .day, value: -1, to: cal.startOfDay(for: now)),
+              let dayBefore = cal.date(byAdding: .day, value: -1, to: yesterday) else { return }
+        let days = answeredDays
+        guard !days.contains(yesterday), !frozenDays.contains(yesterday),
+              days.contains(dayBefore) || frozenDays.contains(dayBefore) else { return }
+        frozenDays.insert(yesterday)
+        streakFreezes -= 1
+        freezeJustUsed = yesterday
+        persist()
+    }
+
+    /// Answer for a calendar day, for Memories.
+    func myAnswer(on day: Date) -> Answer? {
+        myAnswers.first { Calendar.current.isDate($0.createdAt, inSameDayAs: day) }
+    }
+
+    // MARK: Widget
+
+    /// Writes what the Home/Lock Screen widget shows; reloads it only when something changed.
+    func publishWidget() {
+        let friends = friendsAnsweredToday
+        let snapshot = WidgetSnapshot(
+            day: Calendar.current.startOfDay(for: .now), isSignedIn: isSignedIn,
+            answeredToday: hasAnsweredToday, streak: streak,
+            friendsAnswered: friends.count, friendNames: friends.prefix(2).map(\.username))
+        if WidgetBridge.save(snapshot) {
+            WidgetCenter.shared.reloadTimelines(ofKind: WidgetBridge.widgetKind)
         }
     }
 
@@ -519,6 +563,8 @@ final class AppStore {
         var isPrivateAccount: Bool
         var defaultVisibility: AnswerVisibility
         var notificationsSeenAt: Date
+        var frozenDays: Set<Date>
+        var streakFreezes: Int
     }
 
     private func persist() {
@@ -530,11 +576,13 @@ final class AppStore {
             blockedIds: blockedIds, myAnswers: myAnswers,
             savedIds: Set(todayAnswers.filter(\.isSaved).map(\.id)), reactions: reactions,
             remindersEnabled: remindersEnabled, reminderTime: reminderTime, isPrivateAccount: isPrivateAccount,
-            defaultVisibility: defaultVisibility, notificationsSeenAt: notificationsSeenAt
+            defaultVisibility: defaultVisibility, notificationsSeenAt: notificationsSeenAt,
+            frozenDays: frozenDays, streakFreezes: streakFreezes
         )
         if let data = try? JSONEncoder().encode(snapshot) {
             UserDefaults.standard.set(data, forKey: Self.defaultsKey)
         }
+        publishWidget()
     }
 
     private func restore() {
@@ -553,6 +601,8 @@ final class AppStore {
         isPrivateAccount = s.isPrivateAccount
         defaultVisibility = s.defaultVisibility
         notificationsSeenAt = s.notificationsSeenAt
+        frozenDays = s.frozenDays
+        streakFreezes = s.streakFreezes
         for i in todayAnswers.indices {
             let id = todayAnswers[i].id
             todayAnswers[i].isSaved = s.savedIds.contains(id)

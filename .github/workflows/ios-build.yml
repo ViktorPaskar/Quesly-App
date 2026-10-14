@@ -8,6 +8,11 @@ on:
 permissions:
   contents: write
 
+# A newer push cancels the older run, so the ci-screenshots branch always matches the latest commit.
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build, screenshots & IPA

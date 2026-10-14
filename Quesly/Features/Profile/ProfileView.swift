@@ -97,10 +97,10 @@ struct ProfileView: View {
             }
             .accessibilityLabel("Share profile")
             if isMe {
-                NavigationLink(value: Route.menu) {
+                NavigationLink(value: Route.settings) {
                     Icon(.gearSix, size: 25).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
                 }
-                .accessibilityLabel("Menu")
+                .accessibilityLabel("Settings")
             } else {
                 Menu {
                     Button(role: .destructive) { confirmBlock = true } label: {
@@ -227,7 +227,7 @@ struct ProfileHeader: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: 40)
                         .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                            .fill(following ? Color.white : Color.qGreen))
+                            .fill(following ? Color.qBackground : Color.qGreen))
                         .overlay(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
                             .stroke(following ? Color.qLine : .clear, lineWidth: 1.5))
                 }
@@ -246,7 +246,7 @@ struct ProfileHeader: View {
             .foregroundStyle(Color.qInk)
             .frame(maxWidth: .infinity)
             .frame(height: 40)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.white))
+            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qBackground))
             .overlay(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).stroke(Color.qLine, lineWidth: 1.5))
     }
 }
@@ -339,7 +339,7 @@ struct BadgesStrip: View {
                         Text("See all").font(.ui(15, .semibold))
                         Icon(.caretRightBold, size: 13)
                     }
-                    .foregroundStyle(Color.qGreen)
+                    .foregroundStyle(Color.qBrandText)
                 }
             }
             ScrollView(.horizontal, showsIndicators: false) {

@@ -5,8 +5,8 @@ import Foundation
 enum DemoConfig {
     enum Screen: String {
         case welcome, findFriends, notifyPrime, question, composer
-        case feed, friends, otherProfile, share, reactions
-        case discover, notifications, profile, saved, menu, achievements
+        case feed, feedEnd, feedError, offline, tray, friends, otherProfile, share, reactions
+        case discover, notifications, profile, saved, menu, settings, editProfile, achievements
     }
 
     static var screen: Screen? {
@@ -48,7 +48,7 @@ enum DemoConfig {
         switch screen {
         case .discover: return .discover
         case .notifications: return .notifications
-        case .profile, .saved, .achievements, .menu: return .profile
+        case .profile, .saved, .achievements, .menu, .settings, .editProfile: return .profile
         default: return .feed
         }
     }
@@ -57,6 +57,8 @@ enum DemoConfig {
         switch screen {
         case .achievements: return .achievements
         case .menu: return .menu
+        case .settings: return .settings
+        case .editProfile: return .editProfile
         case .otherProfile:
             let first = MockData.answers(for: AppStore.question(for: .now)).first
             return .profile(first?.authorId ?? "u5")
@@ -73,4 +75,9 @@ enum DemoConfig {
     static var showsSavedTab: Bool { screen == .saved }
     static var opensShareSheet: Bool { screen == .share }
     static var opensReactionsSheet: Bool { screen == .reactions }
+    static var scrollsFeedToEnd: Bool { screen == .feedEnd }
+    static var forcesOffline: Bool { screen == .offline }
+    static var forcedFeedError: String? { screen == .feedError ? "We couldn't load today's answers." : nil }
+    /// Opens the reaction tray on the first answer that isn't mine.
+    static var opensReactionTray: Bool { screen == .tray }
 }

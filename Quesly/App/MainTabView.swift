@@ -41,6 +41,8 @@ struct MainTabView: View {
         return [DemoConfig.initialTab: path]
     }()
     @Namespace private var ns
+    /// Incremented when the active tab is tapped again at its root → that tab scrolls to top.
+    @State private var reselect: [MainTab: Int] = [:]
     @State private var demoShare = DemoConfig.opensShareSheet
     @State private var demoReactions = DemoConfig.opensReactionsSheet
 
@@ -69,6 +71,7 @@ struct MainTabView: View {
         NavigationStack(path: binding(for: t)) {
             root().withQueslyRoutes()
         }
+        .environment(\.scrollToTopSignal, reselect[t] ?? 0)
         .opacity(tab == t ? 1 : 0)
         .scaleEffect(tab == t ? 1 : 0.985)
         .allowsHitTesting(tab == t)
@@ -81,7 +84,11 @@ struct MainTabView: View {
 
     private func select(_ t: MainTab) {
         if tab == t {
-            withAnimation(.qSmooth) { paths[t] = NavigationPath() } // re-tap pops to root
+            if (paths[t]?.isEmpty ?? true) {
+                reselect[t, default: 0] += 1                     // at root: scroll to top
+            } else {
+                withAnimation(.qSmooth) { paths[t] = NavigationPath() } // re-tap pops to root
+            }
         } else {
             withAnimation(.easeOut(duration: 0.18)) { tab = t }
         }
@@ -138,12 +145,11 @@ extension View {
         navigationDestination(for: Route.self) { route in
             switch route {
             case .profile(let id): ProfileView(userId: id)
-            case .menu: ProfileMenuView()
+            case .menu, .settings: SettingsView()
             case .achievements: AchievementsView()
             case .editProfile: EditProfileView()
             case .following: FollowListView(kind: .following)
             case .followers: FollowListView(kind: .followers)
-            case .settings: SettingsView()
             case .feedback: FeedbackView()
             case .invite: InviteFriendsView()
             case .blocked: BlockedUsersView()
@@ -153,5 +159,17 @@ extension View {
 }
 
 #Preview {
-    MainTabView().environment(AppStore())
+    MainTabView().environment(AppStore()).environment(NetworkMonitor())
+}
+
+private struct ScrollToTopSignalKey: EnvironmentKey {
+    static let defaultValue = 0
+}
+
+extension EnvironmentValues {
+    /// Changes whenever the user re-taps the current tab while at its root.
+    var scrollToTopSignal: Int {
+        get { self[ScrollToTopSignalKey.self] }
+        set { self[ScrollToTopSignalKey.self] = newValue }
+    }
 }

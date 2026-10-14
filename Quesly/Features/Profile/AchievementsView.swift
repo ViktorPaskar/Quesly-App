@@ -75,7 +75,7 @@ struct AchievementsView: View {
             Spacer(minLength: 0)
             if item.isUnlocked {
                 Icon(.sealCheckFill, size: 26)
-                    .foregroundStyle(Color.qGreen)
+                    .foregroundStyle(Color.qBrandText)
                     .pop(on: animateBars)
                     .accessibilityLabel("Unlocked")
             }

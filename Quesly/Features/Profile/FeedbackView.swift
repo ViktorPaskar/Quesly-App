@@ -20,7 +20,7 @@ struct FeedbackView: View {
                         ForEach(1...5, id: \.self) { i in
                             Button { rating = i } label: {
                                 Icon(.starFill, size: 32)
-                                    .foregroundStyle(i <= rating ? Color.qGreen : Color.qLine)
+                                    .foregroundStyle(i <= rating ? Color.qBrandText : Color.qLine)
                                     .scaleEffect(i <= rating ? 1.1 : 1)
                                     .animation(.qSpring.delay(Double(i) * 0.04), value: rating)
                                     .frame(width: 44, height: 44)
@@ -45,11 +45,11 @@ struct FeedbackView: View {
                                     .font(.ui(13, .medium))
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.8)
-                                    .foregroundStyle(on ? .white : Color.qGreen)
+                                    .foregroundStyle(on ? .white : Color.qBrandText)
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 40)
-                                    .background(Capsule().fill(on ? Color.qGreen : .white))
-                                    .overlay(Capsule().stroke(Color.qGreen, lineWidth: 1))
+                                    .background(Capsule().fill(on ? Color.qGreen : Color.qBackground))
+                                    .overlay(Capsule().stroke(Color.qBrandText, lineWidth: 1))
                             }
                             .buttonStyle(.plain)
                         }

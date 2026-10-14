@@ -51,7 +51,7 @@ struct ShareStorySheet: View {
                             .frame(width: 30, height: 30)
                             .overlay(Circle().stroke(Color.qLine, lineWidth: 1))
                             .padding(4)
-                            .overlay(Circle().stroke(theme == t ? Color.qGreen : .clear, lineWidth: 2.5))
+                            .overlay(Circle().stroke(theme == t ? Color.qBrandText : .clear, lineWidth: 2.5))
                             .frame(width: 44, height: 44)
                     }
                     .buttonStyle(.pressable)
@@ -81,7 +81,7 @@ struct ShareStorySheet: View {
                         Icon(savedToPhotos ? .checkCircleFill : .downloadSimple, size: 20)
                     }
                         .font(.ui(16, .medium))
-                        .foregroundStyle(Color.qGreen)
+                        .foregroundStyle(Color.qBrandText)
                         .frame(height: 44)
                 }
                 .disabled(savedToPhotos)

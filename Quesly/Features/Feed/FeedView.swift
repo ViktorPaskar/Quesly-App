@@ -4,6 +4,8 @@ struct FeedView: View {
     @Environment(AppStore.self) private var store
     @State private var scope: FeedScope = DemoConfig.initialFeedScope
     @State private var showQuestion = false
+    @Environment(NetworkMonitor.self) private var network
+    @Environment(\.scrollToTopSignal) private var scrollToTopSignal
     var onDiscover: () -> Void = {}
 
     var body: some View {
@@ -22,6 +24,10 @@ struct FeedView: View {
 
             UnderlineTabs(items: FeedScope.allCases, selection: $scope, title: \.rawValue)
 
+            if !network.isOnline {
+                OfflineBanner().transition(.move(edge: .top).combined(with: .opacity))
+            }
+
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 0) {
@@ -34,13 +40,24 @@ struct FeedView: View {
                         if !store.hasAnsweredToday {
                             AnswerPrompt { showQuestion = true }
                         }
-                        ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
-                            AnswerCard(answer: answer)
-                                .staggeredAppear(index)
-                            Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 72)
+                        if let error = store.feedError {
+                            ErrorStateView(message: error) {
+                                Task { await store.reloadFeed() }
+                            }
+                        } else if store.isLoadingFeed && othersCount == 0 {
+                            ForEach(0..<4, id: \.self) { _ in AnswerCardSkeleton() }
+                        } else {
+                            ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
+                                AnswerCard(answer: answer, opensTray: DemoConfig.opensReactionTray
+                                           && answer.id == answers.first(where: { $0.authorId != store.me.id })?.id)
+                                    .staggeredAppear(index)
+                                Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 72)
+                            }
                         }
 
-                        if scope == .friends && othersCount == 0 {
+                        if store.feedError != nil || store.isLoadingFeed {
+                            EmptyView()
+                        } else if scope == .friends && othersCount == 0 {
                             EmptyStateView(icon: .usersThreeFill,
                                            title: "Your friends are quiet",
                                            message: "None of the people you follow answered yet. Invite friends or discover new people.") {
@@ -63,16 +80,23 @@ struct FeedView: View {
                             CaughtUpFooter(count: othersCount, scope: scope) {
                                 withAnimation(.qSmooth) { proxy.scrollTo("top", anchor: .top) }
                             }
+                            .id("end")
                         }
                     }
                     .padding(.bottom, DS.Space.s)
                     .animation(.qSmooth, value: scope)
                 }
-                .refreshable {
-                    try? await Task.sleep(for: .milliseconds(600))
-                    store.refreshDay()
+                .refreshable { await store.reloadFeed() }
+                .onChange(of: scrollToTopSignal) { _, _ in
+                    withAnimation(.qSmooth) { proxy.scrollTo("top", anchor: .top) }
+                }
+                .task {
+                    guard DemoConfig.scrollsFeedToEnd else { return }
+                    try? await Task.sleep(for: .milliseconds(800))
+                    proxy.scrollTo("end", anchor: .bottom)
                 }
             }
+            .animation(.qSmooth, value: network.isOnline)
         }
         .background(Color.qBackground)
         .toolbar(.hidden, for: .navigationBar)
@@ -226,5 +250,73 @@ private struct AnswerPrompt: View {
 }
 
 #Preview {
-    NavigationStack { FeedView() }.environment(AppStore())
+    NavigationStack { FeedView() }.environment(AppStore()).environment(NetworkMonitor())
+}
+
+/// Shown at the top of the feed when there is no connection.
+struct OfflineBanner: View {
+    var body: some View {
+        HStack(spacing: DS.Space.xs) {
+            Icon(.wifiSlash, size: 16, weight: .semibold)
+            Text("You're offline. Showing saved answers.").font(.ui(13, .medium))
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(Color.qInk)
+        .padding(.horizontal, DS.Space.screen)
+        .frame(height: 36)
+        .background(Color.qField)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Placeholder row with the same rhythm as `AnswerCard` while answers load.
+struct AnswerCardSkeleton: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var dim = false
+
+    var body: some View {
+        HStack(alignment: .top, spacing: DS.Space.s) {
+            Circle().fill(Color.qField).frame(width: 40, height: 40)
+            VStack(alignment: .leading, spacing: DS.Space.xs) {
+                bar(width: 120, height: 12)
+                bar(width: nil, height: 14)
+                bar(width: 220, height: 14)
+            }
+        }
+        .padding(.horizontal, DS.Space.screen)
+        .padding(.vertical, DS.Space.m)
+        .opacity(dim ? 0.5 : 1)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { dim = true }
+        }
+        .accessibilityLabel("Loading")
+    }
+
+    private func bar(width: CGFloat?, height: CGFloat) -> some View {
+        RoundedRectangle(cornerRadius: DS.Radius.s / 2, style: .continuous)
+            .fill(Color.qField)
+            .frame(maxWidth: width ?? .infinity)
+            .frame(height: height)
+    }
+}
+
+/// Generic error state with a retry action.
+struct ErrorStateView: View {
+    let message: String
+    var retry: () -> Void
+
+    var body: some View {
+        EmptyStateView(icon: .xCircleFill, title: "Something went wrong", message: message) {
+            Button(action: retry) {
+                Text("Try again")
+                    .font(.ui(16, .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, DS.Space.xl)
+                    .frame(height: DS.hitTarget)
+                    .background(Capsule().fill(Color.qGreen))
+            }
+            .buttonStyle(.pressable)
+        }
+    }
 }

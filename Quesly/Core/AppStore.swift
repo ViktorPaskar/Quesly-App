@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import Observation
 
 enum FeedScope: String, CaseIterable, Identifiable {
@@ -31,7 +32,14 @@ final class AppStore {
     private(set) var myAnswers: [Answer] = []
     private(set) var notifications: [AppNotification] = []
     private(set) var todayQuestion: DailyQuestion = MockData.questions[0]
-    private(set) var notificationsSeenAt: Date = .distantPast
+    /// Fresh installs treat older seed notifications as already seen, so "unread" stays meaningful.
+    private(set) var notificationsSeenAt: Date = Date.now.addingTimeInterval(-50 * 60)
+
+    // Feed loading / error state (the API seam: today everything is local and instant).
+    private(set) var isLoadingFeed = false
+    private(set) var feedError: String?
+    /// The signed-in user's photo, stored on disk (Documents/avatar.jpg).
+    private(set) var myPhoto: UIImage?
 
     var remindersEnabled = true { didSet { persist(); NotificationScheduler.reschedule(store: self) } }
     var reminderTime: Date = Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: .now) ?? .now {
@@ -48,6 +56,56 @@ final class AppStore {
         followingIds = MockData.followingIds
         refreshDay()
         restore()
+        myPhoto = Self.loadPhoto()
+        if let error = DemoConfig.forcedFeedError { feedError = error }
+    }
+
+    /// Simulates a network refresh. Replace the body with the real API call.
+    func reloadFeed() async {
+        isLoadingFeed = true
+        feedError = nil
+        try? await Task.sleep(for: .milliseconds(700))
+        refreshDay()
+        isLoadingFeed = false
+    }
+
+    // MARK: Profile photo
+
+    private static var photoURL: URL {
+        URL.documentsDirectory.appending(path: "avatar.jpg")
+    }
+
+    private static func loadPhoto() -> UIImage? {
+        guard let data = try? Data(contentsOf: photoURL) else { return nil }
+        return UIImage(data: data)
+    }
+
+    /// Downscales to 512 px, stores as JPEG and publishes the new photo.
+    func setPhoto(_ data: Data) {
+        guard let image = UIImage(data: data) else { return }
+        let side: CGFloat = 512
+        let scale = min(1, side / max(image.size.width, image.size.height))
+        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let resized = UIGraphicsImageRenderer(size: size).image { _ in image.draw(in: CGRect(origin: .zero, size: size)) }
+        try? resized.jpegData(compressionQuality: 0.85)?.write(to: Self.photoURL, options: .atomic)
+        myPhoto = resized
+    }
+
+    func removePhoto() {
+        try? FileManager.default.removeItem(at: Self.photoURL)
+        myPhoto = nil
+    }
+
+    // MARK: Answer draft (survives app restarts)
+
+    private var draftKey: String { "quesly.draft." + todayQuestion.id }
+
+    var draft: String {
+        get { UserDefaults.standard.string(forKey: draftKey) ?? "" }
+        set {
+            if newValue.isEmpty { UserDefaults.standard.removeObject(forKey: draftKey) }
+            else { UserDefaults.standard.set(newValue, forKey: draftKey) }
+        }
     }
 
     // MARK: Day rotation
@@ -119,6 +177,7 @@ final class AppStore {
 
     func deleteAccount() {
         UserDefaults.standard.removeObject(forKey: Self.defaultsKey)
+        removePhoto()
         me = MockData.me
         myAnswers = []
         followingIds = MockData.followingIds
@@ -149,6 +208,7 @@ final class AppStore {
             visibility: visibility ?? defaultVisibility
         )
         if let visibility { defaultVisibility = visibility }
+        draft = ""
         myAnswers.insert(answer, at: 0)
         notifications.insert(.init(id: UUID().uuidString, kind: .posted, actorId: nil,
                                    message: "Your new answer was posted!", date: .now), at: 0)

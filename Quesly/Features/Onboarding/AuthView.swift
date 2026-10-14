@@ -107,7 +107,7 @@ struct AuthView: View {
                     } else {
                         Button("Forgot password?") {}
                             .font(.ui(13, .medium))
-                            .foregroundStyle(Color.qGreen)
+                            .foregroundStyle(Color.qBrandText)
                     }
 
                     GreenButton(title: mode == .signUp ? "Sign Up" : "Sign In", isEnabled: canSubmit, action: submit)
@@ -120,7 +120,7 @@ struct AuthView: View {
                         Button(mode == .signUp ? "Sign In" : "Sign Up") {
                             withAnimation { mode = mode == .signUp ? .signIn : .signUp }
                         }
-                        .foregroundStyle(Color.qGreen)
+                        .foregroundStyle(Color.qBrandText)
                         .fontWeight(.semibold)
                         Spacer()
                     }
@@ -165,7 +165,7 @@ struct CheckboxToggleStyle: ToggleStyle {
             HStack(alignment: .top, spacing: 12) {
                 Icon(configuration.isOn ? .checkCircleFill : .checkBold, size: 22)
                     .opacity(configuration.isOn ? 1 : 0.35)
-                    .foregroundStyle(configuration.isOn ? Color.qGreen : Color.qGray)
+                    .foregroundStyle(configuration.isOn ? Color.qBrandText : Color.qGray)
                 configuration.label
                     .multilineTextAlignment(.leading)
             }

@@ -16,7 +16,9 @@ description: Screenshot-based visual QA for Quesly. Use after any UI change, bef
 
 `Quesly/Core/DemoConfig.swift` maps `QUESLY_SCREEN=<name>` (DEBUG builds only) to seeded state + initial tab/route/sheet. The workflow loops over a list of names (`for screen in …` in the workflow). Current set:
 
-`welcome findFriends notifyPrime question composer feed friends otherProfile share reactions discover notifications profile saved menu achievements`
+`welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions discover notifications profile saved settings editProfile achievements`
+
+Extra passes (same run): **`dark-<screen>.png`** (Dark appearance: question, feed, reactions, discover, notifications, profile, settings) and **`xl-<screen>.png`** (Dynamic Type *accessibility-extra-large*: feed, profile, settings). Review them with the same checklist; dark mode and large text are only "supported" once these pass.
 
 **When you add a screen or a meaningful state** (empty, error, sheet, tray open…): add a `DemoConfig.Screen` case, wire it (tab/route/sheet), and append the name to the workflow loop. Otherwise it cannot be verified.
 
@@ -58,5 +60,5 @@ Severity: ❌ broken/blocking · ⚠️ noticeably off · 💡 polish. Ship only
 ## Useful extras
 
 - Before/after: keep the previous run's folder and compare side by side (`contact_sheet.py` accepts any folder).
-- Dark mode / Dynamic Type passes: add a workflow step that runs the loop again with `xcrun simctl ui <device> appearance dark` or `xcrun simctl ui <device> content_size accessibility-extra-large` and saves to `screenshots/dark/…` — only claim support after reviewing those images.
+- Dark mode and Dynamic Type passes already exist (see above). To cover another screen in them, add its name to the `dark`/`xl` loops in the workflow.
 - The IPA artifact (`Quesly-ipa`) lets the user sideload on their iPhone from Windows (Sideloadly); real-device feedback from the user outranks screenshots.

@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct QueslyApp: App {
     @State private var store: AppStore
+    @State private var network = NetworkMonitor()
 
     init() {
         DemoConfig.resetPersistedState()
@@ -17,7 +18,7 @@ struct QueslyApp: App {
         WindowGroup {
             RootView()
                 .environment(store)
-                .preferredColorScheme(.light)
+                .environment(network)
                 .tint(.qGreen)
         }
         .onChange(of: scenePhase) { _, phase in

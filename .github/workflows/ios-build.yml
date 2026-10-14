@@ -43,13 +43,28 @@ jobs:
           xcrun simctl install "$DEVICE" build/sim/Build/Products/Debug-iphonesimulator/Quesly.app
           mkdir -p screenshots
           i=1
-          for screen in welcome findFriends notifyPrime question composer feed friends otherProfile share reactions discover notifications profile saved menu achievements; do
+          shoot() { # $1 = screen, $2 = file name
             xcrun simctl terminate "$DEVICE" app.quesly.ios || true
-            SIMCTL_CHILD_QUESLY_SCREEN=$screen xcrun simctl launch "$DEVICE" app.quesly.ios
+            SIMCTL_CHILD_QUESLY_SCREEN=$1 xcrun simctl launch "$DEVICE" app.quesly.ios
             sleep 7
-            xcrun simctl io "$DEVICE" screenshot "screenshots/$(printf '%02d' $i)-$screen.png"
-            i=$((i+1))
+            xcrun simctl io "$DEVICE" screenshot "screenshots/$2.png"
+          }
+          i=1
+          for screen in welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions discover notifications profile saved settings editProfile achievements; do
+            shoot $screen "$(printf '%02d' $i)-$screen"; i=$((i+1))
           done
+          # Dark appearance pass
+          xcrun simctl ui "$DEVICE" appearance dark || true
+          for screen in question feed reactions discover notifications profile settings; do
+            shoot $screen "dark-$screen"
+          done
+          xcrun simctl ui "$DEVICE" appearance light || true
+          # Largest accessibility text size pass (Dynamic Type)
+          xcrun simctl ui "$DEVICE" content_size accessibility-extra-large || true
+          for screen in feed profile settings; do
+            shoot $screen "xl-$screen"
+          done
+          xcrun simctl ui "$DEVICE" content_size large || true
 
       - uses: actions/upload-artifact@v4
         with:

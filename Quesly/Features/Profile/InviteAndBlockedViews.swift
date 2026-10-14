@@ -1,41 +1,5 @@
 import SwiftUI
 
-struct ProfileMenuView: View {
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                row("Achievements", .medalFill, Color(hex: 0xE2A72E), .achievements)
-                row("Invite Friends", .paperPlaneTiltFill, Color(hex: 0xE84FA5), .invite)
-                row("Settings", .gearSixFill, .qGreen, .settings)
-                row("Blocked people", .prohibitFill, Color(hex: 0xE5484D), .blocked)
-                row("Feedback", .chatCircleTextFill, Color(hex: 0x2D7BF0), .feedback)
-            }
-            .padding(16)
-        }
-        .background(Color.qBackground)
-        .queslyBackHeader("Profile")
-    }
-
-    private func row(_ title: String, _ icon: QIcon, _ tint: Color, _ route: Route) -> some View {
-        NavigationLink(value: route) {
-            HStack(spacing: 16) {
-                Icon(icon, size: 20)
-                    .foregroundStyle(.white)
-                    .frame(width: 38, height: 38)
-                    .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(tint))
-                Text(title).font(.ui(17, .medium)).foregroundStyle(Color.qInk)
-                Spacer()
-                Icon(.caretRightBold, size: 16)
-                    .foregroundStyle(Color.qGray.opacity(0.7))
-            }
-            .padding(.horizontal, 16)
-            .frame(height: 62)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
-        }
-        .buttonStyle(.pressable)
-    }
-}
-
 struct InviteFriendsView: View {
     @Environment(AppStore.self) private var store
 
@@ -98,7 +62,7 @@ struct BlockedUsersView: View {
                                 Spacer()
                                 Button("Unblock") { withAnimation(.qSmooth) { store.unblock(user.id) } }
                                     .font(.ui(14, .semibold))
-                                    .foregroundStyle(Color.qGreen)
+                                    .foregroundStyle(Color.qBrandText)
                                     .padding(.horizontal, 16)
                                     .frame(height: 34)
                                     .background(Capsule().fill(Color.qMint))

@@ -19,6 +19,8 @@ struct AnswerCard: View {
     let answer: Answer
     var showsQuestion = false
     var showsAuthor = true
+    /// Demo/screenshot hook: start with the reaction tray open.
+    var opensTray = false
 
     @State private var isTrayOpen = false
     @State private var isSharing = false
@@ -83,6 +85,7 @@ struct AnswerCard: View {
         .confirmationDialog("Delete this answer?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { store.deleteAnswer(answer.id) }
         }
+        .onAppear { if opensTray { isTrayOpen = true } }
     }
 
     private var questionLine: some View {
@@ -242,7 +245,7 @@ struct EditAnswerSheet: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text(answer.questionText.uppercased())
                     .font(.ui(14, .bold))
-                    .foregroundStyle(Color.qGreen)
+                    .foregroundStyle(Color.qBrandText)
                 TextEditor(text: $text)
                     .font(.ui(18))
                     .scrollContentBackground(.hidden)
@@ -348,7 +351,7 @@ struct ReportSheet: View {
         VStack(spacing: 16) {
             Spacer()
             Icon(.shieldCheckFill, size: 60)
-                .foregroundStyle(Color.qGreen)
+                .foregroundStyle(Color.qBrandText)
                 .pop(on: sentReason)
             Text("Thanks for letting us know").font(.ui(22, .semibold))
             Text("We'll review this answer. You can also block this person so you never see their answers again.")

@@ -154,7 +154,7 @@ struct StepDots: View {
         HStack(spacing: 8) {
             ForEach(0..<total, id: \.self) { i in
                 Capsule()
-                    .fill(i == current ? (onDark ? Color.qLime : Color.qGreen) : (onDark ? Color.white.opacity(0.3) : Color.qLine))
+                    .fill(i == current ? (onDark ? Color.qLime : Color.qBrandText) : (onDark ? Color.white.opacity(0.3) : Color.qLine))
                     .frame(width: i == current ? 24 : 8, height: 8)
             }
         }
@@ -249,7 +249,7 @@ struct InviteCard: View {
                 .background(Circle().fill(Color.qBackground))
             VStack(alignment: .leading, spacing: 2) {
                 Text("Invite your friends").font(.ui(16, .semibold)).foregroundStyle(Color.qInk)
-                Text("Answer together, every day").font(.ui(14)).foregroundStyle(Color.qGray).lineLimit(1).minimumScaleFactor(0.85)
+                Text("Answer together").font(.ui(14)).foregroundStyle(Color.qGray).lineLimit(1)
             }
             Spacer()
             ShareLink(item: Invite.text(for: username)) {

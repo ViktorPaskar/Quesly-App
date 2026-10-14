@@ -61,6 +61,11 @@ struct DailyQuestionView: View {
         .onTapGesture { editorFocused = false }
         .onAppear {
             visibility = store.defaultVisibility
+            // Resume an unfinished answer (the draft survives app restarts).
+            if text.isEmpty, !store.draft.isEmpty {
+                text = store.draft
+                isComposing = true
+            }
             revealWords()
         }
     }
@@ -146,6 +151,7 @@ struct DailyQuestionView: View {
                             text = String(newValue.prefix(AppStore.maxAnswerLength))
                             shake += 1
                         }
+                        if !DemoConfig.isActive { store.draft = text }
                     }
             }
             .padding(.horizontal, 16)
@@ -161,8 +167,15 @@ struct DailyQuestionView: View {
                     .monospacedDigit()
                     .contentTransition(.numericText())
                 Spacer()
+                if !text.isEmpty {
+                    Label("Draft saved", systemImage: QIcon.checkBold.rawValue)
+                        .font(.ui(12))
+                        .foregroundStyle(Color.qGray)
+                        .transition(.opacity)
+                }
             }
-            .padding(16)
+            .animation(.qSmooth, value: text.isEmpty)
+            .padding(DS.Space.m)
         }
         .background(Color.qBackground)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
@@ -228,7 +241,7 @@ struct CharacterRing: View {
             Circle().stroke(Color.qLine, lineWidth: 3)
             Circle()
                 .trim(from: 0, to: min(1, progress))
-                .stroke(progress >= 1 ? Color.qFlame : Color.qGreen,
+                .stroke(progress >= 1 ? Color.qFlame : Color.qBrandText,
                         style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
         }

@@ -77,12 +77,12 @@ struct NotificationsView: View {
         switch group.kind {
         case .reaction, .follow:
             ZStack(alignment: .bottomTrailing) {
-                AvatarStack(users: actors, size: 40)
+                Avatar(user: actors.first, size: 40)
                 if let r = group.reactions.first {
                     Text(r.emoji)
                         .font(.system(size: 13))
                         .frame(width: 22, height: 22)
-                        .background(Circle().fill(.white))
+                        .background(Circle().fill(Color.qBackground))
                         .overlay(Circle().stroke(Color.qLine))
                         .offset(x: 4, y: 4)
                 } else if group.kind == .follow {

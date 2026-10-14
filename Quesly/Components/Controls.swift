@@ -45,7 +45,8 @@ struct GreenButton: View {
     }
 }
 
-/// Small Follow / Following pill.
+/// Follow / Following pill. Tinted (not filled) so long lists of people stay calm;
+/// the single filled "Follow" lives on someone's profile.
 struct FollowPill: View {
     let isFollowing: Bool
     var compact = false
@@ -61,11 +62,14 @@ struct FollowPill: View {
                 Text(isFollowing ? "Following" : "Follow")
             }
             .font(.ui(compact ? 13 : 15, .semibold))
-            .foregroundStyle(isFollowing ? Color.qGreen : .white)
-            .padding(.horizontal, compact ? 10 : 14)
-            .frame(height: compact ? 26 : 32)
-            .background(Capsule().fill(isFollowing ? Color.qMint : Color.qGreen))
-            .contentShape(Capsule())
+            .foregroundStyle(isFollowing ? Color.qInk : Color.qBrandText)
+            .padding(.horizontal, compact ? DS.Space.s : DS.Space.m)
+            .frame(height: compact ? 28 : 32)
+            .background(Capsule().fill(isFollowing ? Color.qBackground : Color.qMint))
+            .overlay(Capsule().stroke(isFollowing ? Color.qLine : .clear, lineWidth: 1))
+            // Visual height stays compact; the tappable area meets the 44-pt minimum.
+            .padding(.vertical, (DS.hitTarget - (compact ? 28 : 32)) / 2)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
         .animation(.qSpring, value: isFollowing)

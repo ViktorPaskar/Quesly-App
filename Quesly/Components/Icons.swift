@@ -32,6 +32,7 @@ enum QIcon: String {
     case eye = "eye", eyeSlash = "eye.slash"
 
     // Content & status
+    case wifiSlash = "wifi.slash"
     case clock = "clock", timer = "timer", hourglassMediumFill = "hourglass"
     case lockSimpleFill = "lock.fill", mapPinFill = "mappin.and.ellipse"
     case globeHemisphereWestFill = "globe.europe.africa.fill"

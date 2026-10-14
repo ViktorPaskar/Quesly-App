@@ -46,7 +46,7 @@ jobs:
           shoot() { # $1 = screen, $2 = file name
             xcrun simctl terminate "$DEVICE" app.quesly.ios || true
             SIMCTL_CHILD_QUESLY_SCREEN=$1 xcrun simctl launch "$DEVICE" app.quesly.ios
-            sleep 7
+            sleep 9
             xcrun simctl io "$DEVICE" screenshot "screenshots/$2.png"
           }
           i=1

@@ -42,6 +42,12 @@ struct DailyQuestionView: View {
                         .foregroundStyle(.white.opacity(0.85))
                     }
                     .padding(.bottom, 16)
+                } else {
+                    AnsweredTodayProof(count: store.answeredTodayCount,
+                                       friends: store.friendsAnsweredToday)
+                        .padding(.horizontal, DS.Space.screen)
+                        .padding(.bottom, DS.Space.l)
+                        .transition(.opacity)
                 }
                 LimeButton(title: isComposing ? "Submit" : "Answer",
                            icon: isComposing ? .paperPlaneTiltFill : .pencilSimpleFill,
@@ -194,6 +200,32 @@ struct DailyQuestionView: View {
         editorFocused = false
         store.submitAnswer(text, visibility: visibility)
         onSubmitted()
+    }
+}
+
+/// "12,483 people answered today" with friends' faces — the nudge to join in.
+private struct AnsweredTodayProof: View {
+    let count: Int
+    let friends: [AppUser]
+
+    var body: some View {
+        HStack(spacing: DS.Space.xs) {
+            if !friends.isEmpty {
+                AvatarStack(users: friends, size: 28, ring: .qGreen)
+            }
+            Group {
+                if let first = friends.first {
+                    Text("**\(first.username)** and \((count - 1).formatted()) others answered")
+                } else {
+                    Text("**\(count.formatted())** people answered today")
+                }
+            }
+            .font(.ui(15))
+            .foregroundStyle(.white.opacity(0.85))
+            .lineLimit(2)
+            .multilineTextAlignment(.leading)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 

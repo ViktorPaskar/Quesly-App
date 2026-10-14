@@ -69,6 +69,7 @@ struct RootView: View {
     }
 
     private func flashThenFeed() {
+        store.unlockCelebrationAt = .now.addingTimeInterval(2.0) // when the flash has faded
         showLimeFlash = true
         Task {
             try? await Task.sleep(for: .seconds(1.6))

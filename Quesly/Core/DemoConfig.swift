@@ -5,7 +5,7 @@ import Foundation
 enum DemoConfig {
     enum Screen: String {
         case welcome, findFriends, notifyPrime, question, composer
-        case feed, feedEnd, feedError, offline, tray, friends, otherProfile, share, reactions
+        case feed, feedEnd, feedError, offline, tray, friends, otherProfile, share, reactions, story
         case discover, notifications, profile, saved, menu, settings, editProfile, achievements
     }
 
@@ -75,6 +75,7 @@ enum DemoConfig {
     static var showsSavedTab: Bool { screen == .saved }
     static var opensShareSheet: Bool { screen == .share }
     static var opensReactionsSheet: Bool { screen == .reactions }
+    static var opensStory: Bool { screen == .story }
     static var scrollsFeedToEnd: Bool { screen == .feedEnd }
     static var forcesOffline: Bool { screen == .offline }
     static var forcedFeedError: String? { screen == .feedError ? "We couldn't load today's answers." : nil }

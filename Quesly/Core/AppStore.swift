@@ -49,6 +49,11 @@ final class AppStore {
     /// Visibility pre-selected in the composer (remembers the last choice).
     var defaultVisibility: AnswerVisibility = .everyone { didSet { persist() } }
 
+    /// When the feed should play its "unlocked" moment (set right after posting). Transient.
+    var unlockCelebrationAt: Date?
+    /// Friends whose answer was opened in the stories viewer today. Transient.
+    private(set) var seenStoryAuthorIds: Set<String> = []
+
     @ObservationIgnored private var isRestoring = false
 
     init() {
@@ -241,6 +246,30 @@ final class AppStore {
         }
         if let mine = todaysAnswer { return [mine] + others }
         return others
+    }
+
+    // MARK: Friends today (stories row)
+
+    /// One answer per friend who answered today; unseen first.
+    var friendStories: [Answer] {
+        var authors = Set<String>()
+        let unique = todayAnswers.filter {
+            followingIds.contains($0.authorId) && !blockedIds.contains($0.authorId) && authors.insert($0.authorId).inserted
+        }
+        return unique.filter { !seenStoryAuthorIds.contains($0.authorId) }
+            + unique.filter { seenStoryAuthorIds.contains($0.authorId) }
+    }
+
+    var friendsAnsweredToday: [AppUser] { friendStories.compactMap { users[$0.authorId] } }
+
+    func markStorySeen(_ authorId: String) {
+        seenStoryAuthorIds.insert(authorId)
+    }
+
+    /// Mock "people answered today" counter for social proof. Replace with the API value.
+    var answeredTodayCount: Int {
+        let day = Calendar.current.ordinality(of: .day, in: .era, for: .now) ?? 0
+        return 9_000 + (day * 7_919) % 6_000 + todayAnswers.count + (hasAnsweredToday ? 1 : 0)
     }
 
     func answers(of userId: String) -> [Answer] {

@@ -6,7 +6,15 @@ struct FeedView: View {
     @State private var showQuestion = false
     @Environment(NetworkMonitor.self) private var network
     @Environment(\.scrollToTopSignal) private var scrollToTopSignal
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var onDiscover: () -> Void = {}
+
+    @State private var storyLaunch: StoryLaunch?
+    // "Feed unlocked" moment after posting: cards reveal one by one, the streak ticks up.
+    @State private var revealCount = Int.max
+    @State private var shownStreak: Int?
+    @State private var highlightsMine = false
+    @State private var unlockHaptic = 0
 
     var body: some View {
         let answers = store.feed(scope)
@@ -16,7 +24,7 @@ struct FeedView: View {
                 QueslyLogo(height: 20, markColor: .qInk, textColor: .qInk, background: .qBackground)
                 HStack {
                     Spacer()
-                    StreakChip(days: store.streak)
+                    StreakChip(days: shownStreak ?? store.streak)
                 }
                 .padding(.horizontal, DS.Space.screen)
             }
@@ -31,11 +39,16 @@ struct FeedView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 0) {
+                        Color.clear.frame(height: 0).id("top")
+
+                        FriendStoriesRow { index in
+                            storyLaunch = StoryLaunch(stories: store.friendStories, start: index)
+                        }
+
                         // Scrolls away with the content instead of permanently taking ~130 pt.
                         TodayQuestionBanner(question: store.todayQuestion) {
                             if !store.hasAnsweredToday { showQuestion = true }
                         }
-                        .id("top")
 
                         if !store.hasAnsweredToday {
                             AnswerPrompt { showQuestion = true }
@@ -48,10 +61,17 @@ struct FeedView: View {
                             ForEach(0..<4, id: \.self) { _ in AnswerCardSkeleton() }
                         } else {
                             ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
-                                AnswerCard(answer: answer, opensTray: DemoConfig.opensReactionTray
-                                           && answer.id == answers.first(where: { $0.authorId != store.me.id })?.id)
-                                    .staggeredAppear(index)
-                                Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 72)
+                                let isShown = index < revealCount
+                                Group {
+                                    AnswerCard(answer: answer,
+                                               opensTray: DemoConfig.opensReactionTray
+                                                   && answer.id == answers.first(where: { $0.authorId != store.me.id })?.id,
+                                               isHighlighted: highlightsMine && answer.authorId == store.me.id)
+                                    Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 72)
+                                }
+                                .opacity(isShown ? 1 : 0)
+                                .offset(y: isShown ? 0 : 16)
+                                .staggeredAppear(index)
                             }
                         }
 
@@ -101,9 +121,49 @@ struct FeedView: View {
         .background(Color.qBackground)
         .toolbar(.hidden, for: .navigationBar)
         .fullScreenCover(isPresented: $showQuestion) {
-            DailyQuestionView(onSubmitted: { showQuestion = false },
+            DailyQuestionView(onSubmitted: {
+                                  showQuestion = false
+                                  store.unlockCelebrationAt = .now.addingTimeInterval(0.5)
+                              },
                               onClose: { showQuestion = false })
         }
+        .fullScreenCover(item: $storyLaunch) { launch in
+            StoryViewer(stories: launch.stories, start: launch.start)
+        }
+        .sensoryFeedback(.success, trigger: unlockHaptic)
+        .task(id: store.unlockCelebrationAt) { await celebrateUnlock() }
+        .task {
+            guard DemoConfig.opensStory, storyLaunch == nil else { return }
+            storyLaunch = StoryLaunch(stories: store.friendStories, start: 0)
+        }
+    }
+
+    /// The moment the day's answers unlock: your card lands first and glows, the others
+    /// follow one by one, the streak ticks up with a success haptic.
+    private func celebrateUnlock() async {
+        guard let at = store.unlockCelebrationAt else { return }
+        // Cleared only at the end: changing the task id earlier would cancel this task.
+        defer { store.unlockCelebrationAt = nil }
+        let streak = store.streak
+        if !reduceMotion {
+            revealCount = 1
+            shownStreak = max(0, streak - 1)
+        }
+        highlightsMine = true
+        let wait = at.timeIntervalSinceNow
+        if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
+
+        unlockHaptic += 1
+        withAnimation(.qSpring) { shownStreak = nil }
+        if !reduceMotion {
+            for step in 2...max(2, store.feed(scope).count + 1) {
+                try? await Task.sleep(for: .milliseconds(90))
+                withAnimation(.qSmooth) { revealCount = step }
+            }
+        }
+        revealCount = .max
+        try? await Task.sleep(for: .seconds(1.6))
+        withAnimation(.qSmooth) { highlightsMine = false }
     }
 }
 

@@ -148,7 +148,7 @@ struct ProfileHeader: View {
                         Label(location, systemImage: QIcon.mapPinFill.rawValue)
                             .font(.ui(15))
                             .foregroundStyle(Color.qGray)
-                            .lineLimit(1)
+                            .lineLimit(2)
                     }
                     if !isMe && streak > 0 {
                         Label("\(streak)-day streak", systemImage: QIcon.fireFill.rawValue)
@@ -352,7 +352,7 @@ struct BadgesStrip: View {
                 }
             }
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
                     ForEach(items) { item in
                         NavigationLink(value: Route.achievements) {
                             VStack(spacing: 8) {
@@ -362,8 +362,10 @@ struct BadgesStrip: View {
                                 Text(item.title)
                                     .font(.ui(12, .medium))
                                     .foregroundStyle(item.isUnlocked ? Color.qInk : Color.qGray)
-                                    .lineLimit(1)
-                                    .frame(width: 72)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(width: 76, alignment: .top)
                             }
                         }
                         .buttonStyle(.pressable)

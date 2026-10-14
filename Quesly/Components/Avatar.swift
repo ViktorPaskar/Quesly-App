@@ -1,7 +1,8 @@
 import SwiftUI
 import UIKit
 
-/// User avatar: the real photo for the signed-in user when set, otherwise initials on a soft tint.
+/// User avatar: the signed-in user's own photo when set, otherwise the bundled illustration
+/// (`Assets/Avatars/avatar-<id>`, Notionists by Zoish, CC0), otherwise initials on a soft tint.
 /// Works without an `AppStore` in the environment (e.g. inside `ImageRenderer` for story cards).
 struct Avatar: View {
     let user: AppUser?
@@ -12,8 +13,9 @@ struct Avatar: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private var photo: UIImage? {
-        guard let store, let user, user.id == store.me.id else { return nil }
-        return store.myPhoto
+        guard let user else { return nil }
+        if let store, user.id == store.me.id, let mine = store.myPhoto { return mine }
+        return UIImage(named: "avatar-\(user.id)")
     }
 
     var body: some View {
@@ -52,6 +54,8 @@ struct Avatar: View {
 struct AvatarStack: View {
     let users: [AppUser]
     var size: CGFloat = 34
+    /// Separator ring between avatars — match the surface they sit on.
+    var ring: Color = .qBackground
 
     private var shown: [AppUser] { Array(users.prefix(2)) }
     private var step: CGFloat { size * 0.62 }
@@ -60,7 +64,7 @@ struct AvatarStack: View {
         ZStack(alignment: .topLeading) {
             ForEach(Array(shown.enumerated()), id: \.element.id) { index, user in
                 Avatar(user: user, size: size)
-                    .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
+                    .overlay(Circle().stroke(ring, lineWidth: 2))
                     .offset(x: CGFloat(index) * step)
                     .zIndex(Double(2 - index))
             }

@@ -22,6 +22,8 @@ struct AnswerCard: View {
     var showsAuthor = true
     /// Demo/screenshot hook: start with the reaction tray open.
     var opensTray = false
+    /// Brief brand tint, used when your own answer lands in the feed after posting.
+    var isHighlighted = false
 
     @State private var isTrayOpen = false
     @State private var isSharing = false
@@ -58,6 +60,7 @@ struct AnswerCard: View {
                         .contentShape(Rectangle())
                         .onTapGesture(count: 2) { doubleTapReact() }
                         .overlay { DoubleTapPop(emoji: ReactionKind.love.emoji, trigger: popTrigger) }
+                        .contextMenu { menuItems } preview: { preview }
                     actions
                 }
             }
@@ -65,7 +68,7 @@ struct AnswerCard: View {
         .padding(.horizontal, DS.Space.screen)
         .padding(.top, DS.Space.m)
         .padding(.bottom, DS.Space.xxs)
-        .background(Color.qBackground)
+        .background(isHighlighted ? Color.qMint : Color.qBackground)
         .sheet(isPresented: $isSharing) {
             ShareStorySheet(answer: answer)
                 .presentationDetents([.large])
@@ -134,18 +137,63 @@ struct AnswerCard: View {
         .animation(.qSpring, value: store.isFollowing(answer.authorId))
     }
 
+    /// Shared by the "…" menu and the long-press context menu.
+    @ViewBuilder
+    private var menuItems: some View {
+        if !isMine {
+            Button {
+                withAnimation(.qSpring) { store.react(.love, on: answer.id) }
+            } label: {
+                Label(answer.myReaction == .love ? "Remove love" : "Love it",
+                      systemImage: (answer.myReaction == .love ? QIcon.heartFill : QIcon.heart).rawValue)
+            }
+        }
+        Button {
+            withAnimation(.qSpring) { store.toggleSave(answer.id) }
+        } label: {
+            Label(answer.isSaved ? "Remove from saved" : "Save",
+                  systemImage: (answer.isSaved ? QIcon.bookmarkSimpleFill : QIcon.bookmarkSimple).rawValue)
+        }
+        Button { isSharing = true } label: { Label("Share as story", systemImage: QIcon.paperPlaneTilt.rawValue) }
+        Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", systemImage: QIcon.copy.rawValue) }
+        Divider()
+        if isMine {
+            if answer.isEditable() {
+                Button { isEditing = true } label: { Label("Edit", systemImage: QIcon.pencilSimple.rawValue) }
+            }
+            Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: QIcon.trash.rawValue) }
+        } else {
+            Button(role: .destructive) { isReporting = true } label: { Label("Report or block", systemImage: QIcon.flag.rawValue) }
+        }
+    }
+
+    /// Lifted card shown above the context menu.
+    private var preview: some View {
+        VStack(alignment: .leading, spacing: DS.Space.s) {
+            HStack(spacing: DS.Space.xs) {
+                Avatar(user: author, size: 32)
+                Text(author?.username ?? "")
+                    .font(.ui(15, .semibold))
+                    .foregroundStyle(Color.qInk)
+                Spacer(minLength: 0)
+            }
+            Text(answer.questionText)
+                .font(.ui(13, .semibold))
+                .foregroundStyle(Color.qBrandText)
+            Text(answer.text)
+                .font(.ui(17))
+                .foregroundStyle(Color.qInk)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(DS.Space.l)
+        .frame(width: 340, alignment: .leading)
+        .background(Color.qSurface)
+        .environment(store)
+    }
+
     private var moreMenu: some View {
         Menu {
-            Button { isSharing = true } label: { Label("Share as story", systemImage: QIcon.paperPlaneTilt.rawValue) }
-            Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", systemImage: QIcon.copy.rawValue) }
-            if isMine {
-                if answer.isEditable() {
-                    Button { isEditing = true } label: { Label("Edit", systemImage: QIcon.pencilSimple.rawValue) }
-                }
-                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: QIcon.trash.rawValue) }
-            } else {
-                Button(role: .destructive) { isReporting = true } label: { Label("Report or block", systemImage: QIcon.flag.rawValue) }
-            }
+            menuItems
         } label: {
             Icon(.dotsThreeBold, size: 20)
                 .foregroundStyle(Color.qGray)

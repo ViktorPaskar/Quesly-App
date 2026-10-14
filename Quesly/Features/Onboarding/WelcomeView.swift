@@ -95,6 +95,7 @@ private struct FloatingAnswers: View {
             }
             .padding(.horizontal, DS.Space.screen)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .clipped()
         .mask(
             LinearGradient(stops: [

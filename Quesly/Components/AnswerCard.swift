@@ -16,6 +16,7 @@ enum Route: Hashable {
 
 struct AnswerCard: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.dynamicTypeSize) private var typeSize
     let answer: Answer
     var showsQuestion = false
     var showsAuthor = true
@@ -187,7 +188,10 @@ struct AnswerCard: View {
             HStack(spacing: 6) {
                 if answer.totalReactions == 0 {
                     Icon(.heart, size: 22).foregroundStyle(Color.qGray.opacity(0.6))
-                    Text("No reactions yet").font(.ui(15)).foregroundStyle(Color.qGray)
+                    if !typeSize.isAccessibilitySize {
+                        Text("No reactions yet").font(.ui(15)).foregroundStyle(Color.qGray)
+                            .lineLimit(1)
+                    }
                 } else {
                     HStack(spacing: -4) {
                         ForEach(answer.topReactions.prefix(3)) { kind in

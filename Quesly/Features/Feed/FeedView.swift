@@ -176,21 +176,27 @@ struct StreakChip: View {
 struct TodayQuestionBanner: View {
     let question: DailyQuestion
     var onTap: () -> Void = {}
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         Button(action: onTap) {
             HStack(alignment: .center, spacing: 12) {
-                QueslyMark(color: .qGreen, cutout: .qLime)
-                    .frame(width: 24)
-                    .frame(width: 44, height: 44)
-                    .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qLime))
+                if !typeSize.isAccessibilitySize {
+                    QueslyMark(color: .qGreen, cutout: .qLime)
+                        .frame(width: 24)
+                        .frame(width: 44, height: 44)
+                        .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qLime))
+                }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack {
+                    let header = typeSize.isAccessibilitySize
+                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+                        : AnyLayout(HStackLayout())
+                    header {
                         Text("Today's Question")
                             .font(.ui(13, .semibold))
                             .foregroundStyle(Color.qLime)
-                        Spacer()
+                        if !typeSize.isAccessibilitySize { Spacer() }
                         TimelineView(.periodic(from: .now, by: 60)) { ctx in
                             HStack(spacing: 4) {
                                 Icon(.clock, size: 13)
@@ -204,7 +210,8 @@ struct TodayQuestionBanner: View {
                         .font(.display(17, .bold))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(2)
+                        .lineLimit(typeSize.isAccessibilitySize ? nil : 2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(.horizontal, DS.Space.m)

@@ -124,6 +124,7 @@ struct ProfileHeader: View {
     let isMe: Bool
     let answersCount: Int
     @State private var appeared = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var streak: Int { isMe ? store.streak : (user?.streak ?? 0) }
     private var followingCount: Int { isMe ? store.followingUsers.count : (user?.following ?? 0) }
@@ -184,7 +185,15 @@ struct ProfileHeader: View {
     /// "Followers · following · answers" line with tiny avatars, like Threads.
     private var socialProof: some View {
         let sample = Array(store.followingUsers.prefix(3))
-        return HStack(spacing: 12) {
+        if typeSize.isAccessibilitySize {
+            // Large text: one stat per line instead of a squeezed single row.
+            return AnyView(VStack(alignment: .leading, spacing: DS.Space.xxs) {
+                link("\(user?.followers ?? 0)", "followers", route: isMe ? .followers : nil)
+                link("\(followingCount)", "following", route: isMe ? .following : nil)
+                link("\(answersCount)", answersCount == 1 ? "answer" : "answers", route: nil)
+            })
+        }
+        return AnyView(HStack(spacing: 12) {
             AvatarStack(users: sample, size: 22)
             HStack(spacing: 0) {
                 link("\(user?.followers ?? 0)", "followers", route: isMe ? .followers : nil)
@@ -195,7 +204,7 @@ struct ProfileHeader: View {
             }
             .lineLimit(1)
             .minimumScaleFactor(0.8)
-        }
+        })
     }
 
     @ViewBuilder

@@ -12,7 +12,7 @@ The design system is the single source of truth. Screens consume tokens and comp
 | Layer | File | Contents |
 |---|---|---|
 | Tokens | `Quesly/Core/Theme.swift` | `DS.Space` (xxs 4 · xs 8 · s 12 · m 16 · l 20 · xl 24 · xxl 32 · xxxl 48 · screen 20), `DS.Radius` (s 8 · m 12 · l 20), `DS.hitTarget` 44, colors, `Font.ui` / `Font.display`, `Animation.qSpring` / `.qSmooth`, `PressableStyle`, `queslyField()`, `staggeredAppear()` |
-| Icons | `Quesly/Components/Icons.swift` + `Assets.xcassets/Icons/ui-*` | `QIcon` (one per concept) → UIcons "Regular Rounded" SVG by Flaticon (template) when `ui-<case>` exists, else SF Symbol; `Icon`, `IconLabel`, `.pop(on:)`. Attribution required (Settings footer). Tab bar: active = lime 52 pt bubble + brand-green glyph |
+| Icons | `Quesly/Components/Icons.swift` + `Assets.xcassets/Icons/ui-*` | `QIcon` (one per concept) → UIcons "Regular Rounded" SVG by Flaticon (template) when `ui-<case>` exists, else SF Symbol; `Icon`, `IconLabel`, `.pop(on:)`. Premium Flaticon licence — no attribution needed; new icons must come from the same set. Tab bar: active = lime 52 pt bubble + brand-green glyph |
 | Components | `Quesly/Components/*.swift` | `LimeButton`, `GreenButton`, `FollowPill`, `UnderlineTabs`, `BackHeader`/`queslyBackHeader`, `TitleHeader`, `EmptyStateView`, `SearchField` (Onboarding), `PersonRow`, `InviteCard`, `SectionLabel`, `Avatar`, `AvatarStack`, `HexBadge`, `QueslyLogo`/`QueslyMark`, `AnswerCard`, `ReactionControl`, `ReactionsSheet`, `ConfettiView` |
 | Fonts | `Quesly/Resources/Fonts/Outfit-*.ttf` + `Config/Info.plist` `UIAppFonts` | Outfit (OFL) — display only |
 

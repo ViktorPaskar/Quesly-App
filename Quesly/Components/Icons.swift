@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 /// The app's icon vocabulary, one name per concept. Rendered from the UIcons "Regular Rounded" set
-/// by Flaticon (template SVGs `Assets/Icons/ui-<case>`, attribution in Settings) when an asset exists,
+/// by Flaticon (template SVGs `Assets/Icons/ui-<case>`; premium licence, no attribution needed) when an asset exists,
 /// otherwise from the SF Symbol in the raw value. System menus keep SF Symbols (system chrome).
 /// Selected state = brand color / lime bubble, not a filled glyph. Always render through `Icon`.
 enum QIcon: String {

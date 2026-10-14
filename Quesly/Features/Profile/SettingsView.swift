@@ -67,8 +67,7 @@ struct SettingsView: View {
                     .foregroundStyle(Color.qBrandText)
                 Button("Delete account", role: .destructive) { confirmDelete = true }
             } footer: {
-                Text("Quesly \(Bundle.main.appVersion)\nIcons: UIcons by Flaticon")
-                    .multilineTextAlignment(.center)
+                Text("Quesly \(Bundle.main.appVersion)")
                     .frame(maxWidth: .infinity)
                     .padding(.top, DS.Space.m)
             }

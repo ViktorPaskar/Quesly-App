@@ -174,7 +174,7 @@ struct DailyQuestionView: View {
                     .contentTransition(.numericText())
                 Spacer()
                 if !text.isEmpty {
-                    Label("Draft saved", systemImage: QIcon.checkBold.rawValue)
+                    IconLabel("Draft saved", icon: .checkBold, size: 13)
                         .font(.ui(12))
                         .foregroundStyle(Color.qGray)
                         .transition(.opacity)

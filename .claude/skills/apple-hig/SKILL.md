@@ -40,10 +40,10 @@ Apply the HIG pragmatically: native behaviour by default, brand expression only 
 - Contrast: text ≥ 4.5:1 (≥ 3:1 for ≥ 18 pt bold). Lime `#D4FF00` on white fails → only on green. White on `#07583D` passes.
 - Never convey state by color alone (e.g. selected tab also changes icon fill/weight).
 
-## SF Symbols
+## Icons
 
-- All icons through `QIcon` / `Icon`. Weight matches adjacent text (regular), semibold for chevrons/close.
-- Outline = idle, `.fill` = selected/active. Use symbol effects (`.bounce`) for state changes, not decoration.
+- All icons through `QIcon` / `Icon` / `IconLabel`: the UIcons Regular Rounded set (SVG templates), SF Symbols only as fallback and inside system menus.
+- Selected state = color/bubble (tab bar: lime bubble), never color alone — the bubble shape also marks it. `.pop(on:)` for state changes, not decoration.
 
 ## Motion & haptics
 

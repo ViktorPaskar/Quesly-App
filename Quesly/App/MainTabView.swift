@@ -12,15 +12,6 @@ enum MainTab: CaseIterable {
         }
     }
 
-    var activeIcon: QIcon {
-        switch self {
-        case .feed: return .houseFill
-        case .discover: return .magnifyingGlass
-        case .notifications: return .bellFill
-        case .profile: return .userFill
-        }
-    }
-
     var title: String {
         switch self {
         case .feed: return "Feed"
@@ -94,14 +85,21 @@ struct MainTabView: View {
         }
     }
 
+    /// Icons only; the active tab sits in a lime bubble with a brand-green glyph (it glides between tabs).
     private var tabBar: some View {
         HStack(spacing: 0) {
             ForEach(MainTab.allCases, id: \.self) { t in
                 let active = tab == t
                 Button { select(t) } label: {
-                    VStack(spacing: 4) {
-                        Icon(active ? t.activeIcon : t.icon, size: 25, weight: active ? .semibold : .regular)
-                            .foregroundStyle(active ? Color.qBrandText : Color.qGray)
+                    ZStack {
+                        if active {
+                            Circle()
+                                .fill(Color.qLime)
+                                .frame(width: 52, height: 52)
+                                .matchedGeometryEffect(id: "tabBubble", in: ns)
+                        }
+                        Icon(t.icon, size: 24)
+                            .foregroundStyle(active ? Color.qGreen : Color.qGray)
                             .pop(on: active)
                             .overlay(alignment: .topTrailing) {
                                 if t == .notifications && store.unreadNotifications > 0 && !active {
@@ -115,17 +113,9 @@ struct MainTabView: View {
                                         .transition(.scale)
                                 }
                             }
-                        ZStack {
-                            if active {
-                                Capsule().fill(Color.qBrandText)
-                                    .frame(width: 18, height: 4)
-                                    .matchedGeometryEffect(id: "tabIndicator", in: ns)
-                            }
-                        }
-                        .frame(height: 4)
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(height: 56)
+                    .frame(height: 64)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -133,6 +123,7 @@ struct MainTabView: View {
                 .accessibilityAddTraits(active ? .isSelected : [])
             }
         }
+        .padding(.horizontal, DS.Space.xs)
         .animation(.qSpring, value: tab)
         .background(Color.qBackground.ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) { Rectangle().fill(Color.qLine).frame(height: 1) }

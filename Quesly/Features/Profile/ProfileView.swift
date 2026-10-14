@@ -86,7 +86,7 @@ struct ProfileView: View {
                 .accessibilityLabel("Back")
             }
             if store.isPrivateAccount && isMe {
-                Label("Private", systemImage: QIcon.lockSimpleFill.rawValue)
+                IconLabel("Private", icon: .lockSimpleFill, size: 13)
                     .font(.ui(13, .semibold))
                     .foregroundStyle(Color.qGray)
                     .padding(.leading, DS.Space.s)
@@ -145,13 +145,13 @@ struct ProfileHeader: View {
                         }
                     }
                     if let location = user?.location, !location.isEmpty {
-                        Label(location, systemImage: QIcon.mapPinFill.rawValue)
+                        IconLabel(location, icon: .mapPinFill)
                             .font(.ui(15))
                             .foregroundStyle(Color.qGray)
                             .lineLimit(2)
                     }
                     if !isMe && streak > 0 {
-                        Label("\(streak)-day streak", systemImage: QIcon.fireFill.rawValue)
+                        IconLabel("\(streak)-day streak", icon: .fireFill)
                             .font(.ui(15))
                             .foregroundStyle(Color.qGray)
                     }

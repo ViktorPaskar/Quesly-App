@@ -157,7 +157,7 @@ struct ReactionsSheet: View {
                 }
                 .listStyle(.plain)
                 .animation(.qSmooth, value: filter)
-                Label("Only you can see who reacted", systemImage: QIcon.lockSimpleFill.rawValue)
+                IconLabel("Only you can see who reacted", icon: .lockSimpleFill, size: 13)
                     .font(.ui(13))
                     .foregroundStyle(Color.qGray)
                     .padding(.vertical, DS.Space.s)

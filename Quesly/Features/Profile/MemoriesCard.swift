@@ -73,7 +73,7 @@ struct MemoriesCard: View {
 
     private var freezeInfo: some View {
         VStack(alignment: .leading, spacing: DS.Space.xs) {
-            Label("Streak freeze", systemImage: QIcon.snowflake.rawValue)
+            IconLabel("Streak freeze", icon: .snowflake, size: 18)
                 .font(.ui(17, .semibold))
                 .foregroundStyle(Color.qIce)
             Text("Miss a day and a freeze keeps your streak alive automatically. You earn one for every 7-day streak — up to \(AppStore.maxFreezes).")
@@ -254,8 +254,8 @@ struct MemoryDetailSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Space.m) {
-                Label(answer.createdAt.formatted(.dateTime.weekday(.wide).day().month(.wide)),
-                      systemImage: QIcon.calendar.rawValue)
+                IconLabel(answer.createdAt.formatted(.dateTime.weekday(.wide).day().month(.wide)),
+                          icon: .calendar, size: 14)
                     .font(.ui(13, .semibold))
                     .foregroundStyle(Color.qGray)
                 Text(answer.questionText)
@@ -278,7 +278,7 @@ struct MemoryDetailSheet: View {
                     }
                 }
                 Button { isSharing = true } label: {
-                    Label("Share as story", systemImage: QIcon.paperPlaneTiltFill.rawValue)
+                    IconLabel("Share as story", icon: .paperPlaneTiltFill, size: 17)
                         .font(.ui(16, .semibold))
                         .foregroundStyle(Color.qBrandText)
                         .frame(maxWidth: .infinity)

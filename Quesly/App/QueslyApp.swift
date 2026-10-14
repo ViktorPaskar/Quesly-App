@@ -19,7 +19,7 @@ struct QueslyApp: App {
             RootView()
                 .environment(store)
                 .environment(network)
-                .tint(.qGreen)
+                .tint(.qBrandText)
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { store.refreshDay() }

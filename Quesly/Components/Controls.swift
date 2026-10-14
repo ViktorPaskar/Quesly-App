@@ -83,7 +83,7 @@ struct UnderlineTabs<T: Hashable & Identifiable>: View {
     let items: [T]
     @Binding var selection: T
     let title: (T) -> String
-    var activeColor: Color = .qGreen
+    var activeColor: Color = .qBrandText
     @Namespace private var ns
 
     var body: some View {

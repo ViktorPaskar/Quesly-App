@@ -249,7 +249,7 @@ struct InviteCard: View {
                 .background(Circle().fill(Color.qBackground))
             VStack(alignment: .leading, spacing: 2) {
                 Text("Invite your friends").font(.ui(16, .semibold)).foregroundStyle(Color.qInk)
-                Text("Answer together every day").font(.ui(14)).foregroundStyle(Color.qGray)
+                Text("Answer together, every day").font(.ui(14)).foregroundStyle(Color.qGray).lineLimit(1).minimumScaleFactor(0.85)
             }
             Spacer()
             ShareLink(item: Invite.text(for: username)) {

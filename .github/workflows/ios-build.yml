@@ -38,7 +38,7 @@ jobs:
           xcrun simctl install "$DEVICE" build/sim/Build/Products/Debug-iphonesimulator/Quesly.app
           mkdir -p screenshots
           i=1
-          for screen in welcome findFriends notifyPrime question composer feed friends otherProfile share discover notifications profile saved menu achievements; do
+          for screen in welcome findFriends notifyPrime question composer feed friends otherProfile share reactions discover notifications profile saved menu achievements; do
             xcrun simctl terminate "$DEVICE" app.quesly.ios || true
             SIMCTL_CHILD_QUESLY_SCREEN=$screen xcrun simctl launch "$DEVICE" app.quesly.ios
             sleep 7

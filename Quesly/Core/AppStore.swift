@@ -226,6 +226,34 @@ final class AppStore {
         persist()
     }
 
+    /// Who reacted to one of my answers. Mock: real reactors from notifications, padded with
+    /// other users so the list matches the totals. Replace with an API call.
+    struct Reactor: Identifiable {
+        let user: AppUser
+        let kind: ReactionKind
+        var id: String { user.id }
+    }
+
+    func reactors(for answer: Answer) -> [Reactor] {
+        var result: [Reactor] = []
+        var used = Set<String>()
+        for n in notifications where n.answerId == answer.id && n.kind == .reaction {
+            if let id = n.actorId, let u = users[id], let r = n.reaction, !used.contains(id) {
+                result.append(Reactor(user: u, kind: r)); used.insert(id)
+            }
+        }
+        let pool = users.values.sorted { $0.username < $1.username }.filter { !used.contains($0.id) }
+        var i = 0
+        for kind in answer.topReactions {
+            let have = result.filter { $0.kind == kind }.count
+            let target = max(have, min(answer.count(kind), have + 6))
+            for _ in have..<target where i < pool.count {
+                result.append(Reactor(user: pool[i], kind: kind)); i += 1
+            }
+        }
+        return result
+    }
+
     // MARK: Social
 
     func isFollowing(_ userId: String) -> Bool { followingIds.contains(userId) }
@@ -338,16 +366,14 @@ final class AppStore {
 
     struct WeekDay { let date: Date; let answered: Bool; let isToday: Bool }
 
-    /// Monday…Sunday of the current week with whether the user answered that day.
-    var currentWeek: [WeekDay] {
-        var cal = Calendar.current
-        cal.firstWeekday = 2
+    /// The last 7 days ending today, with whether the user answered each day.
+    var lastSevenDays: [WeekDay] {
+        let cal = Calendar.current
         let today = cal.startOfDay(for: .now)
-        let start = cal.dateInterval(of: .weekOfYear, for: today)?.start ?? today
         let answeredDays = Set(myAnswers.map { cal.startOfDay(for: $0.createdAt) })
-        return (0..<7).compactMap { offset in
-            guard let day = cal.date(byAdding: .day, value: offset, to: start) else { return nil }
-            return WeekDay(date: day, answered: answeredDays.contains(day), isToday: day == today)
+        return (0..<7).reversed().compactMap { back in
+            guard let day = cal.date(byAdding: .day, value: -back, to: today) else { return nil }
+            return WeekDay(date: day, answered: answeredDays.contains(day), isToday: back == 0)
         }
     }
 

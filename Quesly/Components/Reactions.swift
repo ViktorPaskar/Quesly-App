@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The viewer's reaction control: one button that opens a tray of four positive emoji.
 struct ReactionControl: View {
@@ -30,48 +31,50 @@ struct ReactionControl: View {
         .animation(.qSpring, value: isTrayOpen)
     }
 
+    /// Tap = ❤️ (or remove your current reaction). Long-press = choose from all four.
     private var trigger: some View {
-        Button {
-            isTrayOpen = true
-        } label: {
-            HStack(spacing: 8) {
-                if let mine = answer.myReaction {
-                    Text(mine.emoji)
-                        .font(.system(size: 22))
-                        .id(mine)
-                        .transition(.scale(scale: 0.2).combined(with: .opacity))
-                    Text(mine.label)
-                        .font(.ui(14, .semibold))
-                        .foregroundStyle(Color.qGreen)
-                } else {
-                    Icon(.smiley, size: 22)
-                        .overlay(alignment: .topTrailing) {
-                            Icon(.plusCircleFill, size: 11)
-                                .foregroundStyle(Color.qGreen)
-                                .background(Circle().fill(Color.qField).padding(1))
-                                .offset(x: 4, y: -3)
-                        }
-                    Text("React")
-                        .font(.ui(14, .medium))
-                }
+        Group {
+            if let mine = answer.myReaction {
+                Text(mine.emoji)
+                    .font(.system(size: 21))
+                    .id(mine)
+                    .transition(.scale(scale: 0.3).combined(with: .opacity))
+            } else {
+                Icon(.heart, size: 22).foregroundStyle(Color.qGray)
             }
-            .foregroundStyle(Color.qGray)
-            .padding(.horizontal, 12)
-            .frame(height: 38)
-            .background(Capsule().fill(answer.myReaction == nil ? Color.qField : Color.qMint))
-            .contentShape(Capsule())
         }
-        .buttonStyle(.pressable)
-        .frame(minHeight: 44)
-        .accessibilityLabel(answer.myReaction.map { "Your reaction: \($0.label). Change reaction" } ?? "React")
+        .frame(minWidth: 32, minHeight: DS.hitTarget)
+        .contentShape(Rectangle())
+        .onTapGesture { quickReact() }
+        .onLongPressGesture(minimumDuration: 0.3) {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            isTrayOpen = true
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(answer.myReaction.map { "Your reaction: \($0.label)" } ?? "Love")
+        .accessibilityHint("Hold for more reactions")
+        .accessibilityAction { quickReact() }
+        .accessibilityAction(named: "Choose reaction") { isTrayOpen = true }
+    }
+
+    private func quickReact() {
+        let kind = answer.myReaction ?? .love
+        if answer.myReaction == nil { fireBurst(kind) }
+        onPick(kind)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
+    private func fireBurst(_ kind: ReactionKind) {
+        burst = kind
+        burstTrigger += 1
     }
 
     private var tray: some View {
         HStack(spacing: 2) {
             ForEach(Array(ReactionKind.allCases.enumerated()), id: \.element) { index, kind in
                 TrayEmoji(kind: kind, index: index, isSelected: answer.myReaction == kind) {
-                    burst = kind
-                    burstTrigger += 1
+                    if answer.myReaction != kind { fireBurst(kind) }
                     onPick(kind)
                     isTrayOpen = false
                 }
@@ -86,8 +89,8 @@ struct ReactionControl: View {
         .padding(.leading, 8)
         .padding(.trailing, 2)
         .background(
-            Capsule().fill(.white)
-                .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
+            Capsule().fill(Color.qSurface)
+                .shadow(color: .black.opacity(0.1), radius: 10, y: 3)
         )
         .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
     }
@@ -118,39 +121,67 @@ private struct TrayEmoji: View {
     }
 }
 
-/// Author-only summary: top emoji + total. Others never see counts (no popularity contest).
-struct ReactionSummary: View {
+/// Author-only list of who reacted, filterable by emoji (Instagram-style).
+struct ReactionsSheet: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
     let answer: Answer
+    @State private var filter: ReactionKind?
 
     var body: some View {
-        HStack(spacing: 8) {
-            if answer.totalReactions == 0 {
-                Icon(.eyeSlash, size: 15)
-                Text("No reactions yet").font(.ui(13, .medium))
-            } else {
-                HStack(spacing: -6) {
-                    ForEach(answer.topReactions.prefix(3)) { kind in
-                        Text(kind.emoji)
-                            .font(.system(size: 15))
-                            .frame(width: 24, height: 24)
-                            .background(Circle().fill(.white))
-                            .overlay(Circle().stroke(Color.qLine, lineWidth: 1))
+        let all = store.reactors(for: answer)
+        let shown = filter.map { f in all.filter { $0.kind == f } } ?? all
+        NavigationStack {
+            VStack(spacing: 0) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: DS.Space.xs) {
+                        chip(title: "All \(all.count)", isOn: filter == nil) { filter = nil }
+                        ForEach(answer.topReactions) { kind in
+                            chip(title: "\(kind.emoji) \(answer.count(kind))", isOn: filter == kind) { filter = kind }
+                        }
                     }
+                    .padding(.horizontal, DS.Space.screen)
+                    .padding(.vertical, DS.Space.s)
                 }
-                Text("\(answer.totalReactions)")
-                    .font(.ui(14, .semibold))
-                    .foregroundStyle(Color.qInk)
-                    .contentTransition(.numericText())
-                Icon(.lockSimpleFill, size: 11)
-                    .foregroundStyle(Color.qGray.opacity(0.7))
+                Divider()
+                List(shown) { item in
+                    NavigationLink(value: Route.profile(item.user.id)) {
+                        HStack(spacing: DS.Space.s) {
+                            Avatar(user: item.user, size: 40)
+                            Text(item.user.username).font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
+                            Spacer()
+                            Text(item.kind.emoji).font(.system(size: 22))
+                        }
+                    }
+                    .listRowSeparator(.hidden)
+                }
+                .listStyle(.plain)
+                .animation(.qSmooth, value: filter)
+                Label("Only you can see who reacted", systemImage: QIcon.lockSimpleFill.rawValue)
+                    .font(.ui(13))
+                    .foregroundStyle(Color.qGray)
+                    .padding(.vertical, DS.Space.s)
             }
+            .navigationTitle("Reactions")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            }
+            .withQueslyRoutes()
         }
-        .foregroundStyle(Color.qGray)
-        .padding(.horizontal, 12)
-        .frame(height: 36)
-        .background(Capsule().fill(Color.qField))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(answer.totalReactions) reactions, only visible to you")
+    }
+
+    private func chip(title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: { withAnimation(.qSpring) { action() } }) {
+            Text(title)
+                .font(.ui(15, .semibold))
+                .foregroundStyle(isOn ? Color.qBackground : Color.qInk)
+                .padding(.horizontal, DS.Space.s)
+                .frame(height: 34)
+                .background(Capsule().fill(isOn ? Color.qInk : Color.qField))
+        }
+        .buttonStyle(.pressable)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }
 

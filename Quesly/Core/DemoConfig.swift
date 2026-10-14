@@ -5,7 +5,7 @@ import Foundation
 enum DemoConfig {
     enum Screen: String {
         case welcome, findFriends, notifyPrime, question, composer
-        case feed, friends, otherProfile, share
+        case feed, friends, otherProfile, share, reactions
         case discover, notifications, profile, saved, menu, achievements
     }
 
@@ -72,4 +72,5 @@ enum DemoConfig {
     static var initialFeedScope: FeedScope { screen == .friends ? .friends : .world }
     static var showsSavedTab: Bool { screen == .saved }
     static var opensShareSheet: Bool { screen == .share }
+    static var opensReactionsSheet: Bool { screen == .reactions }
 }

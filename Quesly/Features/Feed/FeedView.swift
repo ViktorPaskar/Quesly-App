@@ -8,9 +8,10 @@ struct FeedView: View {
 
     var body: some View {
         let answers = store.feed(scope)
+        let othersCount = answers.filter { $0.authorId != store.me.id }.count
         VStack(spacing: 0) {
             ZStack {
-                QueslyLogo(height: 20, markColor: .qInk, textColor: .qInk, background: .white)
+                QueslyLogo(height: 20, markColor: .qInk, textColor: .qInk, background: .qBackground)
                 HStack {
                     Spacer()
                     StreakChip(days: store.streak)
@@ -20,49 +21,57 @@ struct FeedView: View {
             .frame(height: 48)
 
             UnderlineTabs(items: FeedScope.allCases, selection: $scope, title: \.rawValue)
-                .padding(.top, 4)
 
-            TodayQuestionBanner(question: store.todayQuestion) {
-                if !store.hasAnsweredToday { showQuestion = true }
-            }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        // Scrolls away with the content instead of permanently taking ~130 pt.
+                        TodayQuestionBanner(question: store.todayQuestion) {
+                            if !store.hasAnsweredToday { showQuestion = true }
+                        }
+                        .id("top")
 
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    if !store.hasAnsweredToday {
-                        AnswerPrompt { showQuestion = true }
-                    }
-                    ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
-                        AnswerCard(answer: answer)
-                            .staggeredAppear(index)
-                        Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 76)
-                    }
-                    if scope == .friends && answers.filter({ $0.authorId != store.me.id }).isEmpty {
-                        EmptyStateView(icon: .usersThreeFill,
-                                       title: "Your friends are quiet",
-                                       message: "None of the people you follow answered yet. Invite friends or discover new people.") {
-                            VStack(spacing: 12) {
-                                ShareLink(item: Invite.text(for: store.me.username)) {
-                                    Label { Text("Invite friends") } icon: { Icon(.paperPlaneTiltFill, size: 18) }
-                                        .font(.ui(16, .semibold))
-                                        .foregroundStyle(.white)
-                                        .frame(maxWidth: .infinity).frame(height: 50)
-                                        .background(Capsule().fill(Color.qGreen))
+                        if !store.hasAnsweredToday {
+                            AnswerPrompt { showQuestion = true }
+                        }
+                        ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
+                            AnswerCard(answer: answer)
+                                .staggeredAppear(index)
+                            Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 72)
+                        }
+
+                        if scope == .friends && othersCount == 0 {
+                            EmptyStateView(icon: .usersThreeFill,
+                                           title: "Your friends are quiet",
+                                           message: "None of the people you follow answered yet. Invite friends or discover new people.") {
+                                VStack(spacing: DS.Space.s) {
+                                    ShareLink(item: Invite.text(for: store.me.username)) {
+                                        Text("Invite friends")
+                                            .font(.ui(16, .semibold))
+                                            .foregroundStyle(.white)
+                                            .frame(maxWidth: .infinity).frame(height: 50)
+                                            .background(Capsule().fill(Color.qGreen))
+                                    }
+                                    .buttonStyle(.pressable)
+                                    Button("Discover people", action: onDiscover)
+                                        .font(.ui(16, .medium))
+                                        .foregroundStyle(Color.qBrandText)
+                                        .frame(height: DS.hitTarget)
                                 }
-                                .buttonStyle(.pressable)
-                                Button("Discover people", action: onDiscover)
-                                    .font(.ui(16, .medium))
-                                    .foregroundStyle(Color.qGreen)
-                                    .frame(height: 44)
+                            }
+                        } else if othersCount > 0 {
+                            CaughtUpFooter(count: othersCount, scope: scope) {
+                                withAnimation(.qSmooth) { proxy.scrollTo("top", anchor: .top) }
                             }
                         }
                     }
+                    .padding(.bottom, DS.Space.s)
+                    .animation(.qSmooth, value: scope)
                 }
-                .padding(.bottom, 12)
-                .animation(.qSmooth, value: scope)
-            }
-            .refreshable {
-                try? await Task.sleep(for: .milliseconds(600))
-                store.refreshDay()
+                .refreshable {
+                    try? await Task.sleep(for: .milliseconds(600))
+                    store.refreshDay()
+                }
             }
         }
         .background(Color.qBackground)
@@ -71,6 +80,50 @@ struct FeedView: View {
             DailyQuestionView(onSubmitted: { showQuestion = false },
                               onClose: { showQuestion = false })
         }
+    }
+}
+
+/// The end of a finite feed — Quesly's answer to infinite scrolling.
+struct CaughtUpFooter: View {
+    let count: Int
+    let scope: FeedScope
+    var onBackToTop: () -> Void
+
+    var body: some View {
+        VStack(spacing: DS.Space.s) {
+            Icon(.checkBold, size: 22)
+                .foregroundStyle(Color.qBrandText)
+                .frame(width: 56, height: 56)
+                .background(Circle().fill(Color.qMint))
+            Text("You're all caught up")
+                .font(.display(22, .semibold))
+                .foregroundStyle(Color.qInk)
+            Text("You've read all \(count) \(scope == .friends ? "answers from friends" : "answers") for today.")
+                .font(.ui(15))
+                .foregroundStyle(Color.qGray)
+                .multilineTextAlignment(.center)
+            TimelineView(.periodic(from: .now, by: 60)) { ctx in
+                Label {
+                    Text("Next question in **\(AppStore.timeLeftString(now: ctx.date))**")
+                } icon: {
+                    Icon(.clock, size: 15)
+                }
+                .font(.ui(15))
+                .foregroundStyle(Color.qInk)
+                .padding(.horizontal, DS.Space.m)
+                .frame(height: 36)
+                .background(Capsule().fill(Color.qField))
+            }
+            .padding(.top, DS.Space.xxs)
+            Button("Back to top", action: onBackToTop)
+                .font(.ui(15, .semibold))
+                .foregroundStyle(Color.qBrandText)
+                .frame(minHeight: DS.hitTarget)
+        }
+        .padding(.horizontal, DS.Space.xxl)
+        .padding(.top, DS.Space.xxl)
+        .padding(.bottom, DS.Space.xl)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -124,18 +177,19 @@ struct TodayQuestionBanner: View {
                         }
                     }
                     Text(question.text.uppercased())
-                        .font(.ui(15, .bold))
+                        .font(.display(17, .bold))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
                 }
             }
             .padding(.horizontal, DS.Space.m)
-            .padding(.vertical, 16)
+            .padding(.vertical, DS.Space.m)
             .frame(maxWidth: .infinity)
             .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qGreen))
             .padding(.horizontal, DS.Space.screen)
-            .padding(.vertical, 12)
+            .padding(.top, DS.Space.s)
+            .padding(.bottom, DS.Space.xxs)
         }
         .buttonStyle(.pressable)
     }

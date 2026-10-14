@@ -42,6 +42,7 @@ struct MainTabView: View {
     }()
     @Namespace private var ns
     @State private var demoShare = DemoConfig.opensShareSheet
+    @State private var demoReactions = DemoConfig.opensReactionsSheet
 
     var body: some View {
         VStack(spacing: 0) {
@@ -56,6 +57,11 @@ struct MainTabView: View {
         .ignoresSafeArea(.keyboard)
         .sheet(isPresented: $demoShare) {
             if let answer = store.todaysAnswer { ShareStorySheet(answer: answer) }
+        }
+        .sheet(isPresented: $demoReactions) {
+            if let answer = store.myAnswers.first(where: { $0.totalReactions > 0 }) {
+                ReactionsSheet(answer: answer).presentationDetents([.medium, .large])
+            }
         }
     }
 

@@ -86,13 +86,11 @@ struct ProfileView: View {
                 .accessibilityLabel("Back")
             }
             if store.isPrivateAccount && isMe {
-                Icon(.lockSimpleFill, size: 16).foregroundStyle(Color.qInk)
-                    .padding(.leading, isTabRoot ? 12 : 0)
+                Label("Private", systemImage: QIcon.lockSimpleFill.rawValue)
+                    .font(.ui(13, .semibold))
+                    .foregroundStyle(Color.qGray)
+                    .padding(.leading, DS.Space.s)
             }
-            Text(user?.username ?? "")
-                .font(.ui(20, .bold))
-                .foregroundStyle(Color.qInk)
-                .padding(.leading, isTabRoot && !store.isPrivateAccount ? 12 : 0)
             Spacer()
             ShareLink(item: Invite.text(for: user?.username ?? "")) {
                 Icon(.export, size: 24).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
@@ -145,15 +143,20 @@ struct ProfileHeader: View {
                             HexBadge(color: badge.color, icon: badge.icon).frame(width: 22, height: 22)
                         }
                     }
-                    HStack(spacing: 8) {
-                        chip(icon: .fireFill, text: "\(streak)-day streak", tint: .qFlame)
-                        if let location = user?.location, !location.isEmpty {
-                            chip(icon: .mapPinFill, text: location, tint: .qGray)
-                        }
+                    if let location = user?.location, !location.isEmpty {
+                        Label(location, systemImage: QIcon.mapPinFill.rawValue)
+                            .font(.ui(15))
+                            .foregroundStyle(Color.qGray)
+                            .lineLimit(1)
+                    }
+                    if !isMe && streak > 0 {
+                        Label("\(streak)-day streak", systemImage: QIcon.fireFill.rawValue)
+                            .font(.ui(15))
+                            .foregroundStyle(Color.qGray)
                     }
                 }
                 Spacer(minLength: 0)
-                AvatarRing(user: user, size: 86)
+                AvatarRing(user: user, size: 84, isActiveToday: isMe ? store.hasAnsweredToday : false)
                     .scaleEffect(appeared ? 1 : 0.6)
                     .opacity(appeared ? 1 : 0)
             }
@@ -176,16 +179,6 @@ struct ProfileHeader: View {
             }
         }
         .onAppear { withAnimation(.spring(response: 0.55, dampingFraction: 0.65).delay(0.05)) { appeared = true } }
-    }
-
-    private func chip(icon: QIcon, text: String, tint: Color) -> some View {
-        HStack(spacing: 4) {
-            Icon(icon, size: 14).foregroundStyle(tint)
-            Text(text).font(.ui(13, .medium)).foregroundStyle(Color.qInk.opacity(0.8)).lineLimit(1)
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 28)
-        .background(Capsule().fill(Color.qField))
     }
 
     /// "Followers · following · answers" line with tiny avatars, like Threads.
@@ -259,74 +252,73 @@ struct ProfileHeader: View {
 }
 
 /// Avatar with a slowly rotating brand-gradient ring (like an IG story ring).
+/// Avatar with a brand ring that means something: "answered today".
 struct AvatarRing: View {
     let user: AppUser?
-    var size: CGFloat = 86
+    var size: CGFloat = 84
+    var isActiveToday = false
 
     var body: some View {
         ZStack {
-            Circle()
-                .stroke(Color.qGreen, lineWidth: 2.5)
-            Avatar(user: user, size: size - 12, showsBadge: true)
+            if isActiveToday {
+                Circle().stroke(Color.qGreen, lineWidth: 2.5)
+            }
+            Avatar(user: user, size: isActiveToday ? size - 10 : size, showsBadge: true)
         }
         .frame(width: size, height: size)
     }
 }
 
-/// Green card with the current streak and this week's answered days.
+/// Streak with the last 7 days (rolling, so the dots always agree with the number).
 struct StreakWeekCard: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let streak: Int
     @State private var appeared = false
 
     var body: some View {
-        let days = store.currentWeek
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .center, spacing: 12) {
-                Icon(.fireFill, size: 28)
-                    .foregroundStyle(Color.qFlame)
-                    .frame(width: 48, height: 48)
-                    .background(Circle().fill(.white.opacity(0.12)))
-                    .scaleEffect(appeared ? 1 : 0.5)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("\(streak)-day streak")
-                        .font(.ui(20, .bold))
-                        .foregroundStyle(.white)
-                    Text(store.hasAnsweredToday ? "You're on fire. See you tomorrow!" : "Answer today to keep it going")
-                        .font(.ui(14))
-                        .foregroundStyle(.white.opacity(0.8))
-                }
+        let days = store.lastSevenDays
+        VStack(alignment: .leading, spacing: DS.Space.m) {
+            HStack(alignment: .firstTextBaseline, spacing: DS.Space.xs) {
+                Icon(.fireFill, size: 20).foregroundStyle(Color.qFlame)
+                Text("\(streak)-day streak")
+                    .font(.ui(17, .semibold))
+                    .foregroundStyle(Color.qInk)
                 Spacer()
+                Text(store.hasAnsweredToday ? "See you tomorrow" : "Answer today to keep it")
+                    .font(.ui(13))
+                    .foregroundStyle(Color.qGray)
             }
             HStack(spacing: 0) {
                 ForEach(Array(days.enumerated()), id: \.offset) { index, day in
-                    VStack(spacing: 8) {
-                        Text(day.date.formatted(.dateTime.weekday(.narrow)))
-                            .font(.ui(12, .semibold))
-                            .foregroundStyle(.white.opacity(day.isToday ? 1 : 0.6))
+                    VStack(spacing: DS.Space.xs) {
                         ZStack {
-                            Circle().fill(day.answered ? Color.qLime : Color.white.opacity(0.12))
+                            Circle().fill(day.answered ? Color.qGreen : Color.qLine)
                             if day.answered {
-                                Icon(.checkBold, size: 14).foregroundStyle(Color.qGreen)
-                            }
-                            if day.isToday {
-                                Circle().stroke(Color.qLime, lineWidth: 2).padding(-4)
+                                Icon(.checkBold, size: 13).foregroundStyle(.white)
                             }
                         }
                         .frame(width: 30, height: 30)
-                        .scaleEffect(appeared ? 1 : 0.2)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.6).delay(0.15 + Double(index) * 0.05), value: appeared)
+                        .overlay {
+                            if day.isToday {
+                                Circle().stroke(Color.qGreen, lineWidth: 2).padding(-4)
+                            }
+                        }
+                        .scaleEffect(appeared || reduceMotion ? 1 : 0.4)
+                        .animation(.qSpring.delay(0.1 + Double(index) * 0.04), value: appeared)
+                        Text(day.isToday ? "Today" : day.date.formatted(.dateTime.weekday(.narrow)))
+                            .font(.ui(12, day.isToday ? .semibold : .regular))
+                            .foregroundStyle(day.isToday ? Color.qInk : Color.qGray)
                     }
                     .frame(maxWidth: .infinity)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(day.date.formatted(.dateTime.weekday(.wide))), \(day.answered ? "answered" : "not answered")")
                 }
             }
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                .fill(Color.qGreen)
-        )
-        .onAppear { withAnimation(.qSpring) { appeared = true } }
+        .padding(DS.Space.m)
+        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qField))
+        .onAppear { appeared = true }
     }
 }
 

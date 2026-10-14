@@ -100,3 +100,20 @@ jobs:
         with:
           name: Quesly-ipa
           path: Quesly.ipa
+
+      # Zipped simulator .app (Intel + Apple Silicon) — upload to appetize.io to try the app in a browser.
+      - name: Build simulator app for browser testing (Appetize)
+        run: |
+          set -o pipefail
+          xcodebuild -project Quesly.xcodeproj -scheme Quesly \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Release -derivedDataPath build/simrel \
+            ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build-simrel.log | grep -E "error:|\*\* BUILD" || true
+          grep -q "BUILD SUCCEEDED" build-simrel.log
+          (cd build/simrel/Build/Products/Release-iphonesimulator && zip -qr "$GITHUB_WORKSPACE/Quesly-simulator.zip" Quesly.app)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Quesly-simulator
+          path: Quesly-simulator.zip

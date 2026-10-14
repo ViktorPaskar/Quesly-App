@@ -11,10 +11,15 @@ struct WelcomeView: View {
             Color.qGreen.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                FloatingAnswers(answers: store.todayAnswers)
-                    .frame(maxHeight: .infinity)
-                    .opacity(appeared ? 1 : 0)
-                    .animation(.qSmooth.delay(0.2), value: appeared)
+                // The cards are an overlay so their (very tall, looping) content never pushes the buttons off screen.
+                Color.clear
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .overlay(alignment: .top) {
+                        FloatingAnswers(answers: store.todayAnswers)
+                            .opacity(appeared ? 1 : 0)
+                            .animation(.qSmooth.delay(0.2), value: appeared)
+                    }
+                    .clipped()
 
                 brand
             }

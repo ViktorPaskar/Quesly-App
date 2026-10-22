@@ -43,11 +43,15 @@ struct DailyQuestionView: View {
                     }
                     .padding(.bottom, 16)
                 } else {
-                    AnsweredTodayProof(count: store.answeredTodayCount,
-                                       friends: store.friendsAnsweredToday)
-                        .padding(.horizontal, DS.Space.screen)
-                        .padding(.bottom, DS.Space.l)
-                        .transition(.opacity)
+                    VStack(alignment: .leading, spacing: DS.Space.m) {
+                        LockedFriendsPreview(answers: Array(store.friendStories.prefix(3)),
+                                             users: store.friendsAnsweredToday)
+                        AnsweredTodayProof(count: store.answeredTodayCount,
+                                           friends: store.friendsAnsweredToday)
+                    }
+                    .padding(.horizontal, DS.Space.xl)
+                    .padding(.bottom, DS.Space.l)
+                    .transition(.opacity)
                 }
                 LimeButton(title: isComposing ? "Submit" : "Answer",
                            icon: isComposing ? .paperPlaneTiltFill : .pencilSimpleFill,
@@ -81,49 +85,72 @@ struct DailyQuestionView: View {
     }
 
     private var header: some View {
-        ZStack {
-            VStack(spacing: 16) {
-                QueslyLogo(height: 18, background: .clear)
-                VStack(spacing: 8) {
-                    Text("TODAY'S QUESTION")
-                        .font(.ui(12, .bold))
-                        .tracking(1)
-                        .foregroundStyle(Color.qLime)
-                    Capsule().fill(Color.qLime).frame(width: 110, height: 2)
-                }
-            }
+        HStack {
+            QueslyLogo(height: 18, background: .clear)
+            Spacer()
             if let onClose {
-                HStack {
-                    Spacer()
-                    Button(action: onClose) {
-                        Icon(.xBold, size: 20)
-                            .foregroundStyle(.white.opacity(0.85))
-                            .frame(width: 44, height: 44)
-                    }
-                    .accessibilityLabel("Close")
+                Button(action: onClose) {
+                    Icon(.xBold, size: 16, weight: .semibold)
+                        .foregroundStyle(.white)
+                        .frame(width: 36, height: 36)
+                        .background(Circle().fill(.white.opacity(0.12)))
+                        .frame(width: 44, height: 44)
                 }
-                .padding(.horizontal, 8)
+                .accessibilityLabel("Close")
+                .padding(.trailing, -4)
             }
         }
-        .padding(.top, 12)
+        .frame(height: 44)
+        .padding(.horizontal, DS.Space.xl)
+        .padding(.top, 8)
     }
 
-    /// Question appears word by word; highlighted words glow lime.
+    /// Editorial, left-aligned question: date + time-left chips, then the words arrive one by one.
+    /// Highlighted words become tilted lime "stickers" with green ink.
     private var questionText: some View {
         let highlighted = Set(question.highlights.flatMap { $0.uppercased().split(separator: " ").map(String.init) })
-        return WrappingHStack(spacing: 12, lineSpacing: 6) {
-            ForEach(Array(words.enumerated()), id: \.offset) { index, word in
-                Text(word)
-                    .font(.display(36, .bold))
-                    .foregroundStyle(highlighted.contains(word) ? Color.qLime : .white)
-                    .opacity(index < revealed || reduceMotion ? 1 : 0)
-                    .offset(y: index < revealed || reduceMotion ? 0 : 10)
-                    .animation(.qSmooth.delay(0.15 + Double(index) * 0.06), value: revealed)
+        return VStack(alignment: .leading, spacing: DS.Space.l) {
+            HStack(spacing: DS.Space.xs) {
+                Text(Date.now.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()).uppercased())
+                    .font(.ui(12, .bold))
+                    .tracking(1)
+                    .foregroundStyle(Color.qGreen)
+                    .padding(.horizontal, 10)
+                    .frame(height: 26)
+                    .background(Capsule().fill(Color.qLime))
+                TimelineView(.periodic(from: .now, by: 60)) { ctx in
+                    IconLabel("\(AppStore.timeLeftString(now: ctx.date)) left", icon: .clock, size: 12)
+                        .font(.ui(12, .semibold))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .padding(.horizontal, 10)
+                        .frame(height: 26)
+                        .background(Capsule().fill(.white.opacity(0.12)))
+                }
             }
+            WrappingHStack(spacing: 10, lineSpacing: 4, centered: false) {
+                ForEach(Array(words.enumerated()), id: \.offset) { index, word in
+                    let isHot = highlighted.contains(word)
+                    Text(word)
+                        .font(.display(42, .heavy))
+                        .foregroundStyle(isHot ? Color.qGreen : .white)
+                        .padding(.horizontal, isHot ? 8 : 0)
+                        .background {
+                            if isHot {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.qLime)
+                            }
+                        }
+                        .rotationEffect(.degrees(isHot ? -3 : 0))
+                        .opacity(index < revealed || reduceMotion ? 1 : 0)
+                        .offset(y: index < revealed || reduceMotion ? 0 : 14)
+                        .blur(radius: index < revealed || reduceMotion ? 0 : 6)
+                        .animation(.qSmooth.delay(0.15 + Double(index) * 0.07), value: revealed)
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(question.text)
         }
-        .padding(.horizontal, 32)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(question.text)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, DS.Space.xl)
         .transition(.asymmetric(insertion: .opacity, removal: .scale(scale: 0.85).combined(with: .opacity)))
     }
 
@@ -200,6 +227,63 @@ struct DailyQuestionView: View {
         editorFocused = false
         store.submitAnswer(text, visibility: visibility)
         onSubmitted()
+    }
+}
+
+/// Friends' answers waiting behind the gate: a fanned stack of cards whose text is drawn as
+/// placeholder bars (never the real words), with a lock pill — answer first, then read.
+private struct LockedFriendsPreview: View {
+    let answers: [Answer]
+    let users: [AppUser]
+    @State private var shown = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        if !answers.isEmpty {
+            ZStack(alignment: .top) {
+                ForEach(Array(answers.enumerated().reversed()), id: \.element.id) { index, answer in
+                    card(answer, user: users.first { $0.id == answer.authorId })
+                        .scaleEffect(1 - CGFloat(index) * 0.05, anchor: .top)
+                        .offset(y: CGFloat(index) * 12)
+                        .opacity(1 - Double(index) * 0.25)
+                }
+                lockPill
+                    .offset(y: 62)
+            }
+            .padding(.bottom, CGFloat(answers.count - 1) * 12)
+            .offset(y: shown || reduceMotion ? 0 : 24)
+            .opacity(shown || reduceMotion ? 1 : 0)
+            .onAppear { withAnimation(.qSpring.delay(0.6)) { shown = true } }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(answers.count) friends answered. Answer to see what they said.")
+        }
+    }
+
+    private func card(_ answer: Answer, user: AppUser?) -> some View {
+        HStack(alignment: .top, spacing: DS.Space.s) {
+            Avatar(user: user, size: 36)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(user?.username ?? "")
+                    .font(.ui(14, .semibold))
+                    .foregroundStyle(Color.qInk)
+                Capsule().fill(Color.qField).frame(height: 10)
+                Capsule().fill(Color.qField).frame(width: 150, height: 10)
+            }
+        }
+        .padding(DS.Space.m)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.white))
+        .shadow(color: .black.opacity(0.18), radius: 14, y: 8)
+    }
+
+    private var lockPill: some View {
+        IconLabel("Answer to unlock", icon: .lockSimpleFill, size: 12)
+            .font(.ui(13, .semibold))
+            .foregroundStyle(Color.qLime)
+            .padding(.horizontal, 12)
+            .frame(height: 30)
+            .background(Capsule().fill(Color.qGreen))
+            .overlay(Capsule().strokeBorder(.white, lineWidth: 2))
     }
 }
 
@@ -294,10 +378,11 @@ struct ShakeEffect: GeometryEffect {
     }
 }
 
-/// Simple flow layout that wraps words onto new lines, centered.
+/// Simple flow layout that wraps words onto new lines, centered or left-aligned.
 struct WrappingHStack: Layout {
     var spacing: CGFloat = 8
     var lineSpacing: CGFloat = 4
+    var centered = true
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let rows = arrange(width: proposal.width ?? .infinity, subviews: subviews)
@@ -310,7 +395,7 @@ struct WrappingHStack: Layout {
         let rows = arrange(width: bounds.width, subviews: subviews)
         var y = bounds.minY
         for row in rows {
-            var x = bounds.minX + (bounds.width - row.width) / 2
+            var x = bounds.minX + (centered ? (bounds.width - row.width) / 2 : 0)
             for index in row.indices {
                 let size = subviews[index].sizeThatFits(.unspecified)
                 subviews[index].place(at: CGPoint(x: x, y: y + (row.height - size.height) / 2),

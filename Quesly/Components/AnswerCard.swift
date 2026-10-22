@@ -59,7 +59,7 @@ struct AnswerCard: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
                         .onTapGesture(count: 2) { doubleTapReact() }
-                        .overlay { DoubleTapPop(emoji: ReactionKind.love.emoji, trigger: popTrigger) }
+                        .overlay { DoubleTapPop(kind: .love, trigger: popTrigger) }
                         .contextMenu { menuItems } preview: { preview }
                     actions
                 }
@@ -241,9 +241,9 @@ struct AnswerCard: View {
                             .lineLimit(1)
                     }
                 } else {
-                    HStack(spacing: -4) {
+                    HStack(spacing: -6) {
                         ForEach(answer.topReactions.prefix(3)) { kind in
-                            Text(kind.emoji).font(.system(size: 17))
+                            ReactionSticker(kind: kind, size: 24)
                         }
                     }
                     Text("\(answer.totalReactions)")

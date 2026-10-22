@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// The viewer's reaction control: one button that opens a tray of four positive emoji.
+/// The viewer's reaction control: one button that opens a tray of six positive reactions.
 struct ReactionControl: View {
     let answer: Answer
     @Binding var isTrayOpen: Bool
@@ -23,7 +23,7 @@ struct ReactionControl: View {
         }
         .overlay(alignment: .bottomLeading) {
             if let burst, !reduceMotion {
-                EmojiBurst(emoji: burst.emoji, trigger: burstTrigger)
+                EmojiBurst(kind: burst, trigger: burstTrigger)
                     .offset(x: 6, y: -14)
                     .allowsHitTesting(false)
             }
@@ -31,12 +31,11 @@ struct ReactionControl: View {
         .animation(.qSpring, value: isTrayOpen)
     }
 
-    /// Tap = ❤️ (or remove your current reaction). Long-press = choose from all four.
+    /// Tap = ❤️ (or remove your current reaction). Long-press = choose from all six.
     private var trigger: some View {
         Group {
             if let mine = answer.myReaction {
-                Text(mine.emoji)
-                    .font(.system(size: 21))
+                ReactionSticker(kind: mine, size: 26)
                     .id(mine)
                     .transition(.scale(scale: 0.3).combined(with: .opacity))
             } else {
@@ -105,10 +104,10 @@ private struct TrayEmoji: View {
 
     var body: some View {
         Button(action: action) {
-            Text(kind.emoji)
-                .font(.system(size: 28))
-                .frame(width: 46, height: 46)
-                .background(Circle().fill(isSelected ? Color.qMint : .clear))
+            ReactionSticker(kind: kind, size: kind == .same ? 36 : 34)
+                .frame(minWidth: 42, minHeight: 46)
+                .padding(.horizontal, kind == .same ? 4 : 0)
+                .background(Capsule().fill(isSelected ? Color.qMint : .clear))
                 .scaleEffect(shown ? 1 : 0.3)
                 .offset(y: shown ? 0 : 10)
         }
@@ -137,7 +136,7 @@ struct ReactionsSheet: View {
                     HStack(spacing: DS.Space.xs) {
                         chip(title: "All \(all.count)", isOn: filter == nil) { filter = nil }
                         ForEach(answer.topReactions) { kind in
-                            chip(title: "\(kind.emoji) \(answer.count(kind))", isOn: filter == kind) { filter = kind }
+                            chip(title: "\(answer.count(kind))", kind: kind, isOn: filter == kind) { filter = kind }
                         }
                     }
                     .padding(.horizontal, DS.Space.screen)
@@ -150,7 +149,7 @@ struct ReactionsSheet: View {
                             Avatar(user: item.user, size: 40)
                             Text(item.user.username).font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
                             Spacer()
-                            Text(item.kind.emoji).font(.system(size: 22))
+                            ReactionSticker(kind: item.kind, size: 30)
                         }
                     }
                     .listRowSeparator(.hidden)
@@ -171,9 +170,12 @@ struct ReactionsSheet: View {
         }
     }
 
-    private func chip(title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+    private func chip(title: String, kind: ReactionKind? = nil, isOn: Bool, action: @escaping () -> Void) -> some View {
         Button(action: { withAnimation(.qSpring) { action() } }) {
-            Text(title)
+            HStack(spacing: 6) {
+                if let kind { ReactionSticker(kind: kind, size: 22) }
+                Text(title)
+            }
                 .font(.ui(15, .semibold))
                 .foregroundStyle(isOn ? Color.qBackground : Color.qInk)
                 .padding(.horizontal, DS.Space.s)
@@ -187,20 +189,20 @@ struct ReactionsSheet: View {
 
 /// A handful of emoji that float up and fade out.
 struct EmojiBurst: View {
-    let emoji: String
+    let kind: ReactionKind
     let trigger: Int
 
     var body: some View {
         ZStack {
             ForEach(0..<7, id: \.self) { i in
-                BurstParticle(emoji: emoji, index: i, trigger: trigger)
+                BurstParticle(kind: kind, index: i, trigger: trigger)
             }
         }
     }
 }
 
 private struct BurstParticle: View {
-    let emoji: String
+    let kind: ReactionKind
     let index: Int
     let trigger: Int
     @State private var progress: CGFloat = 1
@@ -208,8 +210,7 @@ private struct BurstParticle: View {
     var body: some View {
         let angle = CGFloat(index) / 7 * .pi - .pi        // fan upwards
         let distance: CGFloat = 46 + CGFloat(index % 3) * 14
-        Text(emoji)
-            .font(.system(size: 16 + CGFloat(index % 3) * 4))
+        ReactionSticker(kind: kind, size: 20 + CGFloat(index % 3) * 5)
             .offset(x: cos(angle) * distance * progress,
                     y: sin(angle) * distance * progress - 20 * progress)
             .scaleEffect(progress < 1 ? 1.1 : 0.6)
@@ -223,13 +224,12 @@ private struct BurstParticle: View {
 
 /// Big emoji that pops in the middle of a card on double-tap.
 struct DoubleTapPop: View {
-    let emoji: String
+    let kind: ReactionKind
     let trigger: Int
     @State private var phase: CGFloat = 0
 
     var body: some View {
-        Text(emoji)
-            .font(.system(size: 76))
+        ReactionSticker(kind: kind, size: 96)
             .scaleEffect(phase == 0 ? 0.2 : (phase == 1 ? 1.15 : 1.4))
             .opacity(phase == 1 ? 1 : 0)
             .rotationEffect(.degrees(phase == 1 ? -8 : 0))
@@ -282,5 +282,46 @@ private struct ConfettiPiece: View {
             )
             .opacity(fire ? 0 : 1)
             .animation(.easeOut(duration: 1.4 + seed * 0.6).delay(seed2 * 0.1), value: fire)
+    }
+}
+
+/// A reaction drawn like the site's stickers: 3D emoji on a lime disc with a white rim,
+/// or the green SAME word pill. `size` is the disc diameter.
+struct ReactionSticker: View {
+    let kind: ReactionKind
+    var size: CGFloat = 28
+
+    var body: some View {
+        Group {
+            if let asset = kind.assetName {
+                Image(asset)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: size * 0.64, height: size * 0.64)
+                    .frame(width: size, height: size)
+                    .background(
+                        Circle()
+                            .fill(RadialGradient(colors: [Color(hex: 0xF1FF9A), .qLime, Color(hex: 0xB5DA00)],
+                                                 center: UnitPoint(x: 0.35, y: 0.3),
+                                                 startRadius: 0, endRadius: size * 0.6))
+                            .padding(size * 0.06)
+                            .background(Circle().fill(.white))
+                    )
+            } else {
+                Text("SAME")
+                    .font(.display(size * 0.38, .black))
+                    .foregroundStyle(Color.qLime)
+                    .padding(.horizontal, size * 0.28)
+                    .frame(height: size * 0.8)
+                    .background(
+                        Capsule().fill(Color.qGreen)
+                            .padding(size * 0.06)
+                            .background(Capsule().fill(.white))
+                    )
+                    .fixedSize()
+            }
+        }
+        .shadow(color: Color(hex: 0x022A1E).opacity(0.25), radius: size * 0.1, y: size * 0.06)
+        .accessibilityLabel(kind.label)
     }
 }

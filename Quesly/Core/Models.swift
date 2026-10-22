@@ -59,26 +59,54 @@ struct DailyQuestion: Identifiable, Codable, Hashable {
 // MARK: - Answer
 
 /// Positive-only reactions. One reaction per person per answer (like iMessage tapbacks).
+/// Drawn as 3D stickers (`ReactionSticker`); SAME is the Quesly-only word reaction.
 enum ReactionKind: String, Codable, CaseIterable, Identifiable {
-    case love, fire, haha, touched
+    case love, green, adore, touched, like, same
 
     var id: String { rawValue }
 
+    /// Plain-text fallback for strings (notifications, accessibility).
     var emoji: String {
         switch self {
         case .love: return "❤️"
-        case .fire: return "🔥"
-        case .haha: return "😂"
+        case .green: return "💚"
+        case .adore: return "🥰"
         case .touched: return "🥹"
+        case .like: return "👍"
+        case .same: return "SAME"
+        }
+    }
+
+    /// 3D image in Assets.xcassets/Reactions; nil for the word sticker.
+    var assetName: String? {
+        switch self {
+        case .love: return "reaction-heart"
+        case .green: return "reaction-green-heart"
+        case .adore: return "reaction-hearts"
+        case .touched: return "reaction-tears"
+        case .like: return "reaction-thumbs"
+        case .same: return nil
         }
     }
 
     var label: String {
         switch self {
         case .love: return "Love"
-        case .fire: return "Fire"
-        case .haha: return "Haha"
+        case .green: return "Green heart"
+        case .adore: return "Adore"
         case .touched: return "Touched"
+        case .like: return "Like"
+        case .same: return "Same"
+        }
+    }
+
+    /// Saved data from before the new set: 🔥 becomes SAME, 😂 becomes 🥰.
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "fire": self = .same
+        case "haha": self = .adore
+        default: self = ReactionKind(rawValue: raw) ?? .love
         }
     }
 }

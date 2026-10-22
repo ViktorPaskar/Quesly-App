@@ -269,8 +269,8 @@ struct MemoryDetailSheet: View {
                     .fixedSize(horizontal: false, vertical: true)
                 if answer.totalReactions > 0 {
                     HStack(spacing: DS.Space.xs) {
-                        HStack(spacing: -4) {
-                            ForEach(answer.topReactions.prefix(3)) { Text($0.emoji) }
+                        HStack(spacing: -6) {
+                            ForEach(answer.topReactions.prefix(3)) { ReactionSticker(kind: $0, size: 22) }
                         }
                         Text("\(answer.totalReactions) reactions")
                             .font(.ui(15))

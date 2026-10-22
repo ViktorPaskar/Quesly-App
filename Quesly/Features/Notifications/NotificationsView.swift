@@ -75,11 +75,7 @@ struct NotificationsView: View {
             ZStack(alignment: .bottomTrailing) {
                 Avatar(user: actors.first, size: 40)
                 if let r = group.reactions.first {
-                    Text(r.emoji)
-                        .font(.system(size: 13))
-                        .frame(width: 22, height: 22)
-                        .background(Circle().fill(Color.qBackground))
-                        .overlay(Circle().stroke(Color.qLine))
+                    ReactionSticker(kind: r, size: 22)
                         .offset(x: 4, y: 4)
                 } else if group.kind == .follow {
                     Icon(.userPlusFill, size: 12)
@@ -121,7 +117,7 @@ struct NotificationsView: View {
                 text += AttributedString(" and ")
                 text += bold("\(actors.count - 1) others")
             }
-            text += AttributedString(" reacted \(group.reactions.map(\.emoji).joined()) to your answer")
+            text += AttributedString(" reacted \(group.reactions.map(\.emoji).joined(separator: " ")) to your answer")
         case .follow:
             text += bold(actors.first?.username ?? "Someone")
             text += AttributedString(" started following you")

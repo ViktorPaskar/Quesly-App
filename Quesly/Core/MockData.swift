@@ -134,7 +134,7 @@ enum MockData {
                                 authorId: author, text: text, createdAt: now.addingTimeInterval(-minutes * 60))
             // A few answers start with reactions / saved so the feed looks alive.
             if index == 1 { answer.myReaction = .love; answer.reactions = [.love: 1] }
-            if index == 2 { answer.isSaved = true; answer.reactions = [.fire: 2] }
+            if index == 2 { answer.isSaved = true; answer.reactions = [.same: 2] }
             if index == 4 { answer.visibility = .friends }
             return answer
         }
@@ -164,10 +164,10 @@ enum MockData {
     static func myHistory(now: Date = .now) -> [Answer] {
         let cal = Calendar.current
         let reactions: [[ReactionKind: Int]] = [
-            [.love: 14, .fire: 22, .haha: 3, .touched: 7],
-            [.love: 2, .fire: 31, .haha: 12, .touched: 5],
-            [.love: 68, .fire: 15, .haha: 1, .touched: 10],
-            [.love: 9, .fire: 4, .touched: 2],
+            [.love: 14, .same: 22, .adore: 3, .touched: 7, .green: 5, .like: 4],
+            [.love: 2, .same: 31, .adore: 12, .touched: 5],
+            [.love: 68, .same: 15, .adore: 1, .touched: 10],
+            [.love: 9, .same: 4, .touched: 2],
         ]
         return answeredDaysAgo.enumerated().map { index, daysAgo in
             let date = cal.date(byAdding: .day, value: -daysAgo, to: now) ?? now
@@ -186,12 +186,12 @@ enum MockData {
         func ago(_ minutes: Double) -> Date { now.addingTimeInterval(-minutes * 60) }
         return [
             .init(id: "n1", kind: .reaction, actorId: "u7", message: "reacted to your answer", date: ago(30), answerId: "h1", reaction: .love),
-            .init(id: "n2", kind: .reaction, actorId: "u4", message: "reacted to your answer", date: ago(48), answerId: "h1", reaction: .fire),
+            .init(id: "n2", kind: .reaction, actorId: "u4", message: "reacted to your answer", date: ago(48), answerId: "h1", reaction: .same),
             .init(id: "n3", kind: .follow, actorId: "u12", message: "started following you", date: ago(60)),
             .init(id: "n4", kind: .reaction, actorId: "u9", message: "reacted to your answer", date: ago(120), answerId: "h1", reaction: .touched),
-            .init(id: "n5", kind: .reaction, actorId: "u5", message: "reacted to your answer", date: ago(130), answerId: "h2", reaction: .haha),
+            .init(id: "n5", kind: .reaction, actorId: "u5", message: "reacted to your answer", date: ago(130), answerId: "h2", reaction: .adore),
             .init(id: "n6", kind: .badge, actorId: nil, message: "**3 days in a row!** A new badge is ready", date: ago(300)),
-            .init(id: "n7", kind: .reaction, actorId: "u3", message: "reacted to your answer", date: ago(360), answerId: "h2", reaction: .fire),
+            .init(id: "n7", kind: .reaction, actorId: "u3", message: "reacted to your answer", date: ago(360), answerId: "h2", reaction: .same),
             .init(id: "n8", kind: .reaction, actorId: "u10", message: "reacted to your answer", date: ago(380), answerId: "h3", reaction: .love),
             .init(id: "n9", kind: .follow, actorId: "u14", message: "started following you", date: ago(500)),
         ]

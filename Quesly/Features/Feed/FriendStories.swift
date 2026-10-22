@@ -225,8 +225,7 @@ private struct ReactionBar: View {
                 Button {
                     withAnimation(.qSpring) { store.react(kind, on: answer.id) }
                 } label: {
-                    Text(kind.emoji)
-                        .font(.system(size: 28))
+                    ReactionSticker(kind: kind, size: 34)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
                         .background(

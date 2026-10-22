@@ -117,7 +117,7 @@ struct NotificationsView: View {
                 text += AttributedString(" and ")
                 text += bold("\(actors.count - 1) others")
             }
-            text += AttributedString(" reacted \(group.reactions.map(\.emoji).joined(separator: " ")) to your answer")
+            text += AttributedString(" reacted to your answer")
         case .follow:
             text += bold(actors.first?.username ?? "Someone")
             text += AttributedString(" started following you")

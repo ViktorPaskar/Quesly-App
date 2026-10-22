@@ -9,7 +9,8 @@ struct StoryLaunch: Identifiable {
 
 // MARK: - Row
 
-/// "Friends today": one ring per friend who answered, Instagram-stories style. Unseen rings are brand green.
+/// "Friends today": one ring per friend who answered, Instagram-stories style. Unseen rings are lime
+/// (the brand's "answered today" ring) with a thin green edge so they read on white.
 struct FriendStoriesRow: View {
     @Environment(AppStore.self) private var store
     var onOpen: (Int) -> Void
@@ -42,12 +43,16 @@ private struct StoryBubble: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 6) {
-                Avatar(user: user, size: 60)
-                    .padding(4)
-                    .overlay(
-                        Circle().strokeBorder(isSeen ? Color.qLine : Color.qBrandText,
-                                              lineWidth: isSeen ? 1.5 : 2.5)
-                    )
+                Avatar(user: user, size: 58)
+                    .padding(5)
+                    .background {
+                        if isSeen {
+                            Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
+                        } else {
+                            Circle().strokeBorder(Color.qLime, lineWidth: 3.5)
+                                .overlay(Circle().strokeBorder(Color.qGreen.opacity(0.35), lineWidth: 0.75))
+                        }
+                    }
                 Text(user?.username ?? "")
                     .font(.ui(12, isSeen ? .regular : .medium))
                     .foregroundStyle(isSeen ? Color.qGray : Color.qInk)

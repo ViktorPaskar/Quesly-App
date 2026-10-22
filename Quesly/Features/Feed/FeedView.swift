@@ -20,17 +20,17 @@ struct FeedView: View {
         let answers = store.feed(scope)
         let othersCount = answers.filter { $0.authorId != store.me.id }.count
         VStack(spacing: 0) {
-            ZStack {
-                QueslyLogo(height: 20, markColor: .qInk, textColor: .qInk, background: .qBackground)
-                HStack {
-                    Spacer()
-                    StreakChip(days: shownStreak ?? store.streak)
-                }
-                .padding(.horizontal, DS.Space.screen)
+            // One quiet bar: brand left, World/Friends switch centre, streak right.
+            HStack(spacing: DS.Space.s) {
+                QueslyLogo(height: 16, markColor: .qInk, textColor: .qInk, background: .qBackground)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                PillTabs(items: FeedScope.allCases, selection: $scope, title: \.rawValue)
+                StreakChip(days: shownStreak ?? store.streak)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            .frame(height: 48)
-
-            UnderlineTabs(items: FeedScope.allCases, selection: $scope, title: \.rawValue)
+            .padding(.horizontal, DS.Space.screen)
+            .frame(height: 52)
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
             if !network.isOnline {
                 OfflineBanner().transition(.move(edge: .top).combined(with: .opacity))
@@ -73,7 +73,6 @@ struct FeedView: View {
                                                opensTray: DemoConfig.opensReactionTray
                                                    && answer.id == answers.first(where: { $0.authorId != store.me.id })?.id,
                                                isHighlighted: highlightsMine && answer.authorId == store.me.id)
-                                    Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 72)
                                 }
                                 .opacity(isShown ? 1 : 0)
                                 .offset(y: isShown ? 0 : 16)

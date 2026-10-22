@@ -12,6 +12,15 @@ enum MainTab: CaseIterable {
         }
     }
 
+    var activeIcon: QIcon {
+        switch self {
+        case .feed: return .houseFill
+        case .discover: return .magnifyingGlass
+        case .notifications: return .bellFill
+        case .profile: return .userFill
+        }
+    }
+
     var title: String {
         switch self {
         case .feed: return "Feed"
@@ -38,15 +47,14 @@ struct MainTabView: View {
     @State private var demoReactions = DemoConfig.opensReactionsSheet
 
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                stack(.feed) { FeedView(onDiscover: { select(.discover) }) }
-                stack(.discover) { DiscoverView() }
-                stack(.notifications) { NotificationsView() }
-                stack(.profile) { ProfileView(userId: store.me.id, isTabRoot: true) }
-            }
-            tabBar
+        // Content scrolls under the floating bar; the inset keeps the last row reachable.
+        ZStack {
+            stack(.feed) { FeedView(onDiscover: { select(.discover) }) }
+            stack(.discover) { DiscoverView() }
+            stack(.notifications) { NotificationsView() }
+            stack(.profile) { ProfileView(userId: store.me.id, isTabRoot: true) }
         }
+        .safeAreaInset(edge: .bottom, spacing: 0) { tabBar }
         .ignoresSafeArea(.keyboard)
         .sheet(isPresented: $demoShare) {
             if let answer = store.todaysAnswer { ShareStorySheet(answer: answer) }
@@ -85,7 +93,8 @@ struct MainTabView: View {
         }
     }
 
-    /// Icons only; the active tab sits in a lime bubble with a brand-green glyph (it glides between tabs).
+    /// Floating frosted capsule, icons only. The active tab is a brand-green pill with a lime
+    /// filled glyph (lime only ever sits on green); the pill glides between tabs.
     private var tabBar: some View {
         HStack(spacing: 0) {
             ForEach(MainTab.allCases, id: \.self) { t in
@@ -93,13 +102,13 @@ struct MainTabView: View {
                 Button { select(t) } label: {
                     ZStack {
                         if active {
-                            Circle()
-                                .fill(Color.qLime)
-                                .frame(width: 52, height: 52)
+                            Capsule()
+                                .fill(Color.qGreen)
+                                .frame(width: 64, height: 44)
                                 .matchedGeometryEffect(id: "tabBubble", in: ns)
                         }
-                        Icon(t.icon, size: 24)
-                            .foregroundStyle(active ? Color.qGreen : Color.qGray)
+                        Icon(active ? t.activeIcon : t.icon, size: 22, weight: active ? .semibold : .regular)
+                            .foregroundStyle(active ? Color.qLime : Color.qGray)
                             .pop(on: active)
                             .overlay(alignment: .topTrailing) {
                                 if t == .notifications && store.unreadNotifications > 0 && !active {
@@ -115,7 +124,7 @@ struct MainTabView: View {
                             }
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(height: 64)
+                    .frame(height: 56)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -123,10 +132,13 @@ struct MainTabView: View {
                 .accessibilityAddTraits(active ? .isSelected : [])
             }
         }
-        .padding(.horizontal, DS.Space.xs)
+        .padding(.horizontal, 6)
+        .background(Capsule().fill(.regularMaterial))
+        .overlay(Capsule().strokeBorder(Color.qLine.opacity(0.8), lineWidth: 0.5))
+        .shadow(color: .black.opacity(0.08), radius: 16, y: 6)
+        .padding(.horizontal, DS.Space.xl)
+        .padding(.bottom, DS.Space.xxs)
         .animation(.qSpring, value: tab)
-        .background(Color.qBackground.ignoresSafeArea(edges: .bottom))
-        .overlay(alignment: .top) { Rectangle().fill(Color.qLine).frame(height: 1) }
         .sensoryFeedback(.selection, trigger: tab)
     }
 }

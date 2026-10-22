@@ -117,6 +117,46 @@ struct UnderlineTabs<T: Hashable & Identifiable>: View {
     }
 }
 
+/// Compact segmented switch ("World / Friends"): the active segment is a brand-green pill
+/// that glides between options.
+struct PillTabs<T: Hashable & Identifiable>: View {
+    let items: [T]
+    @Binding var selection: T
+    let title: (T) -> String
+    @Namespace private var ns
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(items) { item in
+                let isActive = item == selection
+                Button {
+                    withAnimation(.qSpring) { selection = item }
+                } label: {
+                    Text(title(item))
+                        .font(.ui(14, .semibold))
+                        .foregroundStyle(isActive ? Color.white : Color.qGray)
+                        .padding(.horizontal, 14)
+                        .frame(height: 32)
+                        .background {
+                            if isActive {
+                                Capsule().fill(Color.qGreen)
+                                    .matchedGeometryEffect(id: "pill", in: ns)
+                            }
+                        }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isActive ? .isSelected : [])
+            }
+        }
+        .padding(3)
+        .background(Capsule().fill(Color.qField))
+        .frame(minHeight: DS.hitTarget)
+        .fixedSize()
+        .sensoryFeedback(.selection, trigger: selection)
+    }
+}
+
 /// White navigation header with a back chevron, matching the Figma screens.
 struct BackHeader: View {
     let title: String

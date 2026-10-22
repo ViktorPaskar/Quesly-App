@@ -16,7 +16,6 @@ enum Route: Hashable {
 
 struct AnswerCard: View {
     @Environment(AppStore.self) private var store
-    @Environment(\.dynamicTypeSize) private var typeSize
     let answer: Answer
     var showsQuestion = false
     var showsAuthor = true
@@ -66,8 +65,8 @@ struct AnswerCard: View {
             }
         }
         .padding(.horizontal, DS.Space.screen)
-        .padding(.top, DS.Space.m)
-        .padding(.bottom, DS.Space.xxs)
+        .padding(.top, DS.Space.l)
+        .padding(.bottom, DS.Space.xs)
         .background(isHighlighted ? Color.qMint : Color.qBackground)
         .sheet(isPresented: $isSharing) {
             ShareStorySheet(answer: answer)
@@ -208,7 +207,8 @@ struct AnswerCard: View {
     private var actions: some View {
         HStack(spacing: DS.Space.m) {
             if isMine {
-                authorReactions
+                // Nothing until the first reaction: an empty counter reads like a verdict.
+                if answer.totalReactions > 0 { authorReactions }
             } else {
                 ReactionControl(answer: answer, isTrayOpen: $isTrayOpen) { kind in
                     withAnimation(.qSpring) { store.react(kind, on: answer.id) }
@@ -234,33 +234,22 @@ struct AnswerCard: View {
     private var authorReactions: some View {
         Button { showReactions = true } label: {
             HStack(spacing: 6) {
-                if answer.totalReactions == 0 {
-                    Icon(.heart, size: 22).foregroundStyle(Color.qGray.opacity(0.6))
-                    if !typeSize.isAccessibilitySize {
-                        Text("No reactions yet").font(.ui(15)).foregroundStyle(Color.qGray)
-                            .lineLimit(1)
+                HStack(spacing: -6) {
+                    ForEach(answer.topReactions.prefix(3)) { kind in
+                        ReactionSticker(kind: kind, size: 24)
                     }
-                } else {
-                    HStack(spacing: -6) {
-                        ForEach(answer.topReactions.prefix(3)) { kind in
-                            ReactionSticker(kind: kind, size: 24)
-                        }
-                    }
-                    Text("\(answer.totalReactions)")
-                        .font(.ui(15, .semibold))
-                        .foregroundStyle(Color.qInk)
-                        .contentTransition(.numericText())
                 }
+                Text("\(answer.totalReactions)")
+                    .font(.ui(15, .semibold))
+                    .foregroundStyle(Color.qInk)
+                    .contentTransition(.numericText())
                 Icon(.lockSimpleFill, size: 11).foregroundStyle(Color.qGray.opacity(0.7))
             }
             .frame(minHeight: DS.hitTarget)
             .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
-        .disabled(answer.totalReactions == 0)
-        .accessibilityLabel(answer.totalReactions == 0
-            ? "No reactions yet"
-            : "\(answer.totalReactions) reactions. Only you can see this. Show who reacted")
+        .accessibilityLabel("\(answer.totalReactions) reactions. Only you can see this. Show who reacted")
     }
 
     private func iconButton(_ icon: QIcon, tint: Color, label: String, action: @escaping () -> Void) -> some View {

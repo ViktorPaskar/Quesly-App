@@ -1,23 +1,19 @@
 #!/usr/bin/env bash
-# Wait until the GitHub Actions run for a commit finishes. Prints "<run_id> <status> <conclusion>".
-# Usage: wait-for-ci.sh <sha> [owner/repo]   (run it in the background; it polls every 20 s)
+# Wait until the GitHub Actions run for a commit finishes. Prints "<run_id> completed <conclusion>".
+# Usage: wait-for-ci.sh <sha> [owner/repo]   (run it in the background)
+# Uses the GitHub CLI (no Python needed, works on Windows Git Bash). Exits non-zero if the run
+# is cancelled or fails, so a superseded run never leaves this waiting forever.
 set -euo pipefail
 sha="${1:?usage: wait-for-ci.sh <sha> [owner/repo]}"
 repo="${2:-ViktorPaskar/Quesly-App}"
-# Unauthenticated GitHub API allows ~60 requests/hour, so poll every 60 s and report rate limiting.
-while true; do
-  line=$(curl -s "https://api.github.com/repos/$repo/actions/runs?head_sha=$sha" | python3 -c '
-import sys, json
-d = json.load(sys.stdin)
-if "workflow_runs" not in d:
-    print("none ratelimited " + d.get("message", "?")[:60].replace(" ", "_"))
-else:
-    runs = d["workflow_runs"]
-    print(f"{runs[0][\"id\"]} {runs[0][\"status\"]} {runs[0][\"conclusion\"]}" if runs else "none pending None")
-' 2>/dev/null || echo "none error None")
-  case "$line" in
-    *" completed "*) echo "$line"; exit 0 ;;
-    *ratelimited*) echo "GitHub API: $line — retrying in 5 min" >&2; sleep 300; continue ;;
-  esac
-  sleep 60
+gh="gh"; command -v gh >/dev/null 2>&1 || gh="/c/Program Files/GitHub CLI/gh.exe"
+for _ in $(seq 1 30); do   # the run can take a few seconds to appear after a push
+  id=$("$gh" run list -R "$repo" --commit "$sha" -L 1 --json databaseId -q '.[0].databaseId' 2>/dev/null || true)
+  [ -n "$id" ] && break
+  sleep 10
 done
+[ -n "${id:-}" ] || { echo "none missing None"; exit 1; }
+"$gh" run watch "$id" -R "$repo" --interval 30 >/dev/null 2>&1 || true
+conclusion=$("$gh" run view "$id" -R "$repo" --json conclusion -q .conclusion)
+echo "$id completed $conclusion"
+[ "$conclusion" = "success" ]

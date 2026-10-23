@@ -4,7 +4,6 @@ import SwiftUI
 /// already answered it, and one clear way in. Logo on top, the question as the hero, actions below.
 struct WelcomeView: View {
     @Environment(AppStore.self) private var store
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var authMode: AuthView.Mode?
     @State private var appeared = false
 

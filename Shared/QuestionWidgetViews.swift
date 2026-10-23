@@ -153,7 +153,6 @@ private struct WidgetEyebrow: View {
     var body: some View {
         Text("TODAY'S QUESTION")
             .font(.system(size: 10, weight: .bold))
-            .tracking(0.6)
             .foregroundStyle(WidgetPalette.lime)
     }
 }

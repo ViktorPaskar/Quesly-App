@@ -11,14 +11,14 @@ enum QuestionBank {
     }
 
     static let items: [Item] = [
-        .init(id: "q-dayoff", text: "If you only had one day off, what would you do?", highlights: ["day off,", "you do?"]),
+        .init(id: "q-dayoff", text: "If you only had one day off, what would you do?", highlights: ["day off,"]),
         .init(id: "q-happy", text: "What's a small thing that makes you happy every day?", highlights: ["happy"]),
-        .init(id: "q-live", text: "If you could live anywhere in the world, where would it be?", highlights: ["anywhere", "world,"]),
+        .init(id: "q-live", text: "If you could live anywhere in the world, where would it be?", highlights: ["anywhere"]),
         .init(id: "q-power", text: "If you had one superpower, what would it be?", highlights: ["superpower,"]),
-        .init(id: "q-advice", text: "What's the best advice you've ever received?", highlights: ["best advice"]),
-        .init(id: "q-song", text: "Which song always puts you in a good mood?", highlights: ["song", "good mood?"]),
+        .init(id: "q-advice", text: "What's the best advice you've ever received?", highlights: ["advice"]),
+        .init(id: "q-song", text: "Which song always puts you in a good mood?", highlights: ["good mood?"]),
         .init(id: "q-proud", text: "What's something you're quietly proud of?", highlights: ["proud"]),
-        .init(id: "q-tiny", text: "What tiny moment made your week better?", highlights: ["tiny moment"]),
+        .init(id: "q-tiny", text: "What tiny moment made your week better?", highlights: ["moment"]),
         .init(id: "q-learn", text: "What's one skill you'd love to learn this year?", highlights: ["skill"]),
         .init(id: "q-meal", text: "What meal feels like home to you?", highlights: ["home"]),
     ]

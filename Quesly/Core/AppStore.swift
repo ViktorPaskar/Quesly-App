@@ -298,10 +298,6 @@ final class AppStore {
         myAnswers.first { $0.id == id } ?? todayAnswers.first { $0.id == id }
     }
 
-    var savedAnswers: [Answer] {
-        (todayAnswers + myAnswers).filter { $0.isSaved && !blockedIds.contains($0.authorId) }
-    }
-
     func user(_ id: String) -> AppUser? { id == me.id ? me : users[id] }
 
     /// Sets the viewer's reaction. Picking the current reaction again removes it.
@@ -315,10 +311,6 @@ final class AppStore {
                 a.reactions[kind] = a.count(kind) + 1
             }
         }
-    }
-
-    func toggleSave(_ answerId: String) {
-        mutateAnswer(answerId) { $0.isSaved.toggle() }
     }
 
     func deleteAnswer(_ answerId: String) {

@@ -230,7 +230,6 @@ struct SectionLabel: View {
     var body: some View {
         Text(title.uppercased())
             .font(.ui(13, .semibold))
-            .tracking(0.6)
             .foregroundStyle(Color.qGray)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 8)

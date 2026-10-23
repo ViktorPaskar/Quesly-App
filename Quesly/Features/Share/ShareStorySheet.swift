@@ -65,7 +65,7 @@ struct ShareStorySheet: View {
             if let rendered {
                 ShareLink(item: Image(uiImage: rendered),
                           preview: SharePreview("My Quesly answer", image: Image(uiImage: rendered))) {
-                    Label { Text("Share to stories") } icon: { Icon(.paperPlaneTiltFill, size: 20) }
+                    Text("Share to stories")
                         .font(.ui(17, .semibold))
                         .foregroundStyle(Color.qGreen)
                         .frame(maxWidth: .infinity)
@@ -77,9 +77,7 @@ struct ShareStorySheet: View {
                     UIImageWriteToSavedPhotosAlbum(rendered, nil, nil, nil)
                     withAnimation(.qSpring) { savedToPhotos = true }
                 } label: {
-                    Label { Text(savedToPhotos ? "Saved to Photos" : "Save to Photos") } icon: {
-                        Icon(savedToPhotos ? .checkCircleFill : .downloadSimple, size: 20)
-                    }
+                    Text(savedToPhotos ? "Saved to Photos" : "Save to Photos")
                         .font(.ui(16, .medium))
                         .foregroundStyle(Color.qBrandText)
                         .frame(height: 44)
@@ -157,7 +155,6 @@ struct StoryCard: View {
 
                 Text("TODAY'S QUESTION")
                     .font(.custom("Outfit-Bold", fixedSize: 12))
-                    .tracking(1.2)
                     .foregroundStyle(theme == .green ? Color.qLime : Color.qGreen.opacity(0.75))
                     .padding(.bottom, 12)
                 Text(answer.questionText.uppercased())

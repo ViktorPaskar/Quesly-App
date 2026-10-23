@@ -26,7 +26,7 @@ struct InviteFriendsView: View {
 
             Spacer()
             ShareLink(item: Invite.text(for: store.me.username)) {
-                Label { Text("Share invite link") } icon: { Icon(.paperPlaneTiltFill, size: 20) }
+                Text("Share invite link")
                     .font(.ui(17, .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)

@@ -8,6 +8,7 @@ struct FeedView: View {
     @Environment(\.scrollToTopSignal) private var scrollToTopSignal
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var onDiscover: () -> Void = {}
+    private var tour: DemoTour { DemoTour.shared }
 
     @State private var storyLaunch: StoryLaunch?
     // "Feed unlocked" moment after posting: cards reveal one by one, the streak ticks up.
@@ -17,26 +18,64 @@ struct FeedView: View {
     @State private var unlockHaptic = 0
 
     var body: some View {
-        let answers = store.feed(scope)
-        let othersCount = answers.filter { $0.authorId != store.me.id }.count
         VStack(spacing: 0) {
-            // One quiet bar: brand left, World/Friends switch centre, streak right.
-            HStack(spacing: DS.Space.s) {
-                QueslyLogo(height: 16, markColor: .qInk, textColor: .qInk, background: .qBackground)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                PillTabs(items: FeedScope.allCases, selection: $scope, title: \.rawValue)
-                StreakChip(days: shownStreak ?? store.streak)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+            // Logo centred with the streak on the right; the World/Friends switch sits below it.
+            ZStack {
+                QueslyLogo(height: 18, markColor: .qInk, textColor: .qInk, background: .qBackground)
+                HStack {
+                    Spacer()
+                    StreakChip(days: shownStreak ?? store.streak)
+                }
             }
             .padding(.horizontal, DS.Space.screen)
-            .frame(height: 52)
+            .frame(height: 48)
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+
+            PillTabs(items: FeedScope.allCases, selection: $scope, title: \.rawValue)
+                .padding(.bottom, DS.Space.xxs)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
             if !network.isOnline {
                 OfflineBanner().transition(.move(edge: .top).combined(with: .opacity))
             }
 
-            ScrollViewReader { proxy in
+            // Swipe sideways between the two feeds.
+            TabView(selection: $scope) {
+                ForEach(FeedScope.allCases) { s in
+                    feedPage(s).tag(s)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .animation(.qSmooth, value: network.isOnline)
+        }
+        .background(Color.qBackground)
+        .toolbar(.hidden, for: .navigationBar)
+        .fullScreenCover(isPresented: $showQuestion) {
+            DailyQuestionView(onSubmitted: {
+                                  showQuestion = false
+                                  store.unlockCelebrationAt = .now.addingTimeInterval(0.5)
+                              },
+                              onClose: { showQuestion = false })
+        }
+        .fullScreenCover(item: $storyLaunch) { launch in
+            StoryViewer(stories: launch.stories, start: launch.start)
+        }
+        .sensoryFeedback(.success, trigger: unlockHaptic)
+        .task(id: store.unlockCelebrationAt) { await celebrateUnlock() }
+        .task {
+            guard DemoConfig.opensStory, storyLaunch == nil else { return }
+            storyLaunch = StoryLaunch(stories: store.friendStories, start: 0)
+        }
+        .onChange(of: tour.feedScope) { _, s in if let s { withAnimation(.qSmooth) { scope = s } } }
+        .onChange(of: tour.showStory) { _, on in
+            storyLaunch = on ? StoryLaunch(stories: store.friendStories, start: 0) : nil
+        }
+    }
+
+    private func feedPage(_ scope: FeedScope) -> some View {
+        let answers = store.feed(scope)
+        let othersCount = answers.filter { $0.authorId != store.me.id }.count
+        return ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         Color.clear.frame(height: 0).id("top")
@@ -70,7 +109,7 @@ struct FeedView: View {
                                 let isShown = index < revealCount
                                 Group {
                                     AnswerCard(answer: answer,
-                                               opensTray: DemoConfig.opensReactionTray
+                                               opensTray: (DemoConfig.opensReactionTray || tour.openTray)
                                                    && answer.id == answers.first(where: { $0.authorId != store.me.id })?.id,
                                                isHighlighted: highlightsMine && answer.authorId == store.me.id)
                                 }
@@ -121,26 +160,6 @@ struct FeedView: View {
                     proxy.scrollTo("end", anchor: .bottom)
                 }
             }
-            .animation(.qSmooth, value: network.isOnline)
-        }
-        .background(Color.qBackground)
-        .toolbar(.hidden, for: .navigationBar)
-        .fullScreenCover(isPresented: $showQuestion) {
-            DailyQuestionView(onSubmitted: {
-                                  showQuestion = false
-                                  store.unlockCelebrationAt = .now.addingTimeInterval(0.5)
-                              },
-                              onClose: { showQuestion = false })
-        }
-        .fullScreenCover(item: $storyLaunch) { launch in
-            StoryViewer(stories: launch.stories, start: launch.start)
-        }
-        .sensoryFeedback(.success, trigger: unlockHaptic)
-        .task(id: store.unlockCelebrationAt) { await celebrateUnlock() }
-        .task {
-            guard DemoConfig.opensStory, storyLaunch == nil else { return }
-            storyLaunch = StoryLaunch(stories: store.friendStories, start: 0)
-        }
     }
 
     /// The moment the day's answers unlock: your card lands first and glows, the others
@@ -292,23 +311,9 @@ struct TodayQuestionBanner: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    let header = typeSize.isAccessibilitySize
-                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
-                        : AnyLayout(HStackLayout())
-                    header {
-                        Text("Today's Question")
-                            .font(.ui(13, .semibold))
-                            .foregroundStyle(Color.qLime)
-                        if !typeSize.isAccessibilitySize { Spacer() }
-                        TimelineView(.periodic(from: .now, by: 60)) { ctx in
-                            HStack(spacing: 4) {
-                                Icon(.clock, size: 13)
-                                Text("\(AppStore.timeLeftString(now: ctx.date)) left")
-                            }
-                            .font(.ui(13, .medium))
-                            .foregroundStyle(.white.opacity(0.75))
-                        }
-                    }
+                    Text("Today's Question")
+                        .font(.ui(13, .semibold))
+                        .foregroundStyle(Color.qLime)
                     Text(question.text.uppercased())
                         .font(.display(17, .bold))
                         .foregroundStyle(.white)

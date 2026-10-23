@@ -104,8 +104,8 @@ private struct TrayEmoji: View {
 
     var body: some View {
         Button(action: action) {
-            ReactionSticker(kind: kind, size: kind == .same ? 36 : 34)
-                .frame(minWidth: 42, minHeight: 46)
+            ReactionSticker(kind: kind, size: kind == .same ? 34 : 32)
+                .frame(minWidth: 38, minHeight: 46)
                 .padding(.horizontal, kind == .same ? 4 : 0)
                 .background(Capsule().fill(isSelected ? Color.qMint : .clear))
                 .scaleEffect(shown ? 1 : 0.3)

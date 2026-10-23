@@ -170,7 +170,6 @@ struct StoryViewer: View {
         VStack(alignment: .leading, spacing: DS.Space.s) {
             Text(answer.questionText.uppercased())
                 .font(.ui(13, .bold))
-                .tracking(0.5)
                 .foregroundStyle(Color.qLime)
             Text(answer.text)
                 .font(.display(28, .semibold))

@@ -47,15 +47,17 @@ struct MainTabView: View {
     @State private var demoReactions = DemoConfig.opensReactionsSheet
 
     var body: some View {
-        // Content scrolls under the floating bar; the inset keeps the last row reachable.
-        ZStack {
-            stack(.feed) { FeedView(onDiscover: { select(.discover) }) }
-            stack(.discover) { DiscoverView() }
-            stack(.notifications) { NotificationsView() }
-            stack(.profile) { ProfileView(userId: store.me.id, isTabRoot: true) }
+        VStack(spacing: 0) {
+            ZStack {
+                stack(.feed) { FeedView(onDiscover: { select(.discover) }) }
+                stack(.discover) { DiscoverView() }
+                stack(.notifications) { NotificationsView() }
+                stack(.profile) { ProfileView(userId: store.me.id, isTabRoot: true) }
+            }
+            tabBar
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) { tabBar }
         .ignoresSafeArea(.keyboard)
+        .task { if DemoTour.isOn { await playTour() } }
         .sheet(isPresented: $demoShare) {
             if let answer = store.todaysAnswer { ShareStorySheet(answer: answer) }
         }
@@ -77,6 +79,34 @@ struct MainTabView: View {
         .accessibilityHidden(tab != t)
     }
 
+    /// Demo walkthrough after the answer is posted: react, swipe to Friends, watch a story,
+    /// then visit notifications, discover, profile and settings.
+    private func playTour() async {
+        let tour = DemoTour.shared
+        while !store.hasAnsweredToday { await DemoTour.pause(0.3) }
+        await DemoTour.pause(5)
+        tour.openTray = true
+        await DemoTour.pause(1.8)
+        if let other = store.feed(.world).first(where: { $0.authorId != store.me.id }) {
+            withAnimation(.qSpring) { store.react(.adore, on: other.id) }
+        }
+        await DemoTour.pause(0.6)
+        tour.openTray = false
+        await DemoTour.pause(1.5)
+        tour.feedScope = .friends
+        await DemoTour.pause(2.5)
+        tour.showStory = true
+        await DemoTour.pause(6)
+        tour.showStory = false
+        await DemoTour.pause(1.5)
+        for t in [MainTab.notifications, .discover, .profile] {
+            select(t)
+            await DemoTour.pause(3)
+        }
+        withAnimation(.qSmooth) { paths[.profile, default: NavigationPath()].append(Route.settings) }
+        await DemoTour.pause(4)
+    }
+
     private func binding(for t: MainTab) -> Binding<NavigationPath> {
         Binding(get: { paths[t] ?? NavigationPath() }, set: { paths[t] = $0 })
     }
@@ -93,8 +123,8 @@ struct MainTabView: View {
         }
     }
 
-    /// Floating frosted capsule, icons only. The active tab is a brand-green pill with a lime
-    /// filled glyph (lime only ever sits on green); the pill glides between tabs.
+    /// Fixed bar, icons only. The active tab is a brand-green pill with a lime filled glyph
+    /// (lime only ever sits on green); the pill glides between tabs.
     private var tabBar: some View {
         HStack(spacing: 0) {
             ForEach(MainTab.allCases, id: \.self) { t in
@@ -132,12 +162,10 @@ struct MainTabView: View {
                 .accessibilityAddTraits(active ? .isSelected : [])
             }
         }
-        .padding(.horizontal, 6)
-        .background(Capsule().fill(.regularMaterial))
-        .overlay(Capsule().strokeBorder(Color.qLine.opacity(0.8), lineWidth: 0.5))
-        .shadow(color: .black.opacity(0.08), radius: 16, y: 6)
-        .padding(.horizontal, DS.Space.xl)
-        .padding(.bottom, DS.Space.xxs)
+        .padding(.horizontal, DS.Space.xs)
+        .padding(.top, DS.Space.xxs)
+        .background(Color.qBackground.ignoresSafeArea(edges: .bottom))
+        .overlay(alignment: .top) { Rectangle().fill(Color.qLine).frame(height: 1) }
         .animation(.qSpring, value: tab)
         .sensoryFeedback(.selection, trigger: tab)
     }

@@ -32,16 +32,9 @@ struct DailyQuestionView: View {
                     VisibilityPicker(selection: $visibility)
                         .padding(.bottom, 16)
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    TimelineView(.periodic(from: .now, by: 60)) { context in
-                        Label {
-                            Text("**\(AppStore.timeLeftString(now: context.date))** left until the next question")
-                        } icon: {
-                            Icon(.hourglassMediumFill, size: 14)
-                        }
-                        .font(.ui(13))
-                        .foregroundStyle(.white.opacity(0.85))
-                    }
-                    .padding(.bottom, 16)
+                    DayProgress()
+                        .padding(.horizontal, DS.Space.xl)
+                        .padding(.bottom, 16)
                 } else {
                     VStack(alignment: .leading, spacing: DS.Space.m) {
                         LockedFriendsPreview(answers: Array(store.friendStories.prefix(3)),
@@ -54,7 +47,6 @@ struct DailyQuestionView: View {
                     .transition(.opacity)
                 }
                 LimeButton(title: isComposing ? "Submit" : "Answer",
-                           icon: isComposing ? .paperPlaneTiltFill : .pencilSimpleFill,
                            isEnabled: !isComposing || canSubmit) {
                     if isComposing {
                         submit()
@@ -78,6 +70,20 @@ struct DailyQuestionView: View {
             }
             revealWords()
         }
+        .task { if DemoTour.isOn { await playTour() } }
+    }
+
+    /// Demo walkthrough: read the question, type an answer, submit.
+    private func playTour() async {
+        await DemoTour.pause(4)
+        withAnimation(.qSmooth) { isComposing = true }
+        await DemoTour.pause(1)
+        for ch in MockData.sampleAnswers[question.id] ?? "Walking home with my favourite song on." {
+            text.append(ch)
+            await DemoTour.pause(0.045)
+        }
+        await DemoTour.pause(1.2)
+        submit()
     }
 
     private var canSubmit: Bool {
@@ -85,10 +91,11 @@ struct DailyQuestionView: View {
     }
 
     private var header: some View {
-        HStack {
+        ZStack {
             QueslyLogo(height: 18, background: .clear)
-            Spacer()
-            if let onClose {
+            HStack {
+                Spacer()
+                if let onClose {
                 Button(action: onClose) {
                     Icon(.xBold, size: 16, weight: .semibold)
                         .foregroundStyle(.white)
@@ -98,6 +105,7 @@ struct DailyQuestionView: View {
                 }
                 .accessibilityLabel("Close")
                 .padding(.trailing, -4)
+                }
             }
         }
         .frame(height: 44)
@@ -105,31 +113,15 @@ struct DailyQuestionView: View {
         .padding(.top, 8)
     }
 
-    /// Editorial, left-aligned question: date + time-left chips, then the words arrive one by one.
-    /// Highlighted words become tilted lime "stickers" with green ink.
+    /// Editorial, left-aligned question: the day's progress line, then the words arrive one by one.
+    /// The key word becomes a tilted lime "sticker" with green ink.
     private var questionText: some View {
-        let highlighted = Set(question.highlights.flatMap { $0.uppercased().split(separator: " ").map(String.init) })
+        let highlighted = question.keyWords
         return VStack(alignment: .leading, spacing: DS.Space.l) {
-            HStack(spacing: DS.Space.xs) {
-                Text(Date.now.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()).uppercased())
-                    .font(.ui(12, .bold))
-                    .tracking(1)
-                    .foregroundStyle(Color.qGreen)
-                    .padding(.horizontal, 10)
-                    .frame(height: 26)
-                    .background(Capsule().fill(Color.qLime))
-                TimelineView(.periodic(from: .now, by: 60)) { ctx in
-                    IconLabel("\(AppStore.timeLeftString(now: ctx.date)) left", icon: .clock, size: 12)
-                        .font(.ui(12, .semibold))
-                        .foregroundStyle(.white.opacity(0.9))
-                        .padding(.horizontal, 10)
-                        .frame(height: 26)
-                        .background(Capsule().fill(.white.opacity(0.12)))
-                }
-            }
+            DayProgress()
             WrappingHStack(spacing: 10, lineSpacing: 4, centered: false) {
                 ForEach(Array(words.enumerated()), id: \.offset) { index, word in
-                    let isHot = highlighted.contains(word)
+                    let isHot = highlighted.contains(word.filter(\.isLetter))
                     Text(word)
                         .font(.display(42, .heavy))
                         .foregroundStyle(isHot ? Color.qGreen : .white)
@@ -230,6 +222,39 @@ struct DailyQuestionView: View {
     }
 }
 
+/// Today's date and how much of the question's day is left, as a thin lime line that fills
+/// toward midnight. Calm and informative, never a ticking countdown.
+private struct DayProgress: View {
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { ctx in
+            let start = Calendar.current.startOfDay(for: ctx.date)
+            let end = AppStore.nextQuestionDate(after: ctx.date)
+            let elapsed = ctx.date.timeIntervalSince(start) / max(1, end.timeIntervalSince(start))
+            VStack(spacing: DS.Space.xs) {
+                HStack {
+                    Text(ctx.date.formatted(.dateTime.weekday(.wide).month(.wide).day()))
+                        .font(.ui(14, .semibold))
+                        .foregroundStyle(.white)
+                    Spacer()
+                    Text("New question in \(AppStore.timeLeftString(now: ctx.date))")
+                        .font(.ui(14))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(.white.opacity(0.14))
+                        Capsule().fill(Color.qLime)
+                            .frame(width: max(4, geo.size.width * min(1, elapsed)))
+                    }
+                }
+                .frame(height: 4)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("New question in \(AppStore.timeLeftString(now: ctx.date))")
+        }
+    }
+}
+
 /// Friends' answers waiting behind the gate: a fanned stack of cards whose text is drawn as
 /// placeholder bars (never the real words), with a lock pill — answer first, then read.
 private struct LockedFriendsPreview: View {
@@ -266,8 +291,8 @@ private struct LockedFriendsPreview: View {
                 Text(user?.username ?? "")
                     .font(.ui(14, .semibold))
                     .foregroundStyle(Color.qInk)
-                Capsule().fill(Color.qField).frame(height: 10)
-                Capsule().fill(Color.qField).frame(width: 150, height: 10)
+                Capsule().fill(Color.black.opacity(0.08)).frame(height: 10)
+                Capsule().fill(Color.black.opacity(0.08)).frame(width: 150, height: 10)
             }
         }
         .padding(DS.Space.m)
@@ -325,7 +350,7 @@ struct VisibilityPicker: View {
                 Button {
                     withAnimation(.qSpring) { selection = option }
                 } label: {
-                    Label { Text(option.title) } icon: { Icon(option.icon, size: 16) }
+                    Text(option.title)
                         .font(.ui(14, .semibold))
                         .foregroundStyle(on ? Color.qGreen : .white.opacity(0.85))
                         .padding(.horizontal, 16)

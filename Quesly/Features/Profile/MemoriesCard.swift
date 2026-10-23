@@ -278,7 +278,7 @@ struct MemoryDetailSheet: View {
                     }
                 }
                 Button { isSharing = true } label: {
-                    IconLabel("Share as story", icon: .paperPlaneTiltFill, size: 17)
+                    Text("Share as story")
                         .font(.ui(16, .semibold))
                         .foregroundStyle(Color.qBrandText)
                         .frame(maxWidth: .infinity)

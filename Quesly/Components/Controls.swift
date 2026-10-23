@@ -3,16 +3,12 @@ import SwiftUI
 /// Lime pill CTA used on green screens ("Answer", "Submit").
 struct LimeButton: View {
     let title: String
-    var icon: QIcon? = nil
     var isEnabled = true
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                Text(title)
-                if let icon { Icon(icon, size: 19) }
-            }
+            Text(title)
             .font(.ui(17, .bold))
             .foregroundStyle(Color.qGreen)
             .frame(maxWidth: .infinity)
@@ -54,13 +50,7 @@ struct FollowPill: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 4) {
-                if isFollowing {
-                    Icon(.checkBold, size: compact ? 11 : 13)
-                        .transition(.scale.combined(with: .opacity))
-                }
-                Text(isFollowing ? "Following" : "Follow")
-            }
+            Text(isFollowing ? "Following" : "Follow")
             .font(.ui(compact ? 13 : 15, .semibold))
             .foregroundStyle(isFollowing ? Color.qInk : Color.qBrandText)
             .padding(.horizontal, compact ? DS.Space.s : DS.Space.m)

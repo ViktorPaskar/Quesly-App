@@ -52,8 +52,29 @@ enum BadgeTier: String, Codable, CaseIterable {
 struct DailyQuestion: Identifiable, Codable, Hashable {
     var id: String
     var text: String
-    /// Words / phrases rendered in lime on the full-screen question.
+    /// The key word (or pair) rendered as a lime sticker on the full-screen question.
     var highlights: [String] = []
+
+    private static let stopWords: Set<String> = [
+        "WHAT", "WHATS", "WHICH", "WHO", "WHERE", "WHEN", "WHY", "HOW", "IF", "YOU", "YOUR", "YOURE",
+        "YOUD", "YOUVE", "THE", "A", "AN", "AND", "OR", "TO", "OF", "IN", "ON", "FOR", "WITH", "THAT",
+        "THIS", "IS", "ARE", "WAS", "IT", "BE", "WOULD", "COULD", "DO", "DID", "HAD", "HAVE", "ONE",
+        "EVER", "ALWAYS", "EVERY", "THING", "SOMETHING", "MAKES", "MADE", "FEELS", "LIKE", "ABOUT"
+    ]
+
+    /// Upper-cased words to highlight, punctuation stripped. Uses `highlights` when set (the
+    /// question generator picks the emotional heart of the question); otherwise falls back to the
+    /// longest word that isn't a question word, pronoun or filler.
+    var keyWords: Set<String> {
+        let clean = { (w: Substring) in w.uppercased().filter(\.isLetter) }
+        if let first = highlights.first {
+            return Set(first.split(separator: " ").map(clean))
+        }
+        let candidate = text.split(separator: " ").map(clean)
+            .filter { !Self.stopWords.contains($0) }
+            .max { $0.count < $1.count }
+        return candidate.map { Set([$0]) } ?? []
+    }
 }
 
 // MARK: - Answer

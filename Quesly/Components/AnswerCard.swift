@@ -89,6 +89,7 @@ struct AnswerCard: View {
             Button("Delete", role: .destructive) { store.deleteAnswer(answer.id) }
         }
         .onAppear { if opensTray { isTrayOpen = true } }
+        .onChange(of: opensTray) { _, open in withAnimation(.qSpring) { isTrayOpen = open } }
     }
 
     private var questionLine: some View {
@@ -147,15 +148,12 @@ struct AnswerCard: View {
                       systemImage: (answer.myReaction == .love ? QIcon.heartFill : QIcon.heart).rawValue)
             }
         }
-        Button {
-            withAnimation(.qSpring) { store.toggleSave(answer.id) }
-        } label: {
-            Label(answer.isSaved ? "Remove from saved" : "Save",
-                  systemImage: (answer.isSaved ? QIcon.bookmarkSimpleFill : QIcon.bookmarkSimple).rawValue)
+        // Other people's words stay in Quesly: only your own answer can be shared or copied.
+        if isMine {
+            Button { isSharing = true } label: { Label("Share as story", systemImage: QIcon.paperPlaneTilt.rawValue) }
+            Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", systemImage: QIcon.copy.rawValue) }
+            Divider()
         }
-        Button { isSharing = true } label: { Label("Share as story", systemImage: QIcon.paperPlaneTilt.rawValue) }
-        Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", systemImage: QIcon.copy.rawValue) }
-        Divider()
         if isMine {
             if answer.isEditable() {
                 Button { isEditing = true } label: { Label("Edit", systemImage: QIcon.pencilSimple.rawValue) }
@@ -214,17 +212,10 @@ struct AnswerCard: View {
                     withAnimation(.qSpring) { store.react(kind, on: answer.id) }
                 }
             }
-            if !isTrayOpen {
-                iconButton(.paperPlaneTilt, tint: .qGray, label: "Share") { isSharing = true }
-                Spacer(minLength: 0)
-                iconButton(answer.isSaved ? .bookmarkSimpleFill : .bookmarkSimple,
-                           tint: answer.isSaved ? .qBrandText : .qGray,
-                           label: answer.isSaved ? "Remove from saved" : "Save") {
-                    withAnimation(.qSpring) { store.toggleSave(answer.id) }
-                }
-                .pop(on: answer.isSaved)
-                .sensoryFeedback(.selection, trigger: answer.isSaved)
+            if !isTrayOpen && isMine {
+                iconButton(.paperPlaneTilt, tint: .qGray, label: "Share as story") { isSharing = true }
             }
+            Spacer(minLength: 0)
         }
         .frame(minHeight: DS.hitTarget)
         .animation(.qSpring, value: isTrayOpen)
@@ -381,7 +372,7 @@ struct ReportSheet: View {
             }
             Section {
                 Button(role: .destructive) { confirmBlock = true } label: {
-                    Label { Text("Block @\(author?.username ?? "")") } icon: { Icon(.prohibitFill, size: 18) }
+                    Text("Block @\(author?.username ?? "")")
                         .font(.ui(16, .medium))
                 }
             }

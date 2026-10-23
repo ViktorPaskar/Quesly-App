@@ -14,7 +14,6 @@ struct SplashView: View {
                     .opacity(animate ? 1 : 0)
                 Text("ONE QUESTION A DAY. MILLIONS OF STORIES")
                     .font(.ui(11, .bold))
-                    .tracking(1.2)
                     .foregroundStyle(.white)
                     .opacity(showTagline ? 1 : 0)
                     .offset(y: showTagline ? 0 : 8)

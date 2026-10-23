@@ -1,19 +1,12 @@
 import SwiftUI
 
 /// Profile in a Threads / Instagram-style layout: name + ringed avatar, bio, social proof,
-/// actions, streak week and badges, then Answers / Saved.
+/// actions, streak week and badges, then answers.
 struct ProfileView: View {
-    enum Tab: String, CaseIterable, Identifiable {
-        case answers = "Answers"
-        case saved = "Saved"
-        var id: String { rawValue }
-    }
-
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     let userId: String
     var isTabRoot = false
-    @State private var tab: Tab = DemoConfig.showsSavedTab ? .saved : .answers
     @State private var confirmBlock = false
 
     private var isMe: Bool { userId == store.me.id }
@@ -21,7 +14,6 @@ struct ProfileView: View {
     var body: some View {
         let user = store.user(userId)
         let answers = store.answers(of: userId)
-        let items = isMe && tab == .saved ? store.savedAnswers : answers
 
         ScrollView {
             VStack(spacing: 0) {
@@ -29,38 +21,28 @@ struct ProfileView: View {
                     .padding(.horizontal, DS.Space.screen)
                     .padding(.top, 8)
 
-                if isMe {
-                    UnderlineTabs(items: Tab.allCases, selection: $tab) { t in
-                        t == .answers ? "Answers · \(answers.count)" : "Saved · \(store.savedAnswers.count)"
-                    }
-                    .padding(.top, 20)
-                } else {
-                    HStack {
-                        Text("Answers").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-                        Spacer()
-                    }
-                    .padding(.horizontal, DS.Space.screen)
-                    .padding(.top, 24)
-                    .padding(.bottom, 8)
-                    Rectangle().fill(Color.qLine).frame(height: 1)
+                HStack {
+                    Text("Answers").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
+                    Spacer()
                 }
+                .padding(.horizontal, DS.Space.screen)
+                .padding(.top, 24)
+                .padding(.bottom, 8)
+                Rectangle().fill(Color.qLine).frame(height: 1)
 
                 LazyVStack(spacing: 0) {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
-                        AnswerCard(answer: answer, showsQuestion: true, showsAuthor: isMe && tab == .saved)
+                    ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
+                        AnswerCard(answer: answer, showsQuestion: true, showsAuthor: false)
                             .staggeredAppear(index)
                         Rectangle().fill(Color.qLine).frame(height: 1).padding(.horizontal, DS.Space.screen)
                     }
-                    if items.isEmpty {
+                    if answers.isEmpty {
                         EmptyStateView(
-                            icon: tab == .saved && isMe ? .bookmarkSimpleFill : .chatCircleTextFill,
-                            title: tab == .saved && isMe ? "Nothing saved yet" : "No answers yet",
-                            message: tab == .saved && isMe
-                                ? "Tap the bookmark on any answer to keep it here."
-                                : (isMe ? "Answer today's question to start your story." : "Their answers will show up here."))
+                            icon: .chatCircleTextFill,
+                            title: "No answers yet",
+                            message: isMe ? "Answer today's question to start your story." : "Their answers will show up here.")
                     }
                 }
-                .animation(.qSmooth, value: tab)
             }
             .padding(.bottom, 16)
         }

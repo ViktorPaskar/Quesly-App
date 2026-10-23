@@ -83,6 +83,7 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.35), value: store.isSignedIn)
         .animation(.qSmooth, value: store.onboarding)
         .animation(.easeInOut(duration: 0.35), value: store.hasAnsweredToday)
+        .sensoryFeedback(.success, trigger: showLimeFlash) { _, shown in shown }
         .task {
             try? await Task.sleep(for: .seconds(1.8))
             withAnimation(.easeInOut(duration: 0.5)) { showSplash = false }

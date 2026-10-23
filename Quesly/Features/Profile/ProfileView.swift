@@ -154,37 +154,43 @@ struct ProfileHeader: View {
                 actions
             }
             .block()
+            .staggeredAppear(0)
 
-            statTiles
+            statTiles.staggeredAppear(1)
 
             if isMe {
-                MemoriesCard()
-                BadgesStrip().block()
+                MemoriesCard().staggeredAppear(2)
+                BadgesStrip().block().staggeredAppear(3)
             }
         }
         .onAppear { withAnimation(.spring(response: 0.55, dampingFraction: 0.65).delay(0.05)) { appeared = true } }
     }
 
-    /// Big-number tiles (streak, followers, following), like balances in a banking app.
+    /// Big-number tiles (answers or streak, followers, following), like balances in a banking app.
     private var statTiles: some View {
         let layout = typeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(spacing: DS.Space.s))
             : AnyLayout(HStackLayout(spacing: DS.Space.s))
         return layout {
-            tile("\(streak)", "day streak", icon: .fireFill, tint: .qFlame, route: nil)
-            tile("\(user?.followers ?? 0)", "followers", icon: nil, tint: .qInk, route: isMe ? .followers : nil)
-            tile("\(followingCount)", "following", icon: nil, tint: .qInk, route: isMe ? .following : nil)
+            // Your own streak lives in the memories block below, so here it's your answer count.
+            if isMe {
+                let count = store.answers(of: store.me.id).count
+                tile(count, count == 1 ? "answer" : "answers", icon: nil, tint: .qInk, route: nil)
+            } else {
+                tile(streak, "day streak", icon: .fireFill, tint: .qFlame, route: nil)
+            }
+            tile(user?.followers ?? 0, "followers", icon: nil, tint: .qInk, route: isMe ? .followers : nil)
+            tile(followingCount, "following", icon: nil, tint: .qInk, route: isMe ? .following : nil)
         }
     }
 
     @ViewBuilder
-    private func tile(_ value: String, _ label: String, icon: QIcon?, tint: Color, route: Route?) -> some View {
+    private func tile(_ value: Int, _ label: String, icon: QIcon?, tint: Color, route: Route?) -> some View {
         let content = VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 4) {
-                Text(value)
+                CountUpText(value: value)
                     .font(.display(26, .bold))
                     .foregroundStyle(Color.qInk)
-                    .contentTransition(.numericText())
                 if let icon { Icon(icon, size: 18).foregroundStyle(tint) }
             }
             Text(label).font(.ui(13)).foregroundStyle(Color.qGray)
@@ -295,5 +301,26 @@ struct BadgesStrip: View {
                 .padding(.vertical, 4)
             }
         }
+    }
+}
+
+/// A number that counts up from zero the first time it appears (instantly under Reduce Motion).
+struct CountUpText: View {
+    let value: Int
+    @State private var shown = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Text("\(shown)")
+            .contentTransition(.numericText(value: Double(shown)))
+            .monospacedDigit()
+            .onAppear {
+                guard shown != value else { return }
+                if reduceMotion { shown = value } else {
+                    withAnimation(.smooth(duration: 0.9).delay(0.2)) { shown = value }
+                }
+            }
+            .onChange(of: value) { _, new in withAnimation(.qSmooth) { shown = new } }
+            .accessibilityLabel("\(value)")
     }
 }

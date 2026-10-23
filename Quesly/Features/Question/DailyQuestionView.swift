@@ -58,6 +58,7 @@ struct DailyQuestionView: View {
                 .padding(.horizontal, DS.Space.screen)
                 .padding(.bottom, DS.Space.s)
                 .modifier(ShakeEffect(shakes: CGFloat(shake)))
+                .sensoryFeedback(.warning, trigger: shake)
             }
         }
         .onTapGesture { editorFocused = false }
@@ -136,6 +137,10 @@ struct DailyQuestionView: View {
                         .offset(y: index < revealed || reduceMotion ? 0 : 14)
                         .blur(radius: index < revealed || reduceMotion ? 0 : 6)
                         .animation(.qSmooth.delay(0.15 + Double(index) * 0.07), value: revealed)
+                        // The key word lands last, like a sticker being slapped on.
+                        .scaleEffect(isHot && revealed == 0 && !reduceMotion ? 1.6 : 1)
+                        .animation(.spring(response: 0.38, dampingFraction: 0.5)
+                            .delay(0.25 + Double(words.count) * 0.07), value: revealed)
                 }
             }
             .accessibilityElement(children: .ignore)
@@ -285,9 +290,10 @@ private struct LockedFriendsPreview: View {
         HStack(alignment: .top, spacing: DS.Space.s) {
             Avatar(user: user, size: 36)
             VStack(alignment: .leading, spacing: 8) {
+                // The card is always white (it sits on green), so its ink is fixed too.
                 Text(user?.username ?? "")
                     .font(.ui(14, .semibold))
-                    .foregroundStyle(Color.qInk)
+                    .foregroundStyle(Color(hex: 0x16181A))
                 Capsule().fill(Color.black.opacity(0.08)).frame(height: 10)
                 Capsule().fill(Color.black.opacity(0.08)).frame(width: 150, height: 10)
             }

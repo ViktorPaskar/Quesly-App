@@ -62,12 +62,6 @@ jobs:
           SIMCTL_CHILD_QUESLY_SCREEN=tour xcrun simctl launch "$DEVICE" app.quesly.ios
           sleep 60
           kill -INT $REC; wait $REC || true
-          # Dark appearance pass
-          xcrun simctl ui "$DEVICE" appearance dark || true
-          for screen in question feed story reactions discover notifications profile memory settings widgets; do
-            shoot $screen "dark-$screen"
-          done
-          xcrun simctl ui "$DEVICE" appearance light || true
           # Largest accessibility text size pass (Dynamic Type)
           xcrun simctl ui "$DEVICE" content_size accessibility-extra-large || true
           for screen in feed profile settings; do

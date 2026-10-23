@@ -18,7 +18,7 @@ description: Screenshot-based visual QA for Quesly. Use after any UI change, bef
 
 `welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile memory saved settings editProfile achievements freezeUsed widgets`
 
-Extra passes (same run): **`dark-<screen>.png`** (Dark appearance: question, feed, story, reactions, discover, notifications, profile, memory, settings, widgets) and **`xl-<screen>.png`** (Dynamic Type *accessibility-extra-large*: feed, profile, settings). Review them with the same checklist; dark mode and large text are only "supported" once these pass.
+Extra passes (same run): the dark pass is switched off (light theme only for now, founder decision 23.10.2026) and **`xl-<screen>.png`** (Dynamic Type *accessibility-extra-large*: feed, profile, settings). Review them with the same checklist; dark mode and large text are only "supported" once these pass.
 
 Home/Lock Screen widgets can't be screenshotted on the simulator Home Screen; the `widgets` screen renders the same `Shared/` widget views at real sizes instead.
 

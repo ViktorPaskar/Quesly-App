@@ -39,6 +39,8 @@ struct QueslyApp: App {
                 .environment(store)
                 .environment(network)
                 .tint(.qBrandText)
+                // Light theme only for now (founder decision, 23.10.2026); dark tokens stay for later.
+                .preferredColorScheme(.light)
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { store.refreshDay() }

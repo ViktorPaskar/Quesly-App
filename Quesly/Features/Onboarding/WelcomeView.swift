@@ -1,28 +1,36 @@
 import SwiftUI
 
-/// First screen: shows the product instead of describing it — real answer cards drift up behind the brand.
+/// First screen. One idea, shown rather than described: today's question, big, with the people who
+/// already answered it, and one clear way in. Logo on top, the question as the hero, actions below.
 struct WelcomeView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var authMode: AuthView.Mode?
     @State private var appeared = false
+
+    private var question: DailyQuestion { store.todayQuestion }
+    private var words: [String] { question.text.uppercased().split(separator: " ").map(String.init) }
 
     var body: some View {
         ZStack {
             Color.qGreen.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // The cards are an overlay so their (very tall, looping) content never pushes the buttons off screen.
-                GeometryReader { geo in
-                    FloatingAnswers(answers: store.todayAnswers)
-                        .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
-                        .opacity(appeared ? 1 : 0)
-                        .animation(.qSmooth.delay(0.2), value: appeared)
-                }
+                QueslyLogo(height: 22, background: .clear)
+                    .frame(height: 44)
+                    .padding(.top, DS.Space.xs)
+                    .reveal(appeared, delay: 0)
 
-                brand
+                Spacer(minLength: DS.Space.xl)
+
+                hero
+
+                Spacer(minLength: DS.Space.xl)
+
+                actions
             }
         }
-        .onAppear { withAnimation(.qSmooth) { appeared = true } }
+        .onAppear { appeared = true }
         .sheet(item: $authMode) { mode in
             AuthView(mode: mode)
                 .presentationDetents([.large])
@@ -30,138 +38,83 @@ struct WelcomeView: View {
         }
     }
 
-    private var brand: some View {
-        VStack(spacing: 0) {
-            QueslyLogo(height: 38, background: .clear)
-                .opacity(appeared ? 1 : 0)
-                .scaleEffect(appeared ? 1 : 0.9)
-            Text("ONE QUESTION A DAY.\nMILLIONS OF STORIES")
+    private var hero: some View {
+        VStack(alignment: .leading, spacing: DS.Space.l) {
+            Text("Today's question")
                 .font(.ui(15, .semibold))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.white)
-                .padding(.top, DS.Space.m)
-                .opacity(appeared ? 1 : 0)
-            Text("Answer today's question, then see how friends and the world answered it.")
+                .foregroundStyle(Color.qLime)
+                .reveal(appeared, delay: 0.1)
+
+            let keyWords = question.keyWords
+            WrappingHStack(spacing: 10, lineSpacing: 4, centered: false) {
+                ForEach(Array(words.enumerated()), id: \.offset) { index, word in
+                    let isHot = keyWords.contains(word.filter(\.isLetter))
+                    Text(word)
+                        .font(.display(40, .heavy))
+                        .foregroundStyle(isHot ? Color.qGreen : .white)
+                        .padding(.horizontal, isHot ? 8 : 0)
+                        .background {
+                            if isHot {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.qLime)
+                            }
+                        }
+                        .rotationEffect(.degrees(isHot ? -3 : 0))
+                        .reveal(appeared, delay: 0.2 + Double(index) * 0.05)
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(question.text)
+
+            HStack(spacing: DS.Space.s) {
+                AvatarStack(users: Array(store.users.values.sorted { $0.id < $1.id }.prefix(2)), size: 32, ring: .qGreen)
+                Text("**\(store.answeredTodayCount.formatted())** people answered today")
+                    .font(.ui(15))
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+            .accessibilityElement(children: .combine)
+            .reveal(appeared, delay: 0.3 + Double(words.count) * 0.05)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, DS.Space.xl)
+    }
+
+    private var actions: some View {
+        VStack(spacing: DS.Space.xs) {
+            Text("Answer first. Then see what your friends and the world said.")
                 .font(.ui(15))
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.white.opacity(0.8))
-                .padding(.top, DS.Space.xs)
-                .padding(.horizontal, DS.Space.xxl)
-                .opacity(appeared ? 1 : 0)
-
-            VStack(spacing: DS.Space.xs) {
-                LimeButton(title: "Get started") { authMode = .signUp }
-                Button("I already have an account") { authMode = .signIn }
-                    .font(.ui(16))
-                    .foregroundStyle(.white)
-                    .frame(height: 48)
-            }
-            .padding(.horizontal, DS.Space.screen)
-            .padding(.top, DS.Space.xl)
-            .padding(.bottom, DS.Space.m)
-            .opacity(appeared ? 1 : 0)
-            .offset(y: appeared ? 0 : 30)
-            .animation(.qSmooth.delay(0.4), value: appeared)
+                .foregroundStyle(.white.opacity(0.7))
+                .padding(.horizontal, DS.Space.xl)
+                .padding(.bottom, DS.Space.s)
+            LimeButton(title: "Get started") { authMode = .signUp }
+            Button("I already have an account") { authMode = .signIn }
+                .font(.ui(17, .semibold))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, minHeight: 50)
         }
-        .padding(.top, DS.Space.m)
+        .padding(.horizontal, DS.Space.screen)
+        .padding(.bottom, DS.Space.xs)
+        .reveal(appeared, delay: 0.6)
     }
 }
 
-// MARK: - Floating cards
+private extension View {
+    /// Fade + rise in on first appear; instant under Reduce Motion.
+    func reveal(_ shown: Bool, delay: Double) -> some View {
+        modifier(Reveal(shown: shown, delay: delay))
+    }
+}
 
-/// Two columns of answer cards scrolling upward at different speeds, looping seamlessly.
-/// Static under Reduce Motion. The fade at both ends is a mask, not decoration.
-private struct FloatingAnswers: View {
-    let answers: [Answer]
+private struct Reveal: ViewModifier {
+    let shown: Bool
+    let delay: Double
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var columns: [[Answer]] {
-        let usable = answers.filter { !$0.text.isEmpty }
-        return [
-            usable.enumerated().filter { $0.offset.isMultiple(of: 2) }.map { $0.element },
-            usable.enumerated().filter { !$0.offset.isMultiple(of: 2) }.map { $0.element },
-        ]
-    }
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { context in
-            let time = context.date.timeIntervalSinceReferenceDate
-            HStack(alignment: .top, spacing: DS.Space.s) {
-                MarqueeColumn(answers: columns[0], time: time, speed: 14, startOffset: 0)
-                MarqueeColumn(answers: columns[1], time: time, speed: 10, startOffset: 70)
-            }
-            .padding(.horizontal, DS.Space.screen)
-        }
-        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
-        .clipped()
-        .mask(
-            LinearGradient(stops: [
-                .init(color: .clear, location: 0),
-                .init(color: .black, location: 0.18),
-                .init(color: .black, location: 0.72),
-                .init(color: .clear, location: 1),
-            ], startPoint: .top, endPoint: .bottom)
-        )
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-}
-
-private struct MarqueeColumn: View {
-    let answers: [Answer]
-    let time: TimeInterval
-    let speed: Double
-    let startOffset: CGFloat
-    @State private var loopHeight: CGFloat = 0
-
-    private var offset: CGFloat {
-        guard loopHeight > 0 else { return -startOffset }
-        let travelled = CGFloat((time * speed).truncatingRemainder(dividingBy: Double(loopHeight)))
-        return -((travelled + startOffset).truncatingRemainder(dividingBy: loopHeight))
-    }
-
-    var body: some View {
-        VStack(spacing: DS.Space.s) {
-            stack
-                .background(GeometryReader { geo in
-                    Color.clear.onAppear { loopHeight = geo.size.height + DS.Space.s }
-                })
-            stack // second copy so the loop has no gap
-        }
-        .offset(y: offset)
-        .frame(maxWidth: .infinity, alignment: .top)
-    }
-
-    private var stack: some View {
-        VStack(spacing: DS.Space.s) {
-            ForEach(answers) { MiniAnswerCard(answer: $0) }
-        }
-    }
-}
-
-private struct MiniAnswerCard: View {
-    @Environment(AppStore.self) private var store
-    let answer: Answer
-
-    var body: some View {
-        let author = store.user(answer.authorId)
-        VStack(alignment: .leading, spacing: DS.Space.xs) {
-            HStack(spacing: DS.Space.xs) {
-                Avatar(user: author, size: 26)
-                Text(author?.username ?? "")
-                    .font(.ui(13, .semibold))
-                    .foregroundStyle(Color.qInk)
-                    .lineLimit(1)
-            }
-            Text(answer.text)
-                .font(.ui(15))
-                .foregroundStyle(Color.qInk)
-                .lineLimit(5)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(DS.Space.s)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qSurface))
+    func body(content: Content) -> some View {
+        content
+            .opacity(shown || reduceMotion ? 1 : 0)
+            .offset(y: shown || reduceMotion ? 0 : 12)
+            .animation(.qSmooth.delay(delay), value: shown)
     }
 }
 

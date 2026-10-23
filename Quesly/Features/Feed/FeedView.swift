@@ -111,7 +111,8 @@ struct FeedView: View {
                                     AnswerCard(answer: answer,
                                                opensTray: (DemoConfig.opensReactionTray || tour.openTray)
                                                    && answer.id == answers.first(where: { $0.authorId != store.me.id })?.id,
-                                               isHighlighted: highlightsMine && answer.authorId == store.me.id)
+                                               isHighlighted: highlightsMine && answer.authorId == store.me.id,
+                                               isPinnedMine: answer.authorId == store.me.id)
                                 }
                                 // Each answer is its own white card on the gray canvas.
                                 .background(Color.qBlock)

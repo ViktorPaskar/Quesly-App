@@ -76,7 +76,7 @@ struct MemoriesCard: View {
             IconLabel("Streak freeze", icon: .snowflake, size: DS.Icon.inline)
                 .font(.ui(17, .semibold))
                 .foregroundStyle(Color.qIce)
-            Text("Miss a day and a freeze keeps your streak alive automatically. You earn one for every 7-day streak — up to \(AppStore.maxFreezes).")
+            Text("Miss a day and a freeze keeps your streak alive automatically. You earn one for every 7-day streak, up to \(AppStore.maxFreezes).")
                 .font(.ui(15))
                 .foregroundStyle(Color.qInk)
                 .fixedSize(horizontal: false, vertical: true)

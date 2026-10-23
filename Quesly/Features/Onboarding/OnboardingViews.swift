@@ -85,7 +85,7 @@ struct NotificationPrimingView: View {
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.white)
                     .padding(.top, 36)
-                Text("We'll send one gentle reminder a day — when the new question drops. No spam, promise.")
+                Text("We'll send one gentle reminder a day, when the new question drops. No spam, promise.")
                     .font(.ui(16))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.white.opacity(0.8))

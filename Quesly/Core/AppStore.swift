@@ -258,9 +258,10 @@ final class AppStore {
         case .friends:
             others = others.filter { followingIds.contains($0.authorId) }
         case .world:
-            // Friends-only answers appear in World only for people who follow the author.
-            others = others.filter { $0.visibility == .everyone || followingIds.contains($0.authorId) }
+            // Posting to World means agreeing to be seen; Friends-only answers never appear there.
+            others = others.filter { $0.visibility == .everyone }
         }
+        // Your own answer is always pinned on top of both feeds.
         if let mine = todaysAnswer { return [mine] + others }
         return others
     }
@@ -316,6 +317,15 @@ final class AppStore {
     /// Answers the viewer reposted to their profile.
     var resharedAnswers: [Answer] {
         todayAnswers.filter { $0.isResharedByMe && !blockedIds.contains($0.authorId) }
+    }
+
+    /// Answers the viewer bookmarked (private, shown under Saved in their profile).
+    var bookmarkedAnswers: [Answer] {
+        todayAnswers.filter { $0.isBookmarked && !blockedIds.contains($0.authorId) }
+    }
+
+    func toggleBookmark(_ answerId: String) {
+        mutateAnswer(answerId) { $0.isBookmarked.toggle() }
     }
 
     /// Reposts someone's answer to your profile (or takes it back). The author is not told who.
@@ -571,6 +581,8 @@ final class AppStore {
         var notificationsSeenAt: Date
         var frozenDays: Set<Date>
         var streakFreezes: Int
+        /// Optional so snapshots from before bookmarks still decode.
+        var bookmarkedIds: Set<String>?
     }
 
     private func persist() {
@@ -583,7 +595,8 @@ final class AppStore {
             savedIds: Set(todayAnswers.filter(\.isResharedByMe).map(\.id)), reactions: reactions,
             remindersEnabled: remindersEnabled, reminderTime: reminderTime, isPrivateAccount: isPrivateAccount,
             defaultVisibility: defaultVisibility, notificationsSeenAt: notificationsSeenAt,
-            frozenDays: frozenDays, streakFreezes: streakFreezes
+            frozenDays: frozenDays, streakFreezes: streakFreezes,
+            bookmarkedIds: Set(todayAnswers.filter(\.isBookmarked).map(\.id))
         )
         if let data = try? JSONEncoder().encode(snapshot) {
             UserDefaults.standard.set(data, forKey: Self.defaultsKey)
@@ -612,6 +625,7 @@ final class AppStore {
         for i in todayAnswers.indices {
             let id = todayAnswers[i].id
             todayAnswers[i].isResharedByMe = s.savedIds.contains(id)
+            todayAnswers[i].isBookmarked = s.bookmarkedIds?.contains(id) ?? false
             let seeded = todayAnswers[i].myReaction
             let restored = s.reactions[id]
             if seeded != restored {

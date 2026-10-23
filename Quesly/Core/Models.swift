@@ -161,13 +161,19 @@ struct Answer: Identifiable, Codable, Hashable {
     var isEdited: Bool = false
     /// Optional so answers saved before reposts existed still decode.
     var reshareCount: Int? = nil
+    /// Privately saved by the viewer (the bookmark). Only the viewer sees their saved list.
+    var bookmarked: Bool? = nil
 
     var reshares: Int { reshareCount ?? 0 }
+    var isBookmarked: Bool {
+        get { bookmarked ?? false }
+        set { bookmarked = newValue }
+    }
 
     private enum CodingKeys: String, CodingKey {
         case id, questionId, questionText, authorId, text, createdAt, reactions, myReaction
         case isResharedByMe = "isSaved"   // stored under its old name
-        case isPinned, visibility, isEdited, reshareCount
+        case isPinned, visibility, isEdited, reshareCount, bookmarked
     }
 
     func count(_ kind: ReactionKind) -> Int { reactions[kind, default: 0] }

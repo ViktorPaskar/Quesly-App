@@ -47,8 +47,7 @@ struct ReactionControl: View {
                     Icon(.smiley, size: DS.Icon.action).foregroundStyle(Color.qGray)
                 }
             }
-            .frame(minWidth: 32, minHeight: DS.hitTarget)
-            .contentShape(Rectangle())
+            .glyphHitArea()
         }
         .buttonStyle(.pressable)
         .accessibilityLabel(answer.myReaction.map { "Your reaction: \($0.label). Change reaction" } ?? "React")

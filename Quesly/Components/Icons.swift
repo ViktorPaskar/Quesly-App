@@ -23,7 +23,7 @@ enum QIcon: String {
     case pencilSimple = "pencil", pencilSimpleFill = "pencil.line"
     case prohibit = "hand.raised", prohibitFill = "hand.raised.fill"
     case downloadSimple = "arrow.down.to.line"
-    /// Repost to your profile. No brand glyph yet (add `ui-repost` from the UIcons set to replace the SF fallback).
+    /// Repost to your profile. `ui-repost` is drawn to match UIcons Regular Rounded (2-pt rounded strokes, 24 grid).
     case repost = "arrow.2.squarepath"
     case gearSix = "gearshape", gearSixFill = "gearshape.fill"
     case dotsThreeBold = "ellipsis"
@@ -151,5 +151,17 @@ struct IconChip: View {
             .foregroundStyle(tint)
             .frame(width: 34, height: 34)
             .background(Circle().fill(fill))
+    }
+}
+
+extension View {
+    /// Lays an action glyph out at its own size, so its visible edge lines up with text and card
+    /// edges, while the tap area stays the HIG 44 × 44 pt around it.
+    func glyphHitArea() -> some View {
+        let inset = (DS.hitTarget - DS.Icon.action) / 2
+        return self
+            .padding(inset)
+            .contentShape(Rectangle())
+            .padding(-inset)
     }
 }

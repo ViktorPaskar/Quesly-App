@@ -8,14 +8,23 @@ struct ProfileView: View {
     let userId: String
     var isTabRoot = false
     @State private var confirmBlock = false
+    @State private var list: ListKind = .answers
+
+    /// Your profile: your answers (plus reposts) or your private Saved list.
+    enum ListKind: String, CaseIterable, Identifiable {
+        case answers = "Answers", saved = "Saved"
+        var id: String { rawValue }
+    }
 
     private var isMe: Bool { userId == store.me.id }
 
     var body: some View {
         let user = store.user(userId)
         let answers = store.answers(of: userId)
-        // Your profile mixes your answers with the ones you reposted, newest first.
-        let items = isMe ? (answers + store.resharedAnswers).sorted { $0.createdAt > $1.createdAt } : answers
+        // Answers mixes your own with the ones you reposted, newest first.
+        let items: [Answer] = !isMe ? answers
+            : list == .saved ? store.bookmarkedAnswers
+            : (answers + store.resharedAnswers).sorted { $0.createdAt > $1.createdAt }
 
         ScrollView {
             VStack(spacing: 0) {
@@ -24,32 +33,39 @@ struct ProfileView: View {
                     .padding(.top, 8)
 
                 HStack(spacing: 6) {
-                    Text("Answers").font(.ui(17, .semibold)).foregroundStyle(Color.qInk)
-                    Text("\(answers.count)").font(.ui(15)).foregroundStyle(Color.qGray)
+                    if isMe {
+                        PillTabs(items: ListKind.allCases, selection: $list, title: \.rawValue)
+                    } else {
+                        Text("Answers").font(.ui(17, .semibold)).foregroundStyle(Color.qInk)
+                        Text("\(answers.count)").font(.ui(15)).foregroundStyle(Color.qGray)
+                    }
                     Spacer()
                 }
-                .padding(.horizontal, DS.Space.screen)
+                .padding(.horizontal, DS.Space.m)
                 .padding(.top, DS.Space.l)
-                .padding(.bottom, DS.Space.xs)
+                .padding(.bottom, DS.Space.xxs)
 
-                LazyVStack(spacing: 0) {
+                // Same white cards as the feed.
+                LazyVStack(spacing: DS.Space.xs) {
                     ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
-                        let repost = answer.authorId != userId
-                        AnswerCard(answer: answer, showsQuestion: true, showsAuthor: repost, isRepost: repost)
+                        let other = answer.authorId != userId
+                        AnswerCard(answer: answer, showsQuestion: true, showsAuthor: other,
+                                   isRepost: other && list == .answers)
+                            .background(Color.qBlock)
+                            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
                             .staggeredAppear(index)
-                        Rectangle().fill(Color.qLine).frame(height: 1).padding(.horizontal, DS.Space.screen)
                     }
                     if items.isEmpty {
                         EmptyStateView(
-                            icon: .chatCircleTextFill,
-                            title: "No answers yet",
-                            message: isMe ? "Answer today's question to start your story." : "Their answers will show up here.")
+                            icon: list == .saved ? .bookmarkSimpleFill : .chatCircleTextFill,
+                            title: list == .saved ? "Nothing saved yet" : "No answers yet",
+                            message: list == .saved ? "Tap the bookmark on an answer to keep it here. Only you can see this list."
+                                : isMe ? "Answer today's question to start your story." : "Their answers will show up here.")
                     }
                 }
-                .padding(.bottom, DS.Space.xs)
-                .background(Color.qBlock)
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
-                .padding(.horizontal, DS.Space.m)
+                .padding(.horizontal, DS.Space.s)
+                .padding(.top, DS.Space.xs)
+                .animation(.qSmooth, value: list)
             }
             .padding(.bottom, 16)
         }

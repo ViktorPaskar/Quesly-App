@@ -8,7 +8,6 @@ struct Avatar: View {
     let user: AppUser?
     var size: CGFloat = 40
     var showsBadge = false
-    var sticker = true
 
     @Environment(AppStore.self) private var store: AppStore?
     @Environment(\.colorScheme) private var colorScheme
@@ -38,11 +37,6 @@ struct Avatar: View {
         }
         .frame(width: size, height: size)
         .clipShape(Circle())
-        // Brand "sticker" look: white rim and a soft lift, like the stickers on quesly.me.
-        .overlay {
-            if sticker { Circle().strokeBorder(.white, lineWidth: max(1.5, size * 0.05)) }
-        }
-        .shadow(color: sticker ? Color(hex: 0x022A1E).opacity(0.14) : .clear, radius: size * 0.06, y: size * 0.03)
         .overlay(alignment: .bottomTrailing) {
             if showsBadge, let badge = user?.badge {
                 HexBadge(color: badge.color, icon: badge.icon)

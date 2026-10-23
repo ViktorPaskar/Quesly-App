@@ -65,7 +65,7 @@ enum MockData {
             ("u4", "Tokyo, just to be surrounded by order and ramen", 6),
             ("u2", "A small village in the Alps with a huge garden", 9),
             ("u12", "Napoli, for the pizza and the chaos", 12),
-            ("u10", "Copenhagen — bikes everywhere and cozy cafés", 17),
+            ("u10", "Copenhagen. Bikes everywhere and cozy cafés", 17),
             ("u7", "Barcelona, so I can dance until 3am and nap at the beach", 25),
         ],
         "q-power": [
@@ -77,7 +77,7 @@ enum MockData {
             ("u13", "Healing people with a touch. Med school would be way easier", 23),
         ],
         "q-advice": [
-            ("u1", "\"Don't compare your chapter 1 to someone's chapter 20\" — my mom", 2),
+            ("u1", "\"Don't compare your chapter 1 to someone's chapter 20\", my mom", 2),
             ("u4", "Done is better than perfect", 5),
             ("u11", "Take the photo. You won't regret having it", 8),
             ("u2", "Drink water before deciding anything important", 12),
@@ -85,7 +85,7 @@ enum MockData {
             ("u7", "You can't pour from an empty cup", 21),
         ],
         "q-song": [
-            ("u7", "September — Earth, Wind & Fire. Instant smile", 1),
+            ("u7", "September by Earth, Wind & Fire. Instant smile", 1),
             ("u5", "Mr. Blue Sky. Every morning on the metro", 4),
             ("u9", "Anything by Stromae, honestly", 9),
             ("u3", "Dancing Queen. No explanation needed 💃", 13),
@@ -135,6 +135,7 @@ enum MockData {
             // A few answers start with reactions / saved so the feed looks alive.
             if index == 1 { answer.myReaction = .love; answer.reactions = [.love: 1] }
             if index == 2 { answer.isResharedByMe = true; answer.reshareCount = 4; answer.reactions = [.same: 2] }
+            if index == 3 { answer.isBookmarked = true }
             if index == 4 { answer.visibility = .friends }
             return answer
         }
@@ -147,7 +148,7 @@ enum MockData {
         "q-happy": "When I hear my favorite song randomly playing in a cafe... It feels awesome",
         "q-live": "Somewhere by the sea 🌊 where mornings start with coffee on the balcony",
         "q-power": "Teleportation ✨ so I could visit my family anytime without packing or flights",
-        "q-advice": "\"You don't have to have it all figured out to move forward\" — my grandma",
+        "q-advice": "\"You don't have to have it all figured out to move forward\", my grandma",
         "q-song": "Anything by ABBA. Instant dance mode in the kitchen 💃",
         "q-proud": "I finally started running in the mornings and kept it up for a month",
         "q-tiny": "A stranger complimented my jacket on the metro and made my whole day",

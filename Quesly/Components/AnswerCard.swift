@@ -25,6 +25,8 @@ struct AnswerCard: View {
     var opensTray = false
     /// Brief brand tint, used when your own answer lands in the feed after posting.
     var isHighlighted = false
+    /// Your own answer pinned on top of the feeds.
+    var isPinnedMine = false
 
     @State private var isTrayOpen = false
     @State private var isSharing = false
@@ -37,43 +39,43 @@ struct AnswerCard: View {
     private var author: AppUser? { store.user(answer.authorId) }
     private var isMine: Bool { answer.authorId == store.me.id }
 
+    /// Card grid (all on the 4-pt scale, one 16-pt inset on every side):
+    /// header row — 40-pt avatar, name + time centred on it, "…" on the right edge;
+    /// 12 pt; the answer at full card width, aligned with the avatar's left edge;
+    /// 4 pt; the action row — glyphs (not their 44-pt hit areas) aligned to the same edges.
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Space.xs) {
+        VStack(alignment: .leading, spacing: 0) {
             if isRepost {
                 IconLabel("You reposted", icon: .repost, size: DS.Icon.caption)
                     .font(.ui(13, .semibold))
                     .foregroundStyle(Color.qGray)
+                    .padding(.bottom, DS.Space.s)
             }
-            if showsQuestion { questionLine }
-
-            HStack(alignment: .top, spacing: DS.Space.s) {
-                if showsAuthor {
-                    NavigationLink(value: Route.profile(answer.authorId)) {
-                        Avatar(user: author, size: 40)
-                    }
-                    .buttonStyle(.pressable)
-                    .accessibilityLabel("\(author?.username ?? "") profile")
-                }
-
-                VStack(alignment: .leading, spacing: DS.Space.xxs) {
-                    if showsAuthor { header }
-                    Text(answer.text)
-                        .font(.ui(17))
-                        .lineSpacing(2)
-                        .foregroundStyle(Color.qInk)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                        .onTapGesture(count: 2) { doubleTapReact() }
-                        .overlay { DoubleTapPop(kind: .love, trigger: popTrigger) }
-                        .contextMenu { menuItems } preview: { preview }
-                    actions
-                }
+            if isPinnedMine {
+                IconLabel("Your answer", icon: .pushPinFill, size: DS.Icon.caption)
+                    .font(.ui(13, .semibold))
+                    .foregroundStyle(Color.qBrandText)
+                    .padding(.bottom, DS.Space.s)
             }
+            if showsQuestion { questionLine.padding(.bottom, DS.Space.s) }
+            if showsAuthor { header.padding(.bottom, DS.Space.s) }
+
+            Text(answer.text)
+                .font(.ui(17))
+                .lineSpacing(3)
+                .foregroundStyle(Color.qInk)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { doubleTapReact() }
+                .overlay { DoubleTapPop(kind: .love, trigger: popTrigger) }
+                .contextMenu { menuItems } preview: { preview }
+
+            actions.padding(.top, DS.Space.xxs)
         }
         .padding(.horizontal, DS.Space.m)
-        .padding(.top, DS.Space.l)
-        .padding(.bottom, DS.Space.xs)
+        .padding(.top, DS.Space.m)
+        .padding(.bottom, DS.Space.xxs)   // + the action row's own air ≈ 16 pt visually
         .background(isHighlighted ? Color.qMint : Color.clear)
         .sheet(isPresented: $isSharing) {
             ShareStorySheet(answer: answer)
@@ -113,34 +115,35 @@ struct AnswerCard: View {
         }
     }
 
+    /// Avatar, then name · badge · time on one line, vertically centred on the avatar.
     private var header: some View {
-        HStack(spacing: 6) {
+        HStack(alignment: .center, spacing: DS.Space.s) {
             NavigationLink(value: Route.profile(answer.authorId)) {
-                Text(author?.username ?? "unknown")
-                    .font(.ui(15, .semibold))
-                    .foregroundStyle(Color.qInk)
-                    .lineLimit(1)
+                HStack(alignment: .center, spacing: DS.Space.s) {
+                    Avatar(user: author, size: 40)
+                    HStack(spacing: 6) {
+                        Text(author?.username ?? "unknown")
+                            .font(.ui(15, .semibold))
+                            .foregroundStyle(Color.qInk)
+                            .lineLimit(1)
+                        if let badge = author?.badge {
+                            HexBadge(color: badge.color, icon: badge.icon).frame(width: 14, height: 14)
+                        }
+                        Text(RelativeTime.short(answer.createdAt) + (answer.isEdited ? " · edited" : ""))
+                            .font(.ui(15)).foregroundStyle(Color.qGray)
+                            .lineLimit(1)
+                    }
+                }
             }
             .buttonStyle(.plain)
-            if let badge = author?.badge {
-                HexBadge(color: badge.color, icon: badge.icon).frame(width: 14, height: 14)
-            }
-            Text(RelativeTime.short(answer.createdAt) + (answer.isEdited ? " · edited" : ""))
-                .font(.ui(15)).foregroundStyle(Color.qGray)
-                .lineLimit(1)
-            if answer.visibility == .friends {
-                Icon(.userFill, size: DS.Icon.caption)
-                    .foregroundStyle(Color.qGray)
-                    .accessibilityLabel("Friends only")
-            }
-            Spacer(minLength: DS.Space.xxs)
+            .accessibilityLabel("\(author?.username ?? "") profile")
+            Spacer(minLength: DS.Space.xs)
             if !isMine && !store.isFollowing(answer.authorId) {
                 FollowPill(isFollowing: false, compact: true) { store.toggleFollow(answer.authorId) }
                     .transition(.opacity)
             }
             moreMenu
         }
-        .frame(minHeight: 24)
         .animation(.qSpring, value: store.isFollowing(answer.authorId))
     }
 
@@ -199,19 +202,17 @@ struct AnswerCard: View {
         Menu {
             menuItems
         } label: {
-            Icon(.dotsThreeBold, size: DS.Icon.row)
+            Icon(.dotsThreeBold, size: DS.Icon.action)
                 .foregroundStyle(Color.qGray)
-                .frame(width: 32, height: 32)
-                .contentShape(Rectangle())
+                .glyphHitArea()
         }
-        .padding(.trailing, -6)
         .accessibilityLabel("More")
     }
 
-    /// Threads-style action row: react · share ··· save. Icons only, 44-pt targets.
+    /// react · repost · share on the left, bookmark on the right (under "…").
+    /// Glyphs sit on the card's 16-pt edges; each keeps a full 44-pt tap area.
     private var actions: some View {
-        HStack(spacing: DS.Space.m) {
-            // Three actions on every card: react · repost to profile · share outside Quesly.
+        HStack(spacing: DS.Space.xl) {
             if isMine {
                 // Nothing until the first reaction: an empty counter reads like a verdict.
                 if answer.totalReactions > 0 { authorReactions }
@@ -233,6 +234,15 @@ struct AnswerCard: View {
                 iconButton(.paperPlaneTilt, tint: .qGray, label: "Share outside Quesly") { isSharing = true }
             }
             Spacer(minLength: 0)
+            if !isMine && !isTrayOpen {
+                iconButton(answer.isBookmarked ? .bookmarkSimpleFill : .bookmarkSimple,
+                           tint: answer.isBookmarked ? .qBrandText : .qGray,
+                           label: answer.isBookmarked ? "Remove from saved" : "Save to your profile") {
+                    withAnimation(.qSpring) { store.toggleBookmark(answer.id) }
+                }
+                .pop(on: answer.isBookmarked)
+                .sensoryFeedback(.selection, trigger: answer.isBookmarked)
+            }
         }
         .frame(minHeight: DS.hitTarget)
         .animation(.qSpring, value: isTrayOpen)
@@ -279,8 +289,7 @@ struct AnswerCard: View {
         Button(action: action) {
             Icon(icon, size: DS.Icon.action)
                 .foregroundStyle(tint)
-                .frame(minWidth: 32, minHeight: DS.hitTarget)
-                .contentShape(Rectangle())
+                .glyphHitArea()
         }
         .buttonStyle(.pressable)
         .accessibilityLabel(label)
@@ -399,7 +408,7 @@ struct ReportSheet: View {
             } header: {
                 Text("Why are you reporting this?").font(.ui(13))
             } footer: {
-                Text("Reports are anonymous. Quesly is a kind place — we review every report.")
+                Text("Reports are anonymous. Quesly is a kind place. We review every report.")
                     .font(.ui(13))
             }
             Section {

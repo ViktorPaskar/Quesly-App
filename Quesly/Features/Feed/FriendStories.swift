@@ -155,7 +155,7 @@ struct StoryViewer: View {
             }
             Spacer()
             Button { dismiss() } label: {
-                Icon(.xBold, size: 20)
+                Icon(.xBold, size: DS.Icon.row)
                     .foregroundStyle(.white)
                     .frame(width: DS.hitTarget, height: DS.hitTarget)
                     .contentShape(Rectangle())
@@ -169,7 +169,7 @@ struct StoryViewer: View {
     private var content: some View {
         VStack(alignment: .leading, spacing: DS.Space.s) {
             Text(answer.questionText.uppercased())
-                .font(.ui(13, .bold))
+                .font(.ui(13, .semibold))
                 .foregroundStyle(Color.qLime)
             Text(answer.text)
                 .font(.display(28, .semibold))

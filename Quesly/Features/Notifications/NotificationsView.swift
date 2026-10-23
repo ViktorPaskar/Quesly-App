@@ -67,7 +67,7 @@ struct NotificationsView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 if let answerId = group.answerId, let answer = store.answer(answerId) {
                     Text("“\(answer.text)”")
-                        .font(.ui(14))
+                        .font(.ui(15))
                         .foregroundStyle(Color.qGray)
                         .lineLimit(1)
                 }
@@ -100,7 +100,7 @@ struct NotificationsView: View {
                     ReactionSticker(kind: r, size: 22)
                         .offset(x: 4, y: 4)
                 } else if group.kind == .follow {
-                    Icon(.userPlusFill, size: 12)
+                    Icon(.userPlusFill, size: DS.Icon.caption)
                         .foregroundStyle(Color.qLime)
                         .frame(width: 22, height: 22)
                         .background(Circle().fill(Color.qGreen))
@@ -109,7 +109,7 @@ struct NotificationsView: View {
                 }
             }
         case .badge:
-            Icon(.medalFill, size: 22)
+            Icon(.medalFill, size: DS.Icon.action)
                 .foregroundStyle(Color.qGreen)
                 .frame(width: 40, height: 40)
                 .background(Circle().fill(Color.qLime))

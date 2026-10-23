@@ -32,6 +32,22 @@ enum DS {
         static let l: CGFloat = 20
     }
 
+    /// Icon glyph sizes, matched to the text they sit with (HIG: icons align with the type scale).
+    enum Icon {
+        /// Next to caption / footnote text (12–13 pt): badges, meta, lock hints.
+        static let caption: CGFloat = 13
+        /// Inline with body / subheadline text (15–17 pt): labels, chips, buttons.
+        static let inline: CGFloat = 17
+        /// Default for `IconLabel` (with subheadline text, 15 pt).
+        static let label: CGFloat = 15
+        /// Leading icon in list rows and tiles.
+        static let row: CGFloat = 20
+        /// Standalone actions: card actions, toolbar and navigation buttons.
+        static let action: CGFloat = 22
+        /// Tab bar glyphs.
+        static let tab: CGFloat = 24
+    }
+
     /// Minimum tappable size (HIG).
     static let hitTarget: CGFloat = 44
 }
@@ -47,6 +63,12 @@ extension Color {
     /// Brand acid lime — accent on green surfaces only (fails contrast as text on white).
     static let qLime = Color(hex: 0xD4FF00)
     static let qFlame = Color(hex: 0xFF6A1A)
+    /// Soft fills for icon chips; each tint carries one meaning (streak, following, badges).
+    static let qFlameSoft = Color(hex: 0xFF6A1A, opacity: 0.12)
+    static let qViolet = Color(hex: 0x7C4DEB)
+    static let qVioletSoft = Color(hex: 0x7C4DEB, opacity: 0.12)
+    static let qGold = Color(hex: 0xB97C0C)
+    static let qGoldSoft = Color(hex: 0xE2A72E, opacity: 0.16)
     /// Streak freeze ❄️ (icon/text) and its soft fill.
     static let qIce = Color(light: 0x2F7FE0, dark: 0x7DB8FF)
     static let qIceSoft = Color(light: 0xE6F0FC, dark: 0x16263B)

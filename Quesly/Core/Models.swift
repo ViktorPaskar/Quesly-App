@@ -41,7 +41,7 @@ enum BadgeTier: String, Codable, CaseIterable {
         case .gold: return .crownSimpleFill
         case .red: return .fireFill
         case .purple: return .sparkleFill
-        case .blue: return .lightningFill
+        case .blue: return .sparkleFill
         case .green: return .leafFill
         }
     }
@@ -137,7 +137,7 @@ enum AnswerVisibility: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var title: String { self == .everyone ? "Everyone" : "Friends" }
-    var icon: QIcon { self == .everyone ? .globeHemisphereWestFill : .usersFill }
+    var icon: QIcon { self == .everyone ? .globeHemisphereWestFill : .userFill }
 }
 
 struct Answer: Identifiable, Codable, Hashable {

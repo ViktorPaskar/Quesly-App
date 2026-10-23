@@ -141,7 +141,7 @@ struct MainTabView: View {
                                 .frame(width: 64, height: 44)
                                 .matchedGeometryEffect(id: "tabBubble", in: ns)
                         }
-                        Icon(active ? t.activeIcon : t.icon, size: 22, weight: active ? .semibold : .regular)
+                        Icon(active ? t.activeIcon : t.icon, size: DS.Icon.tab, weight: active ? .semibold : .regular)
                             .foregroundStyle(active ? Color.qLime : Color.qGray)
                             .pop(on: active)
                             .overlay(alignment: .topTrailing) {

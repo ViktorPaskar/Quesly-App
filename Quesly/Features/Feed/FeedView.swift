@@ -127,7 +127,7 @@ struct FeedView: View {
                         if store.feedError != nil || store.isLoadingFeed {
                             EmptyView()
                         } else if scope == .friends && othersCount == 0 {
-                            EmptyStateView(icon: .usersThreeFill,
+                            EmptyStateView(icon: .userFill,
                                            title: "Your friends are quiet",
                                            message: "None of the people you follow answered yet. Invite friends or discover new people.") {
                                 VStack(spacing: DS.Space.s) {
@@ -140,7 +140,7 @@ struct FeedView: View {
                                     }
                                     .buttonStyle(.pressable)
                                     Button("Discover people", action: onDiscover)
-                                        .font(.ui(16, .medium))
+                                        .font(.ui(16))
                                         .foregroundStyle(Color.qBrandText)
                                         .frame(height: DS.hitTarget)
                                 }
@@ -203,7 +203,7 @@ private struct FreezeUsedNote: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: DS.Space.s) {
-            Icon(.snowflake, size: 18, weight: .semibold)
+            Icon(.snowflake, size: DS.Icon.inline, weight: .semibold)
                 .foregroundStyle(Color.qIce)
                 .frame(width: 40, height: 40)
                 .background(Circle().fill(Color.qBackground))
@@ -218,7 +218,7 @@ private struct FreezeUsedNote: View {
             }
             Spacer(minLength: 0)
             Button(action: onDismiss) {
-                Icon(.xBold, size: 14)
+                Icon(.xBold, size: DS.Icon.caption)
                     .foregroundStyle(Color.qGray)
                     .frame(width: DS.hitTarget, height: DS.hitTarget)
                     .contentShape(Rectangle())
@@ -242,7 +242,7 @@ struct CaughtUpFooter: View {
 
     var body: some View {
         VStack(spacing: DS.Space.s) {
-            Icon(.checkBold, size: 22)
+            Icon(.checkBold, size: DS.Icon.action)
                 .foregroundStyle(Color.qBrandText)
                 .frame(width: 56, height: 56)
                 .background(Circle().fill(Color.qMint))
@@ -257,13 +257,13 @@ struct CaughtUpFooter: View {
                 Label {
                     Text("Next question in **\(AppStore.timeLeftString(now: ctx.date))**")
                 } icon: {
-                    Icon(.clock, size: 15)
+                    Icon(.clock, size: DS.Icon.inline)
                 }
                 .font(.ui(15))
                 .foregroundStyle(Color.qInk)
                 .padding(.horizontal, DS.Space.m)
                 .frame(height: 36)
-                .background(Capsule().fill(Color.qField))
+                .background(Capsule().fill(Color.qBlock))
             }
             .padding(.top, DS.Space.xxs)
             Button("Back to top", action: onBackToTop)
@@ -284,17 +284,17 @@ struct StreakChip: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            Icon(.fireFill, size: 18)
+            Icon(.fireFill, size: DS.Icon.inline)
                 .foregroundStyle(Color.qFlame)
                 .pop(on: days)
             Text("\(days)")
-                .font(.ui(15, .bold))
+                .font(.ui(15, .semibold))
                 .foregroundStyle(Color.qInk)
                 .contentTransition(.numericText())
         }
         .padding(.horizontal, 12)
         .frame(height: 32)
-        .background(Capsule().fill(Color.qField))
+        .background(Capsule().fill(Color.qBlock))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(days) day streak")
     }
@@ -351,11 +351,11 @@ private struct AnswerPrompt: View {
                         .font(.ui(16, .semibold))
                         .foregroundStyle(Color.qGreen)
                     Text("Share your story to join today's conversation")
-                        .font(.ui(14))
+                        .font(.ui(15))
                         .foregroundStyle(Color.qGreen.opacity(0.8))
                 }
                 Spacer()
-                Icon(.arrowRightBold, size: 18)
+                Icon(.arrowRightBold, size: DS.Icon.inline)
                     .foregroundStyle(Color.qLime)
                     .frame(width: 40, height: 40)
                     .background(Circle().fill(Color.qGreen))
@@ -377,8 +377,8 @@ private struct AnswerPrompt: View {
 struct OfflineBanner: View {
     var body: some View {
         HStack(spacing: DS.Space.xs) {
-            Icon(.wifiSlash, size: 16, weight: .semibold)
-            Text("You're offline. Showing saved answers.").font(.ui(13, .medium))
+            Icon(.info, size: DS.Icon.inline, weight: .semibold)
+            Text("You're offline. Showing saved answers.").font(.ui(13))
             Spacer(minLength: 0)
         }
         .foregroundStyle(Color.qInk)

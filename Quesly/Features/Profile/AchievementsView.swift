@@ -18,14 +18,14 @@ struct AchievementsView: View {
                             .stroke(Color.qLime, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                             .rotationEffect(.degrees(-90))
                         Text("\(unlocked)/\(items.count)")
-                            .font(.ui(18, .bold))
+                            .font(.ui(17, .semibold))
                             .foregroundStyle(.white)
                     }
                     .frame(width: 72, height: 72)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Your badges").font(.ui(20, .bold)).foregroundStyle(.white)
+                        Text("Your badges").font(.ui(20, .semibold)).foregroundStyle(.white)
                         Text("Answer daily, react kindly and invite friends to collect them all.")
-                            .font(.ui(14)).foregroundStyle(.white.opacity(0.8))
+                            .font(.ui(15)).foregroundStyle(.white.opacity(0.8))
                     }
                 }
                 .padding(20)
@@ -58,7 +58,7 @@ struct AchievementsView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.title).font(.ui(17, .semibold)).foregroundStyle(Color.qInk)
-                Text(item.subtitle).font(.ui(14)).foregroundStyle(Color.qGray)
+                Text(item.subtitle).font(.ui(15)).foregroundStyle(Color.qGray)
                 if !item.isUnlocked && !item.isSpecial {
                     HStack(spacing: 12) {
                         GeometryReader { geo in
@@ -79,7 +79,7 @@ struct AchievementsView: View {
             }
             Spacer(minLength: 0)
             if item.isUnlocked {
-                Icon(.sealCheckFill, size: 26)
+                Icon(.checkCircleFill, size: DS.Icon.action)
                     .foregroundStyle(Color.qBrandText)
                     .pop(on: animateBars)
                     .accessibilityLabel("Unlocked")

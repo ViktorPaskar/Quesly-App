@@ -31,7 +31,7 @@ struct DiscoverView: View {
                                             VStack(spacing: 8) {
                                                 Avatar(user: user, size: 58)
                                                 Text(user.username)
-                                                    .font(.ui(12, .medium))
+                                                    .font(.ui(12))
                                                     .foregroundStyle(Color.qInk)
                                                     .lineLimit(1)
                                                     .frame(width: 70)

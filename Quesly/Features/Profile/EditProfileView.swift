@@ -25,7 +25,7 @@ struct EditProfileView: View {
                                 }
                             }
                             .overlay(alignment: .bottomTrailing) {
-                                Icon(.cameraFill, size: 14)
+                                Icon(.cameraFill, size: DS.Icon.caption)
                                     .foregroundStyle(.white)
                                     .frame(width: 30, height: 30)
                                     .background(Circle().fill(Color.qGreen))
@@ -75,13 +75,13 @@ struct EditProfileView: View {
                         Text("Password").font(.ui(13)).foregroundStyle(Color.qGray)
                         Spacer()
                         Button("Change your password") {}
-                            .font(.ui(13, .medium))
+                            .font(.ui(13))
                             .foregroundStyle(Color.qBrandText)
                     }
                     HStack {
                         if showPassword { TextField("", text: $password) } else { SecureField("", text: $password) }
                         Button { showPassword.toggle() } label: {
-                            Icon(showPassword ? .eyeSlash : .eye, size: 22).foregroundStyle(Color.qGray)
+                            Icon(showPassword ? .eyeSlash : .eye, size: DS.Icon.action).foregroundStyle(Color.qGray)
                         }
                     }
                     .queslyField(fill: .qBlock)

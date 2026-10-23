@@ -6,7 +6,7 @@ struct InviteFriendsView: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
-            HexBadge(color: Color(hex: 0xE84FA5), icon: .handWavingFill)
+            HexBadge(color: Color(hex: 0xE84FA5), icon: .smileyFill)
                 .frame(width: 110)
             Text("Invite your friends")
                 .font(.display(28, .bold))
@@ -19,7 +19,7 @@ struct InviteFriendsView: View {
 
             VStack(spacing: 8) {
                 ProgressView(value: 7, total: 10).tint(Color(hex: 0xE84FA5))
-                Text("7 of 10 friends joined").font(.ui(14, .medium)).foregroundStyle(Color.qGray)
+                Text("7 of 10 friends joined").font(.ui(15)).foregroundStyle(Color.qGray)
             }
             .padding(.horizontal, 48)
             .padding(.top, 8)

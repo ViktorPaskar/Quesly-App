@@ -3,7 +3,8 @@ import UIKit
 
 /// The app's icon vocabulary, one name per concept. Rendered from the UIcons "Regular Rounded" set
 /// by Flaticon (template SVGs `Assets/Icons/ui-<case>`; premium licence, no attribution needed) when an asset exists,
-/// otherwise from the SF Symbol in the raw value. System menus keep SF Symbols (system chrome).
+/// otherwise from the SF Symbol in the raw value. Every case below has a brand glyph, so content never
+/// mixes icon styles; system menus keep SF Symbols (system chrome). Sizes come from `DS.Icon`.
 /// Selected state = brand color / lime bubble, not a filled glyph. Always render through `Icon`.
 enum QIcon: String {
     // Tabs
@@ -28,24 +29,23 @@ enum QIcon: String {
     // Navigation & controls
     case caretLeftBold = "chevron.left", caretRightBold = "chevron.right"
     case xBold = "xmark", xCircleFill = "xmark.circle.fill"
-    case arrowRightBold = "arrow.right", arrowUpRightBold = "arrow.up.right"
+    case arrowRightBold = "arrow.right"
     case checkBold = "checkmark", checkCircleFill = "checkmark.circle.fill"
     case plusCircleFill = "plus.circle.fill"
     case eye = "eye", eyeSlash = "eye.slash"
 
     // Content & status
-    case wifiSlash = "wifi.slash"
     case clock = "clock", timer = "timer", hourglassMediumFill = "hourglass"
     case lockSimpleFill = "lock.fill", mapPinFill = "mappin.and.ellipse"
     case globeHemisphereWestFill = "globe.europe.africa.fill"
-    case usersFill = "person.2.fill", usersThreeFill = "person.3.fill", userPlusFill = "person.badge.plus"
+    case userPlusFill = "person.badge.plus"
     case pushPinFill = "pin.fill", fireFill = "flame.fill"
     case snowflake = "snowflake", calendar = "calendar", info = "info.circle"
-    case sealCheckFill = "checkmark.seal.fill", shieldCheckFill = "checkmark.shield.fill"
+    case shieldCheckFill = "checkmark.shield.fill"
     case starFill = "star.fill", sunFill = "sun.max.fill", sparkleFill = "sparkles"
     case medalFill = "medal.fill", crownSimpleFill = "crown.fill"
-    case handWavingFill = "hand.wave.fill", leafFill = "leaf.fill", lightningFill = "bolt.fill"
-    case footprintsFill = "figure.walk", chatCircleTextFill = "text.bubble.fill", cameraFill = "camera.fill"
+    case leafFill = "leaf.fill"
+    case chatCircleTextFill = "text.bubble.fill", cameraFill = "camera.fill"
 
     /// Asset name of the UIcons glyph for this concept.
     var assetName: String { "ui-" + String(describing: self) }
@@ -56,7 +56,7 @@ enum QIcon: String {
     /// Chevrons, close and check marks read better slightly heavier.
     var defaultWeight: Font.Weight {
         switch self {
-        case .caretLeftBold, .caretRightBold, .xBold, .checkBold, .arrowRightBold, .arrowUpRightBold: return .semibold
+        case .caretLeftBold, .caretRightBold, .xBold, .checkBold, .arrowRightBold: return .semibold
         default: return .regular
         }
     }
@@ -68,7 +68,7 @@ struct Icon: View {
     var size: CGFloat
     var weight: Font.Weight?
 
-    init(_ icon: QIcon, size: CGFloat = 22, weight: Font.Weight? = nil) {
+    init(_ icon: QIcon, size: CGFloat = DS.Icon.action, weight: Font.Weight? = nil) {
         self.icon = icon
         self.size = size
         self.weight = weight
@@ -97,9 +97,9 @@ struct Icon: View {
 struct IconLabel: View {
     let title: String
     let icon: QIcon
-    var size: CGFloat = 15
+    var size: CGFloat = DS.Icon.label
 
-    init(_ title: String, icon: QIcon, size: CGFloat = 15) {
+    init(_ title: String, icon: QIcon, size: CGFloat = DS.Icon.label) {
         self.title = title
         self.icon = icon
         self.size = size
@@ -134,5 +134,20 @@ private struct PopEffect<V: Equatable>: ViewModifier {
                 SpringKeyframe(1.0, duration: 0.35)
             }
         }
+    }
+}
+
+/// Tinted round icon chip that heads a block or tile (bunq / Revolut style). The tint carries
+/// meaning (brand, streak, freeze…); the glyph is always `DS.Icon.inline` in a 34-pt circle.
+struct IconChip: View {
+    let icon: QIcon
+    var tint: Color = .qBrandText
+    var fill: Color = .qMint
+
+    var body: some View {
+        Icon(icon, size: DS.Icon.inline)
+            .foregroundStyle(tint)
+            .frame(width: 34, height: 34)
+            .background(Circle().fill(fill))
     }
 }

@@ -98,7 +98,7 @@ struct DailyQuestionView: View {
                 Spacer()
                 if let onClose {
                 Button(action: onClose) {
-                    Icon(.xBold, size: 16, weight: .semibold)
+                    Icon(.xBold, size: DS.Icon.inline, weight: .semibold)
                         .foregroundStyle(.white)
                         .frame(width: 36, height: 36)
                         .background(Circle().fill(.white.opacity(0.12)))
@@ -192,7 +192,7 @@ struct DailyQuestionView: View {
                 CharacterRing(progress: Double(text.count) / Double(AppStore.maxAnswerLength))
                     .frame(width: 16, height: 16)
                 Text("\(text.count)/\(AppStore.maxAnswerLength)")
-                    .font(.ui(13, .medium))
+                    .font(.ui(13))
                     .foregroundStyle(text.count >= AppStore.maxAnswerLength ? Color.qFlame : .white.opacity(0.7))
                     .monospacedDigit()
                     .contentTransition(.numericText())
@@ -239,7 +239,7 @@ private struct DayProgress: View {
                         .foregroundStyle(.white)
                     Spacer()
                     Text("New question in \(AppStore.timeLeftString(now: ctx.date))")
-                        .font(.ui(14))
+                        .font(.ui(15))
                         .foregroundStyle(.white.opacity(0.7))
                 }
                 GeometryReader { geo in
@@ -305,7 +305,7 @@ private struct LockedFriendsPreview: View {
     }
 
     private var lockPill: some View {
-        IconLabel("Answer to unlock", icon: .lockSimpleFill, size: 12)
+        IconLabel("Answer to unlock", icon: .lockSimpleFill, size: DS.Icon.caption)
             .font(.ui(13, .semibold))
             .foregroundStyle(Color.qLime)
             .padding(.horizontal, 12)

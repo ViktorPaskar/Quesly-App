@@ -39,7 +39,7 @@ struct ReactionControl: View {
                     .id(mine)
                     .transition(.scale(scale: 0.3).combined(with: .opacity))
             } else {
-                Icon(.heart, size: 22).foregroundStyle(Color.qGray)
+                Icon(.heart, size: DS.Icon.action).foregroundStyle(Color.qGray)
             }
         }
         .frame(minWidth: 32, minHeight: DS.hitTarget)
@@ -79,7 +79,7 @@ struct ReactionControl: View {
                 }
             }
             Button { isTrayOpen = false } label: {
-                Icon(.xBold, size: 14)
+                Icon(.xBold, size: DS.Icon.caption)
                     .foregroundStyle(Color.qGray)
                     .frame(width: 32, height: 44)
             }
@@ -156,7 +156,7 @@ struct ReactionsSheet: View {
                 }
                 .listStyle(.plain)
                 .animation(.qSmooth, value: filter)
-                IconLabel("Only you can see who reacted", icon: .lockSimpleFill, size: 13)
+                IconLabel("Only you can see who reacted", icon: .lockSimpleFill, size: DS.Icon.caption)
                     .font(.ui(13))
                     .foregroundStyle(Color.qGray)
                     .padding(.vertical, DS.Space.s)

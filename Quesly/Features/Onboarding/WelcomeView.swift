@@ -36,7 +36,7 @@ struct WelcomeView: View {
                 .opacity(appeared ? 1 : 0)
                 .scaleEffect(appeared ? 1 : 0.9)
             Text("ONE QUESTION A DAY.\nMILLIONS OF STORIES")
-                .font(.ui(15, .bold))
+                .font(.ui(15, .semibold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.white)
                 .padding(.top, DS.Space.m)
@@ -52,7 +52,7 @@ struct WelcomeView: View {
             VStack(spacing: DS.Space.xs) {
                 LimeButton(title: "Get started") { authMode = .signUp }
                 Button("I already have an account") { authMode = .signIn }
-                    .font(.ui(16, .medium))
+                    .font(.ui(16))
                     .foregroundStyle(.white)
                     .frame(height: 48)
             }

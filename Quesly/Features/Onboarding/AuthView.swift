@@ -90,7 +90,7 @@ struct AuthView: View {
                             .onSubmit(submit)
 
                             Button { showPassword.toggle() } label: {
-                                Icon(showPassword ? .eyeSlash : .eye, size: 22)
+                                Icon(showPassword ? .eyeSlash : .eye, size: DS.Icon.action)
                                     .foregroundStyle(Color.qGray)
                             }
                             .accessibilityLabel(showPassword ? "Hide password" : "Show password")
@@ -106,7 +106,7 @@ struct AuthView: View {
                         .toggleStyle(CheckboxToggleStyle())
                     } else {
                         Button("Forgot password?") {}
-                            .font(.ui(13, .medium))
+                            .font(.ui(13))
                             .foregroundStyle(Color.qBrandText)
                     }
 
@@ -124,7 +124,7 @@ struct AuthView: View {
                         .fontWeight(.semibold)
                         Spacer()
                     }
-                    .font(.ui(14))
+                    .font(.ui(15))
                 }
                 .padding(.horizontal, DS.Space.screen)
                 .padding(.bottom, 32)
@@ -134,7 +134,7 @@ struct AuthView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { dismiss() } label: {
-                        Icon(.xBold, size: 20).foregroundStyle(Color.qInk)
+                        Icon(.xBold, size: DS.Icon.row).foregroundStyle(Color.qInk)
                     }
                     .accessibilityLabel("Close")
                 }
@@ -163,7 +163,7 @@ struct CheckboxToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         Button { configuration.isOn.toggle() } label: {
             HStack(alignment: .top, spacing: 12) {
-                Icon(configuration.isOn ? .checkCircleFill : .checkBold, size: 22)
+                Icon(configuration.isOn ? .checkCircleFill : .checkBold, size: DS.Icon.action)
                     .opacity(configuration.isOn ? 1 : 0.35)
                     .foregroundStyle(configuration.isOn ? Color.qBrandText : Color.qGray)
                 configuration.label

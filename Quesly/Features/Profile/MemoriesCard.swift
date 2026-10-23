@@ -41,8 +41,8 @@ struct MemoriesCard: View {
     // MARK: Parts
 
     private var header: some View {
-        HStack(alignment: .center, spacing: DS.Space.xs) {
-            Icon(.fireFill, size: 20).foregroundStyle(Color.qFlame)
+        HStack(alignment: .center, spacing: DS.Space.s) {
+            IconChip(icon: .fireFill, tint: .qFlame, fill: Color.qFlameSoft)
             VStack(alignment: .leading, spacing: 0) {
                 Text("\(store.streak)-day streak")
                     .font(.ui(17, .semibold))
@@ -54,7 +54,7 @@ struct MemoriesCard: View {
             Spacer(minLength: DS.Space.xs)
             Button { showsFreezeInfo = true } label: {
                 HStack(spacing: DS.Space.xxs) {
-                    Icon(.snowflake, size: 13, weight: .semibold)
+                    Icon(.snowflake, size: DS.Icon.caption, weight: .semibold)
                     Text("\(store.streakFreezes)").font(.ui(15, .semibold))
                 }
                 .foregroundStyle(Color.qIce)
@@ -73,7 +73,7 @@ struct MemoriesCard: View {
 
     private var freezeInfo: some View {
         VStack(alignment: .leading, spacing: DS.Space.xs) {
-            IconLabel("Streak freeze", icon: .snowflake, size: 18)
+            IconLabel("Streak freeze", icon: .snowflake, size: DS.Icon.inline)
                 .font(.ui(17, .semibold))
                 .foregroundStyle(Color.qIce)
             Text("Miss a day and a freeze keeps your streak alive automatically. You earn one for every 7-day streak — up to \(AppStore.maxFreezes).")
@@ -100,7 +100,7 @@ struct MemoriesCard: View {
 
     private func monthButton(_ icon: QIcon, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button { withAnimation(.qSmooth) { action() } } label: {
-            Icon(icon, size: 15)
+            Icon(icon, size: DS.Icon.inline)
                 .foregroundStyle(enabled ? Color.qInk : Color.qGray.opacity(0.4))
                 .frame(width: DS.hitTarget, height: 36)
                 .contentShape(Rectangle())
@@ -116,7 +116,7 @@ struct MemoriesCard: View {
                 Text("Answered")
             }
             HStack(spacing: DS.Space.xxs) {
-                Icon(.snowflake, size: 11).foregroundStyle(Color.qIce)
+                Icon(.snowflake, size: DS.Icon.caption).foregroundStyle(Color.qIce)
                 Text("Freeze")
             }
             Spacer()
@@ -161,7 +161,7 @@ private struct MonthGrid: View {
         LazyVGrid(columns: columns, spacing: DS.Space.xxs) {
             ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
                 Text(symbol)
-                    .font(.ui(12, .medium))
+                    .font(.ui(12))
                     .foregroundStyle(Color.qGray)
                     .frame(height: 20)
             }
@@ -218,7 +218,7 @@ private struct DayCell: View {
                 Text(number).font(.ui(13, .semibold)).foregroundStyle(.white)
             case .frozen:
                 Circle().fill(Color.qIceSoft)
-                Icon(.snowflake, size: 14, weight: .semibold).foregroundStyle(Color.qIce)
+                Icon(.snowflake, size: DS.Icon.caption, weight: .semibold).foregroundStyle(Color.qIce)
             case .missed:
                 Text(number).font(.ui(13)).foregroundStyle(Color.qGray)
             case .future:

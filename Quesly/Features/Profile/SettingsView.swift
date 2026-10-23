@@ -102,7 +102,7 @@ struct SettingsView: View {
         Label {
             Text(title).foregroundStyle(Color.qInk)
         } icon: {
-            Icon(icon, size: 15)
+            Icon(icon, size: DS.Icon.inline)
                 .foregroundStyle(.white)
                 .frame(width: 29, height: 29)
                 .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(tint))

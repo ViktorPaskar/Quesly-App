@@ -104,7 +104,7 @@ struct NotificationPrimingView: View {
                     Button("Not now") {
                         withAnimation(.qSmooth) { store.finishNotificationPriming(enable: false) }
                     }
-                    .font(.ui(16, .medium))
+                    .font(.ui(16))
                     .foregroundStyle(.white.opacity(0.85))
                     .frame(height: 48)
                 }
@@ -132,7 +132,7 @@ private struct NotificationPreview: View {
                     Text("now").font(.ui(12)).foregroundStyle(Color.qGray)
                 }
                 Text("Today's question is here ✨").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-                Text("What tiny moment made your week better?").font(.ui(14)).foregroundStyle(Color.qInk.opacity(0.8))
+                Text("What tiny moment made your week better?").font(.ui(15)).foregroundStyle(Color.qInk.opacity(0.8))
                     .lineLimit(1)
             }
         }
@@ -170,14 +170,14 @@ struct SearchField: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Icon(.magnifyingGlass, size: 18).foregroundStyle(Color.qGray)
+            Icon(.magnifyingGlass, size: DS.Icon.inline).foregroundStyle(Color.qGray)
             TextField(prompt, text: $text)
                 .font(.ui(16))
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
             if !text.isEmpty {
                 Button { text = "" } label: {
-                    Icon(.xCircleFill, size: 20).foregroundStyle(Color.qGray.opacity(0.6))
+                    Icon(.xCircleFill, size: DS.Icon.row).foregroundStyle(Color.qGray.opacity(0.6))
                 }
                 .accessibilityLabel("Clear search")
                 .transition(.scale.combined(with: .opacity))
@@ -207,7 +207,7 @@ struct PersonRow: View {
                             }
                         }
                         Text(user.bio.isEmpty ? "\(user.followers) followers" : user.bio)
-                            .font(.ui(14))
+                            .font(.ui(15))
                             .foregroundStyle(Color.qGray)
                             .lineLimit(1)
                     }
@@ -242,13 +242,13 @@ struct InviteCard: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            Icon(.paperPlaneTiltFill, size: 22)
+            Icon(.paperPlaneTiltFill, size: DS.Icon.action)
                 .foregroundStyle(Color.qBrandText)
                 .frame(width: 44, height: 44)
                 .background(Circle().fill(Color.qBackground))
             VStack(alignment: .leading, spacing: 2) {
                 Text("Invite your friends").font(.ui(16, .semibold)).foregroundStyle(Color.qInk)
-                Text("Answer together").font(.ui(14)).foregroundStyle(Color.qGray).lineLimit(1)
+                Text("Answer together").font(.ui(15)).foregroundStyle(Color.qGray).lineLimit(1)
             }
             Spacer()
             ShareLink(item: Invite.text(for: username)) {

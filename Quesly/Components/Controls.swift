@@ -9,7 +9,7 @@ struct LimeButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-            .font(.ui(17, .bold))
+            .font(.ui(17, .semibold))
             .foregroundStyle(Color.qGreen)
             .frame(maxWidth: .infinity)
             .frame(height: 54)
@@ -140,7 +140,7 @@ struct PillTabs<T: Hashable & Identifiable>: View {
             }
         }
         .padding(3)
-        .background(Capsule().fill(Color.qField))
+        .background(Capsule().fill(Color.qBlock))
         .frame(minHeight: DS.hitTarget)
         .fixedSize()
         .sensoryFeedback(.selection, trigger: selection)
@@ -155,7 +155,7 @@ struct BackHeader: View {
     var body: some View {
         HStack(spacing: 8) {
             Button { dismiss() } label: {
-                Icon(.caretLeftBold, size: 22)
+                Icon(.caretLeftBold, size: DS.Icon.action)
                     .foregroundStyle(Color.qInk)
                     .frame(width: 44, height: 44)
             }

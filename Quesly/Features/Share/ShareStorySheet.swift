@@ -78,7 +78,7 @@ struct ShareStorySheet: View {
                     withAnimation(.qSpring) { savedToPhotos = true }
                 } label: {
                     Text(savedToPhotos ? "Saved to Photos" : "Save to Photos")
-                        .font(.ui(16, .medium))
+                        .font(.ui(16))
                         .foregroundStyle(Color.qBrandText)
                         .frame(height: 44)
                 }
@@ -174,7 +174,7 @@ struct StoryCard: View {
                 HStack(spacing: 8) {
                     Text("Answer yourself on Quesly")
                         .font(.custom("Outfit-SemiBold", fixedSize: 15))
-                    Icon(.arrowUpRightBold, size: 15)
+                    Icon(.arrowRightBold, size: DS.Icon.inline)
                 }
                 .foregroundStyle(theme == .green ? Color.qGreen : Color.qLime)
                 .padding(.horizontal, 20)

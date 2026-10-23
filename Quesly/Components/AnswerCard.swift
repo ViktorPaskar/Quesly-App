@@ -122,7 +122,7 @@ struct AnswerCard: View {
                 .font(.ui(15)).foregroundStyle(Color.qGray)
                 .lineLimit(1)
             if answer.visibility == .friends {
-                Icon(.usersFill, size: 13)
+                Icon(.userFill, size: DS.Icon.caption)
                     .foregroundStyle(Color.qGray)
                     .accessibilityLabel("Friends only")
             }
@@ -192,7 +192,7 @@ struct AnswerCard: View {
         Menu {
             menuItems
         } label: {
-            Icon(.dotsThreeBold, size: 20)
+            Icon(.dotsThreeBold, size: DS.Icon.row)
                 .foregroundStyle(Color.qGray)
                 .frame(width: 32, height: 32)
                 .contentShape(Rectangle())
@@ -234,7 +234,7 @@ struct AnswerCard: View {
                     .font(.ui(15, .semibold))
                     .foregroundStyle(Color.qInk)
                     .contentTransition(.numericText())
-                Icon(.lockSimpleFill, size: 11).foregroundStyle(Color.qGray.opacity(0.7))
+                Icon(.lockSimpleFill, size: DS.Icon.caption).foregroundStyle(Color.qGray.opacity(0.7))
             }
             .frame(minHeight: DS.hitTarget)
             .contentShape(Rectangle())
@@ -245,7 +245,7 @@ struct AnswerCard: View {
 
     private func iconButton(_ icon: QIcon, tint: Color, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Icon(icon, size: 22)
+            Icon(icon, size: DS.Icon.action)
                 .foregroundStyle(tint)
                 .frame(minWidth: 32, minHeight: DS.hitTarget)
                 .contentShape(Rectangle())
@@ -276,10 +276,10 @@ struct EditAnswerSheet: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
                 Text(answer.questionText.uppercased())
-                    .font(.ui(14, .bold))
+                    .font(.ui(15, .semibold))
                     .foregroundStyle(Color.qBrandText)
                 TextEditor(text: $text)
-                    .font(.ui(18))
+                    .font(.ui(17))
                     .scrollContentBackground(.hidden)
                     .padding(12)
                     .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
@@ -289,14 +289,14 @@ struct EditAnswerSheet: View {
                 HStack {
                     TimelineView(.periodic(from: .now, by: 1)) { ctx in
                         let left = max(0, Int(Answer.editWindow - ctx.date.timeIntervalSince(answer.createdAt)))
-                        Label { Text(String(format: "%d:%02d left to edit", left / 60, left % 60)) } icon: { Icon(.timer, size: 16) }
-                            .font(.ui(13, .medium))
+                        Label { Text(String(format: "%d:%02d left to edit", left / 60, left % 60)) } icon: { Icon(.timer, size: DS.Icon.inline) }
+                            .font(.ui(13))
                             .foregroundStyle(left < 60 ? Color.qFlame : Color.qGray)
                             .monospacedDigit()
                     }
                     Spacer()
                     Text("\(text.count)/\(AppStore.maxAnswerLength)")
-                        .font(.ui(13, .medium)).foregroundStyle(Color.qGray).monospacedDigit()
+                        .font(.ui(13)).foregroundStyle(Color.qGray).monospacedDigit()
                 }
                 GreenButton(title: "Save changes", isEnabled: !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                             && answer.isEditable()) {
@@ -359,13 +359,13 @@ struct ReportSheet: View {
                         HStack {
                             Text(reason.rawValue).font(.ui(16)).foregroundStyle(Color.qInk)
                             Spacer()
-                            Icon(.caretRightBold, size: 14)
+                            Icon(.caretRightBold, size: DS.Icon.caption)
                                 .foregroundStyle(Color.qGray)
                         }
                     }
                 }
             } header: {
-                Text("Why are you reporting this?").font(.ui(13, .medium))
+                Text("Why are you reporting this?").font(.ui(13))
             } footer: {
                 Text("Reports are anonymous. Quesly is a kind place — we review every report.")
                     .font(.ui(13))
@@ -373,7 +373,7 @@ struct ReportSheet: View {
             Section {
                 Button(role: .destructive) { confirmBlock = true } label: {
                     Text("Block @\(author?.username ?? "")")
-                        .font(.ui(16, .medium))
+                        .font(.ui(16))
                 }
             }
         }

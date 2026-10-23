@@ -67,24 +67,24 @@ struct ProfileView: View {
         HStack(spacing: 4) {
             if !isTabRoot {
                 Button { dismiss() } label: {
-                    Icon(.caretLeftBold, size: 22).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
+                    Icon(.caretLeftBold, size: DS.Icon.action).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
                 }
                 .accessibilityLabel("Back")
             }
             if store.isPrivateAccount && isMe {
-                IconLabel("Private", icon: .lockSimpleFill, size: 13)
+                IconLabel("Private", icon: .lockSimpleFill, size: DS.Icon.caption)
                     .font(.ui(13, .semibold))
                     .foregroundStyle(Color.qGray)
                     .padding(.leading, DS.Space.s)
             }
             Spacer()
             ShareLink(item: Invite.text(for: user?.username ?? "")) {
-                Icon(.export, size: 24).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
+                Icon(.export, size: DS.Icon.action).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
             }
             .accessibilityLabel("Share profile")
             if isMe {
                 NavigationLink(value: Route.settings) {
-                    Icon(.gearSix, size: 25).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
+                    Icon(.gearSix, size: DS.Icon.action).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
                 }
                 .accessibilityLabel("Settings")
             } else {
@@ -93,7 +93,7 @@ struct ProfileView: View {
                         Label("Block", systemImage: QIcon.prohibit.rawValue)
                     }
                 } label: {
-                    Icon(.dotsThreeBold, size: 24).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
+                    Icon(.dotsThreeBold, size: DS.Icon.action).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
                 }
                 .accessibilityLabel("More")
             }
@@ -125,7 +125,7 @@ struct ProfileHeader: View {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
                             Text(user?.username ?? "")
-                                .font(.display(26, .bold))
+                                .font(.display(28, .bold))
                                 .foregroundStyle(Color.qInk)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
@@ -175,25 +175,31 @@ struct ProfileHeader: View {
             // Your own streak lives in the memories block below, so here it's your answer count.
             if isMe {
                 let count = store.answers(of: store.me.id).count
-                tile(count, count == 1 ? "answer" : "answers", icon: nil, tint: .qInk, route: nil)
+                tile(count, count == 1 ? "Answer" : "Answers", icon: .chatCircleTextFill,
+                     tint: .qBrandText, fill: .qMint, route: nil)
             } else {
-                tile(streak, "day streak", icon: .fireFill, tint: .qFlame, route: nil)
+                tile(streak, "Day streak", icon: .fireFill, tint: .qFlame, fill: Color.qFlameSoft, route: nil)
             }
-            tile(user?.followers ?? 0, "followers", icon: nil, tint: .qInk, route: isMe ? .followers : nil)
-            tile(followingCount, "following", icon: nil, tint: .qInk, route: isMe ? .following : nil)
+            tile(user?.followers ?? 0, "Followers", icon: .userFill, tint: .qIce, fill: .qIceSoft,
+                 route: isMe ? .followers : nil)
+            tile(followingCount, "Following", icon: .userPlusFill, tint: .qViolet,
+                 fill: .qVioletSoft, route: isMe ? .following : nil)
         }
     }
 
+    /// bunq / Revolut-style tile: a tinted icon chip, then the big number and a short label.
+    /// Each tile has its own meaning colour (brand green, flame, ice, violet) only on the chip.
     @ViewBuilder
-    private func tile(_ value: Int, _ label: String, icon: QIcon?, tint: Color, route: Route?) -> some View {
-        let content = VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 4) {
+    private func tile(_ value: Int, _ label: String, icon: QIcon, tint: Color, fill: Color, route: Route?) -> some View {
+        let content = VStack(alignment: .leading, spacing: DS.Space.s) {
+            IconChip(icon: icon, tint: tint, fill: fill)
+            VStack(alignment: .leading, spacing: 2) {
                 CountUpText(value: value)
-                    .font(.display(26, .bold))
+                    .font(.display(22, .bold))
                     .foregroundStyle(Color.qInk)
-                if let icon { Icon(icon, size: 18).foregroundStyle(tint) }
+                Text(label).font(.ui(13)).foregroundStyle(Color.qGray)
+                    .lineLimit(1)
             }
-            Text(label).font(.ui(13)).foregroundStyle(Color.qGray)
         }
         .block(padding: DS.Space.m)
         if let route {
@@ -265,7 +271,8 @@ struct BadgesStrip: View {
     var body: some View {
         let items = store.achievements
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
+            HStack(spacing: DS.Space.s) {
+                IconChip(icon: .medalFill, tint: .qGold, fill: .qGoldSoft)
                 Text("Badges").font(.ui(17, .semibold)).foregroundStyle(Color.qInk)
                 Text("\(items.filter(\.isUnlocked).count)/\(items.count)")
                     .font(.ui(15)).foregroundStyle(Color.qGray)
@@ -273,7 +280,7 @@ struct BadgesStrip: View {
                 NavigationLink(value: Route.achievements) {
                     HStack(spacing: 2) {
                         Text("See all").font(.ui(15, .semibold))
-                        Icon(.caretRightBold, size: 13)
+                        Icon(.caretRightBold, size: DS.Icon.caption)
                     }
                     .foregroundStyle(Color.qBrandText)
                 }
@@ -287,7 +294,7 @@ struct BadgesStrip: View {
                                     .frame(width: 54, height: 54)
                                     .opacity(item.isUnlocked ? 1 : 0.55)
                                 Text(item.title)
-                                    .font(.ui(12, .medium))
+                                    .font(.ui(12))
                                     .foregroundStyle(item.isUnlocked ? Color.qInk : Color.qGray)
                                     .multilineTextAlignment(.center)
                                     .lineLimit(2)

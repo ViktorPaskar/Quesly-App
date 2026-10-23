@@ -11,26 +11,48 @@ struct NotificationsView: View {
                 EmptyStateView(icon: .bellRingingFill, title: "All caught up",
                                message: "Reactions, new followers and badges will show up here.")
             } else {
-                    LazyVStack(spacing: 0) {
-                        ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
-                            row(group)
-                                .padding(.horizontal, DS.Space.screen)
-                                .padding(.vertical, 12)
-                                .overlay(alignment: .leading) {
-                                    if group.date > store.notificationsSeenAt {
-                                        Circle().fill(Color.qGreen).frame(width: 8, height: 8).padding(.leading, 6)
-                                            .accessibilityLabel("Unread")
-                                    }
-                                }
-                                .staggeredAppear(index)
-                        }
-                    }
+                // "Today" and "Earlier", each a white block on the gray canvas.
+                let today = groups.filter { Calendar.current.isDateInToday($0.date) }
+                let earlier = groups.filter { !Calendar.current.isDateInToday($0.date) }
+                VStack(alignment: .leading, spacing: DS.Space.s) {
+                    section("Today", today)
+                    section("Earlier", earlier)
+                }
+                .padding(.horizontal, DS.Space.m)
+                .padding(.bottom, DS.Space.l)
             }
         }
-        .background(Color.qBackground)
+        .background(Color.qCanvas)
         .navigationTitle("Notifications")
         .navigationBarTitleDisplayMode(.large)
         .onDisappear { store.markNotificationsSeen() }
+    }
+
+    @ViewBuilder
+    private func section(_ title: String, _ items: [NotificationGroup]) -> some View {
+        if !items.isEmpty {
+            Text(title)
+                .font(.ui(15, .semibold))
+                .foregroundStyle(Color.qGray)
+                .padding(.horizontal, DS.Space.xs)
+                .padding(.top, DS.Space.s)
+            VStack(spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.element.id) { index, group in
+                    if index > 0 { Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 68) }
+                    row(group)
+                        .padding(.horizontal, DS.Space.m)
+                        .padding(.vertical, 12)
+                        .overlay(alignment: .leading) {
+                            if group.date > store.notificationsSeenAt {
+                                Circle().fill(Color.qGreen).frame(width: 7, height: 7).padding(.leading, 5)
+                                    .accessibilityLabel("Unread")
+                            }
+                        }
+                        .staggeredAppear(index)
+                }
+            }
+            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+        }
     }
 
     @ViewBuilder

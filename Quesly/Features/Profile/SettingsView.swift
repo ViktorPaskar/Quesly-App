@@ -72,6 +72,8 @@ struct SettingsView: View {
                     .padding(.top, DS.Space.m)
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.qCanvas)
         .tint(Color.qGreen)
         .queslyBackHeader("Settings")
         .confirmationDialog("Sign out of Quesly?", isPresented: $confirmSignOut, titleVisibility: .visible) {

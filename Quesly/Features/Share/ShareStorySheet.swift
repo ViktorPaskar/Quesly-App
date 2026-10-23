@@ -106,7 +106,7 @@ struct ShareStorySheet: View {
     }
 }
 
-/// The exported 9:16 story card. Uses the lime arc from the pitch deck as a brand device.
+/// The exported 9:16 story card: flat brand colour, logo, question and the answer card.
 struct StoryCard: View {
     enum Theme: String, CaseIterable, Identifiable {
         case green = "Green", lime = "Lime", light = "Light"
@@ -119,7 +119,6 @@ struct StoryCard: View {
             case .light: return Color(hex: 0xF4F7F5)
             }
         }
-        var arc: Color { self == .lime ? .qGreen : .qLime }
         var ink: Color { self == .green ? .white : .qGreen }
         var swatch: Color { background }
     }
@@ -131,20 +130,6 @@ struct StoryCard: View {
     var body: some View {
         ZStack {
             theme.background
-                .overlay {
-                    // Brand arc (top-right), as on the pitch deck. In an overlay so it can't widen the layout.
-                    ZStack {
-                        Circle()
-                            .stroke(theme.arc, lineWidth: 64)
-                            .frame(width: 340, height: 340)
-                            .offset(x: 230, y: -340)
-                        Circle()
-                            .stroke(theme.arc.opacity(0.35), lineWidth: 2)
-                            .frame(width: 520, height: 520)
-                            .offset(x: -230, y: 360)
-                    }
-                }
-                .clipped()
 
             VStack(alignment: .leading, spacing: 0) {
                 QueslyLogo(height: 18, markColor: theme == .lime ? .qGreen : .qLime, textColor: theme.ink,

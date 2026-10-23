@@ -146,29 +146,29 @@ struct DailyQuestionView: View {
         .transition(.asymmetric(insertion: .opacity, removal: .scale(scale: 0.85).combined(with: .opacity)))
     }
 
+    /// Writing happens on the green itself: the question stays on top, the answer is typed in
+    /// large white type, with a quiet counter line underneath. No card, no second surface.
     private var composer: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: DS.Space.m) {
             Text(question.text.uppercased())
-                .font(.ui(17, .bold))
-                .foregroundStyle(Color.qGreen)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
-                .padding(.bottom, 16)
-                .background(Color.qLime)
+                .font(.display(20, .bold))
+                .foregroundStyle(Color.qLime)
+                .fixedSize(horizontal: false, vertical: true)
 
             ZStack(alignment: .topLeading) {
                 if text.isEmpty {
                     Text("Be honest, keep it short…")
-                        .font(.ui(18))
-                        .foregroundStyle(Color.qGray)
-                        .padding(.horizontal, 4)
+                        .font(.display(26, .medium))
+                        .foregroundStyle(.white.opacity(0.4))
+                        .padding(.horizontal, 5)
                         .padding(.vertical, 8)
                         .allowsHitTesting(false)
                 }
                 TextEditor(text: $text)
-                    .font(.ui(18))
-                    .lineSpacing(3)
-                    .foregroundStyle(Color.qInk)
+                    .font(.display(26, .medium))
+                    .lineSpacing(2)
+                    .foregroundStyle(.white)
+                    .tint(Color.qLime)
                     .scrollContentBackground(.hidden)
                     .focused($editorFocused)
                     .onChange(of: text) { _, newValue in
@@ -179,32 +179,29 @@ struct DailyQuestionView: View {
                         if !DemoConfig.isActive { store.draft = text }
                     }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .frame(height: 190)
+            .padding(.horizontal, -5)
+            .frame(height: 200)
 
+            Rectangle().fill(.white.opacity(0.14)).frame(height: 1)
             HStack(spacing: 8) {
                 CharacterRing(progress: Double(text.count) / Double(AppStore.maxAnswerLength))
                     .frame(width: 16, height: 16)
                 Text("\(text.count)/\(AppStore.maxAnswerLength)")
                     .font(.ui(13, .medium))
-                    .foregroundStyle(text.count >= AppStore.maxAnswerLength ? Color.qFlame : Color.qGray)
+                    .foregroundStyle(text.count >= AppStore.maxAnswerLength ? Color.qFlame : .white.opacity(0.7))
                     .monospacedDigit()
                     .contentTransition(.numericText())
                 Spacer()
                 if !text.isEmpty {
-                    IconLabel("Draft saved", icon: .checkBold, size: 13)
-                        .font(.ui(12))
-                        .foregroundStyle(Color.qGray)
+                    Text("Draft saved")
+                        .font(.ui(13))
+                        .foregroundStyle(.white.opacity(0.7))
                         .transition(.opacity)
                 }
             }
             .animation(.qSmooth, value: text.isEmpty)
-            .padding(DS.Space.m)
         }
-        .background(Color.qBackground)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
-        .padding(.horizontal, DS.Space.screen)
+        .padding(.horizontal, DS.Space.xl)
         .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity).combined(with: .scale(scale: 0.9)),
                                 removal: .opacity))
     }
@@ -379,10 +376,10 @@ struct CharacterRing: View {
 
     var body: some View {
         ZStack {
-            Circle().stroke(Color.qLine, lineWidth: 3)
+            Circle().stroke(.white.opacity(0.2), lineWidth: 3)
             Circle()
                 .trim(from: 0, to: min(1, progress))
-                .stroke(progress >= 1 ? Color.qFlame : Color.qBrandText,
+                .stroke(progress >= 1 ? Color.qFlame : Color.qLime,
                         style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
         }

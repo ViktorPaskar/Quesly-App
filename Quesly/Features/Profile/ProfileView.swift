@@ -17,18 +17,18 @@ struct ProfileView: View {
 
         ScrollView {
             VStack(spacing: 0) {
-                ProfileHeader(user: user, isMe: isMe, answersCount: answers.count)
-                    .padding(.horizontal, DS.Space.screen)
+                ProfileHeader(user: user, isMe: isMe)
+                    .padding(.horizontal, DS.Space.m)
                     .padding(.top, 8)
 
-                HStack {
-                    Text("Answers").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
+                HStack(spacing: 6) {
+                    Text("Answers").font(.ui(17, .semibold)).foregroundStyle(Color.qInk)
+                    Text("(answers.count)").font(.ui(15)).foregroundStyle(Color.qGray)
                     Spacer()
                 }
                 .padding(.horizontal, DS.Space.screen)
-                .padding(.top, 24)
-                .padding(.bottom, 8)
-                Rectangle().fill(Color.qLine).frame(height: 1)
+                .padding(.top, DS.Space.l)
+                .padding(.bottom, DS.Space.xs)
 
                 LazyVStack(spacing: 0) {
                     ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
@@ -43,10 +43,14 @@ struct ProfileView: View {
                             message: isMe ? "Answer today's question to start your story." : "Their answers will show up here.")
                     }
                 }
+                .padding(.bottom, DS.Space.xs)
+                .background(Color.qBlock)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
+                .padding(.horizontal, DS.Space.m)
             }
             .padding(.bottom, 16)
         }
-        .background(Color.qBackground)
+        .background(Color.qCanvas)
         .safeAreaInset(edge: .top, spacing: 0) { topBar(user) }
         .toolbar(.hidden, for: .navigationBar)
         .confirmationDialog("Block @\(user?.username ?? "")?", isPresented: $confirmBlock, titleVisibility: .visible) {
@@ -96,7 +100,7 @@ struct ProfileView: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 52)
-        .background(Color.qBackground)
+        .background(Color.qCanvas)
     }
 }
 
@@ -104,7 +108,6 @@ struct ProfileHeader: View {
     @Environment(AppStore.self) private var store
     let user: AppUser?
     let isMe: Bool
-    let answersCount: Int
     @State private var appeared = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -112,93 +115,85 @@ struct ProfileHeader: View {
     private var followingCount: Int { isMe ? store.followingUsers.count : (user?.following ?? 0) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Name + avatar
-            HStack(alignment: .center, spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        Text(user?.username ?? "")
-                            .font(.display(28, .bold))
-                            .foregroundStyle(Color.qInk)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                        if let badge = user?.badge {
-                            HexBadge(color: badge.color, icon: badge.icon).frame(width: 22, height: 22)
+        VStack(alignment: .leading, spacing: DS.Space.s) {
+            // Identity block: avatar, name, place, bio, actions.
+            VStack(alignment: .leading, spacing: DS.Space.m) {
+                HStack(alignment: .center, spacing: DS.Space.m) {
+                    AvatarRing(user: user, size: 76, isActiveToday: isMe ? store.hasAnsweredToday : false)
+                        .scaleEffect(appeared ? 1 : 0.6)
+                        .opacity(appeared ? 1 : 0)
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            Text(user?.username ?? "")
+                                .font(.display(26, .bold))
+                                .foregroundStyle(Color.qInk)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                            if let badge = user?.badge {
+                                HexBadge(color: badge.color, icon: badge.icon).frame(width: 20, height: 20)
+                            }
+                        }
+                        if let location = user?.location, !location.isEmpty {
+                            IconLabel(location, icon: .mapPinFill)
+                                .font(.ui(15))
+                                .foregroundStyle(Color.qGray)
+                                .lineLimit(2)
                         }
                     }
-                    if let location = user?.location, !location.isEmpty {
-                        IconLabel(location, icon: .mapPinFill)
-                            .font(.ui(15))
-                            .foregroundStyle(Color.qGray)
-                            .lineLimit(2)
-                    }
-                    if !isMe && streak > 0 {
-                        IconLabel("\(streak)-day streak", icon: .fireFill)
-                            .font(.ui(15))
-                            .foregroundStyle(Color.qGray)
-                    }
+                    Spacer(minLength: 0)
                 }
-                Spacer(minLength: 0)
-                AvatarRing(user: user, size: 84, isActiveToday: isMe ? store.hasAnsweredToday : false)
-                    .scaleEffect(appeared ? 1 : 0.6)
-                    .opacity(appeared ? 1 : 0)
+
+                if let bio = user?.bio, !bio.isEmpty {
+                    Text(bio)
+                        .font(.ui(16))
+                        .foregroundStyle(Color.qInk)
+                        .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                actions
             }
+            .block()
 
-            if let bio = user?.bio, !bio.isEmpty {
-                Text(bio)
-                    .font(.ui(16))
-                    .foregroundStyle(Color.qInk)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            socialProof
-
-            actions
+            statTiles
 
             if isMe {
                 MemoriesCard()
-                BadgesStrip()
+                BadgesStrip().block()
             }
         }
         .onAppear { withAnimation(.spring(response: 0.55, dampingFraction: 0.65).delay(0.05)) { appeared = true } }
     }
 
-    /// "Followers · following · answers" line with tiny avatars, like Threads.
-    private var socialProof: some View {
-        let sample = Array(store.followingUsers.prefix(3))
-        if typeSize.isAccessibilitySize {
-            // Large text: one stat per line instead of a squeezed single row.
-            return AnyView(VStack(alignment: .leading, spacing: DS.Space.xxs) {
-                link("\(user?.followers ?? 0)", "followers", route: isMe ? .followers : nil)
-                link("\(followingCount)", "following", route: isMe ? .following : nil)
-                link("\(answersCount)", answersCount == 1 ? "answer" : "answers", route: nil)
-            })
+    /// Big-number tiles (streak, followers, following), like balances in a banking app.
+    private var statTiles: some View {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: DS.Space.s))
+            : AnyLayout(HStackLayout(spacing: DS.Space.s))
+        return layout {
+            tile("\(streak)", "day streak", icon: .fireFill, tint: .qFlame, route: nil)
+            tile("\(user?.followers ?? 0)", "followers", icon: nil, tint: .qInk, route: isMe ? .followers : nil)
+            tile("\(followingCount)", "following", icon: nil, tint: .qInk, route: isMe ? .following : nil)
         }
-        return AnyView(HStack(spacing: 12) {
-            AvatarStack(users: sample, size: 22)
-            HStack(spacing: 0) {
-                link("\(user?.followers ?? 0)", "followers", route: isMe ? .followers : nil)
-                Text("  ·  ").font(.ui(15)).foregroundStyle(Color.qGray)
-                link("\(followingCount)", "following", route: isMe ? .following : nil)
-                Text("  ·  ").font(.ui(15)).foregroundStyle(Color.qGray)
-                link("\(answersCount)", answersCount == 1 ? "answer" : "answers", route: nil)
-            }
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
-        })
     }
 
     @ViewBuilder
-    private func link(_ value: String, _ label: String, route: Route?) -> some View {
-        let text = HStack(spacing: 4) {
-            Text(value).font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-            Text(label).font(.ui(15)).foregroundStyle(Color.qGray)
+    private func tile(_ value: String, _ label: String, icon: QIcon?, tint: Color, route: Route?) -> some View {
+        let content = VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 4) {
+                Text(value)
+                    .font(.display(26, .bold))
+                    .foregroundStyle(Color.qInk)
+                    .contentTransition(.numericText())
+                if let icon { Icon(icon, size: 18).foregroundStyle(tint) }
+            }
+            Text(label).font(.ui(13)).foregroundStyle(Color.qGray)
         }
+        .block(padding: DS.Space.m)
         if let route {
-            NavigationLink(value: route) { text }.buttonStyle(.plain)
+            NavigationLink(value: route) { content }.buttonStyle(.pressable)
         } else {
-            text
+            content
         }
     }
 
@@ -218,9 +213,7 @@ struct ProfileHeader: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: 40)
                         .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                            .fill(following ? Color.qBackground : Color.qGreen))
-                        .overlay(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                            .stroke(following ? Color.qLine : .clear, lineWidth: 1.5))
+                            .fill(following ? Color.qField : Color.qGreen))
                 }
                 .buttonStyle(.pressable)
                 .sensoryFeedback(.success, trigger: following)
@@ -237,8 +230,7 @@ struct ProfileHeader: View {
             .foregroundStyle(Color.qInk)
             .frame(maxWidth: .infinity)
             .frame(height: 40)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qBackground))
-            .overlay(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).stroke(Color.qLine, lineWidth: 1.5))
+            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
     }
 }
 

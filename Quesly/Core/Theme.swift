@@ -68,6 +68,10 @@ extension Color {
     static let qBackground = Color(light: 0xFFFFFF, dark: 0x0C0E0D)
     /// Elevated surfaces (sheets, popovers).
     static let qSurface = Color(light: 0xFFFFFF, dark: 0x161917)
+    /// Soft gray canvas behind blocks (profile, notifications, discover, settings).
+    static let qCanvas = Color(light: 0xF1F3F2, dark: 0x0C0E0D)
+    /// White rounded block that sits on `qCanvas`.
+    static let qBlock = Color(light: 0xFFFFFF, dark: 0x181B19)
 
     init(hex: UInt32, opacity: Double = 1) {
         self.init(
@@ -173,6 +177,14 @@ struct QueslyFieldStyle: ViewModifier {
 
 extension View {
     func queslyField() -> some View { modifier(QueslyFieldStyle()) }
+
+    /// White rounded block on the gray canvas (Revolut / N26-style screens).
+    func block(padding: CGFloat = DS.Space.m) -> some View {
+        self
+            .padding(padding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+    }
 
     /// Fades a list item in, staggered by `index`. Skipped entirely under Reduce Motion.
     func staggeredAppear(_ index: Int) -> some View {

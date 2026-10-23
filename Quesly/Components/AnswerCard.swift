@@ -67,7 +67,7 @@ struct AnswerCard: View {
         .padding(.horizontal, DS.Space.screen)
         .padding(.top, DS.Space.l)
         .padding(.bottom, DS.Space.xs)
-        .background(isHighlighted ? Color.qMint : Color.qBackground)
+        .background(isHighlighted ? Color.qMint : Color.clear)
         .sheet(isPresented: $isSharing) {
             ShareStorySheet(answer: answer)
                 .presentationDetents([.large])

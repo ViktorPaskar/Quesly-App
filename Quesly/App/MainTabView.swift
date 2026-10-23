@@ -104,7 +104,11 @@ struct MainTabView: View {
             await DemoTour.pause(3)
         }
         withAnimation(.qSmooth) { paths[.profile, default: NavigationPath()].append(Route.settings) }
+        // The recorder drops trailing frames that don't change, so end on a visible step:
+        // stay on Settings, then go back to the profile.
         await DemoTour.pause(4)
+        withAnimation(.qSmooth) { paths[.profile] = NavigationPath() }
+        await DemoTour.pause(2)
     }
 
     private func binding(for t: MainTab) -> Binding<NavigationPath> {

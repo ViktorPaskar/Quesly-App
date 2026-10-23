@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// Find people: search, invite and suggestions. Replaces the old Archive tab
-/// (your answers + saved now live in Profile).
+/// Find people: search, invite and suggestions, as white blocks on the gray canvas.
 struct DiscoverView: View {
     @Environment(AppStore.self) private var store
     @State private var query = ""
@@ -16,9 +15,13 @@ struct DiscoverView: View {
                         InviteCard(username: store.me.username)
                             .padding(.vertical, 8)
                         SectionLabel("Suggested for you")
-                        ForEach(Array(suggestions.enumerated()), id: \.element.id) { index, user in
-                            PersonRow(user: user).staggeredAppear(index)
+                        VStack(spacing: 0) {
+                            ForEach(Array(suggestions.enumerated()), id: \.element.id) { index, user in
+                                PersonRow(user: user).staggeredAppear(index)
+                            }
                         }
+                        .padding(.horizontal, DS.Space.m)
+                        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
                         if !store.followingUsers.isEmpty {
                             SectionLabel("You follow").padding(.top, 8)
                             ScrollView(.horizontal, showsIndicators: false) {
@@ -37,23 +40,29 @@ struct DiscoverView: View {
                                         .buttonStyle(.pressable)
                                     }
                                 }
-                                .padding(.vertical, 4)
+                                .padding(.vertical, DS.Space.s)
+                                .padding(.horizontal, DS.Space.m)
                             }
+                            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
                         }
                     } else if results.isEmpty {
                         EmptyStateView(icon: .magnifyingGlass,
                                        title: "No one found",
                                        message: "Nobody called “\(query)” yet. Invite them to Quesly!")
                     } else {
-                        ForEach(results) { user in PersonRow(user: user) }
+                        VStack(spacing: 0) {
+                            ForEach(results) { user in PersonRow(user: user) }
+                        }
+                        .padding(.horizontal, DS.Space.m)
+                        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
                     }
                 }
-                .padding(.horizontal, DS.Space.screen)
+                .padding(.horizontal, DS.Space.m)
                 .padding(.bottom, 16)
                 .animation(.qSmooth, value: query.isEmpty)
         }
         .scrollDismissesKeyboard(.immediately)
-        .background(Color.qBackground)
+        .background(Color.qCanvas)
         .navigationTitle("Discover")
         .navigationBarTitleDisplayMode(.large)
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search people")

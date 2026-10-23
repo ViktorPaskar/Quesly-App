@@ -29,7 +29,7 @@ struct EditProfileView: View {
                                     .foregroundStyle(.white)
                                     .frame(width: 30, height: 30)
                                     .background(Circle().fill(Color.qGreen))
-                                    .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
+                                    .overlay(Circle().stroke(Color.qCanvas, lineWidth: 2))
                             }
                     }
                     .accessibilityLabel("Change photo")
@@ -58,12 +58,12 @@ struct EditProfileView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }
-                field("Email Address") {
+                field("Email address") {
                     TextField("Email", text: $draft.email)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
                 }
-                field("Phone Number") {
+                field("Phone number") {
                     TextField("Phone", text: $draft.phone).keyboardType(.phonePad)
                 }
                 field("Location") {
@@ -84,7 +84,7 @@ struct EditProfileView: View {
                             Icon(showPassword ? .eyeSlash : .eye, size: 22).foregroundStyle(Color.qGray)
                         }
                     }
-                    .queslyField()
+                    .queslyField(fill: .qBlock)
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -93,7 +93,7 @@ struct EditProfileView: View {
                         .lineLimit(3...6)
                         .font(.ui(16))
                         .padding(16)
-                        .background(RoundedRectangle(cornerRadius: DS.Radius.m).stroke(Color.qLine))
+                        .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qBlock))
                 }
 
                 GreenButton(title: "Save", isEnabled: draft.username.count >= 3) {
@@ -106,8 +106,8 @@ struct EditProfileView: View {
             .padding(.bottom, 32)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.qBackground)
-        .queslyBackHeader("Edit Profile")
+        .background(Color.qCanvas)
+        .queslyBackHeader("Edit profile")
         .onAppear {
             guard !loaded else { return }
             draft = store.me
@@ -135,7 +135,7 @@ struct EditProfileView: View {
     private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(.ui(13)).foregroundStyle(Color.qGray)
-            content().queslyField()
+            content().queslyField(fill: .qBlock)
         }
     }
 }

@@ -147,7 +147,7 @@ struct PillTabs<T: Hashable & Identifiable>: View {
     }
 }
 
-/// White navigation header with a back chevron, matching the Figma screens.
+/// Navigation header with a back chevron, on the gray canvas like the screens it sits on.
 struct BackHeader: View {
     let title: String
     @Environment(\.dismiss) private var dismiss
@@ -165,8 +165,7 @@ struct BackHeader: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 2)
-        .background(Color.qBackground)
-        .overlay(alignment: .bottom) { Rectangle().fill(Color.qLine).frame(height: 1) }
+        .background(Color.qCanvas)
     }
 }
 

@@ -54,14 +54,6 @@ jobs:
           for screen in welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile memory settings editProfile achievements freezeUsed widgets; do
             shoot $screen "$(printf '%02d' $i)-$screen"; i=$((i+1))
           done
-          # Demo video: the auto-playing walkthrough (QUESLY_SCREEN=tour), recorded from launch
-          xcrun simctl terminate "$DEVICE" app.quesly.ios || true
-          xcrun simctl io "$DEVICE" recordVideo --codec=h264 --force screenshots/demo.mp4 &
-          REC=$!
-          sleep 2
-          SIMCTL_CHILD_QUESLY_SCREEN=tour xcrun simctl launch "$DEVICE" app.quesly.ios
-          sleep 60
-          kill -INT $REC; wait $REC || true
           # Largest accessibility text size pass (Dynamic Type)
           xcrun simctl ui "$DEVICE" content_size accessibility-extra-large || true
           for screen in feed profile settings; do

@@ -37,8 +37,8 @@ struct InviteFriendsView: View {
             .padding(.horizontal, DS.Space.screen)
             .padding(.bottom, 24)
         }
-        .background(Color.qBackground)
-        .queslyBackHeader("Invite Friends")
+        .background(Color.qCanvas)
+        .queslyBackHeader("Invite friends")
     }
 }
 
@@ -74,7 +74,7 @@ struct BlockedUsersView: View {
                 }
             }
         }
-        .background(Color.qBackground)
+        .background(Color.qCanvas)
         .queslyBackHeader("Blocked people")
     }
 }

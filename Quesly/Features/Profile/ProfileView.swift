@@ -23,7 +23,7 @@ struct ProfileView: View {
 
                 HStack(spacing: 6) {
                     Text("Answers").font(.ui(17, .semibold)).foregroundStyle(Color.qInk)
-                    Text("(answers.count)").font(.ui(15)).foregroundStyle(Color.qGray)
+                    Text("\(answers.count)").font(.ui(15)).foregroundStyle(Color.qGray)
                     Spacer()
                 }
                 .padding(.horizontal, DS.Space.screen)

@@ -166,17 +166,19 @@ extension ButtonStyle where Self == PressableStyle {
 // MARK: - Shared modifiers
 
 struct QueslyFieldStyle: ViewModifier {
+    /// Gray on white screens; white (`qBlock`) on the gray canvas.
+    var fill: Color = .qField
     func body(content: Content) -> some View {
         content
             .font(.ui(17))
             .padding(.horizontal, DS.Space.m)
             .frame(minHeight: 50)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
+            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(fill))
     }
 }
 
 extension View {
-    func queslyField() -> some View { modifier(QueslyFieldStyle()) }
+    func queslyField(fill: Color = .qField) -> some View { modifier(QueslyFieldStyle(fill: fill)) }
 
     /// White rounded block on the gray canvas (Revolut / N26-style screens).
     func block(padding: CGFloat = DS.Space.m) -> some View {

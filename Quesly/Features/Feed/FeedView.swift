@@ -21,7 +21,7 @@ struct FeedView: View {
         VStack(spacing: 0) {
             // Logo centred with the streak on the right; the World/Friends switch sits below it.
             ZStack {
-                QueslyLogo(height: 18, markColor: .qInk, textColor: .qInk, background: .qBackground)
+                QueslyLogo(height: 18, markColor: .qInk, textColor: .qInk, background: .qCanvas)
                 HStack {
                     Spacer()
                     StreakChip(days: shownStreak ?? store.streak)
@@ -48,7 +48,7 @@ struct FeedView: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.qSmooth, value: network.isOnline)
         }
-        .background(Color.qBackground)
+        .background(Color.qCanvas)
         .toolbar(.hidden, for: .navigationBar)
         .fullScreenCover(isPresented: $showQuestion) {
             DailyQuestionView(onSubmitted: {
@@ -113,6 +113,11 @@ struct FeedView: View {
                                                    && answer.id == answers.first(where: { $0.authorId != store.me.id })?.id,
                                                isHighlighted: highlightsMine && answer.authorId == store.me.id)
                                 }
+                                // Each answer is its own white card on the gray canvas.
+                                .background(Color.qBlock)
+                                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
+                                .padding(.horizontal, DS.Space.s)
+                                .padding(.top, DS.Space.xs)
                                 .opacity(isShown ? 1 : 0)
                                 .offset(y: isShown ? 0 : 16)
                                 .staggeredAppear(index)
@@ -318,7 +323,7 @@ struct TodayQuestionBanner: View {
                         .font(.display(17, .bold))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(typeSize.isAccessibilitySize ? nil : 2)
+                        .lineLimit(typeSize.isAccessibilitySize ? nil : 3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }

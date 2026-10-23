@@ -32,16 +32,21 @@ struct AchievementsView: View {
                 .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qGreen))
                 .padding(16)
 
-                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                    row(item)
-                        .padding(.horizontal, DS.Space.screen)
-                        .padding(.vertical, 12)
-                        .staggeredAppear(index)
+                VStack(spacing: 0) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                        if index > 0 { Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 76) }
+                        row(item)
+                            .padding(.horizontal, DS.Space.m)
+                            .padding(.vertical, DS.Space.s)
+                            .staggeredAppear(index)
+                    }
                 }
+                .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+                .padding(.horizontal, DS.Space.m)
             }
             .padding(.bottom, 16)
         }
-        .background(Color.qBackground)
+        .background(Color.qCanvas)
         .queslyBackHeader("Achievements")
         .onAppear { withAnimation(.easeOut(duration: 1).delay(0.2)) { animateBars = true } }
     }

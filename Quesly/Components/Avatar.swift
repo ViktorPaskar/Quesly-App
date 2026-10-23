@@ -1,8 +1,8 @@
 import SwiftUI
 import UIKit
 
-/// User avatar: the signed-in user's own photo when set, otherwise the bundled illustration
-/// (`Assets/Avatars/avatar-<id>`, Notionists by Zoish, CC0), otherwise initials on a soft tint.
+/// User avatar: the signed-in user's own photo when set, otherwise the bundled demo photo
+/// (`Assets/Avatars/avatar-<id>`, demo photos shared with quesly.me), otherwise initials on a soft tint.
 /// Works without an `AppStore` in the environment (e.g. inside `ImageRenderer` for story cards).
 struct Avatar: View {
     let user: AppUser?

@@ -134,7 +134,7 @@ enum MockData {
                                 authorId: author, text: text, createdAt: now.addingTimeInterval(-minutes * 60))
             // A few answers start with reactions / saved so the feed looks alive.
             if index == 1 { answer.myReaction = .love; answer.reactions = [.love: 1] }
-            if index == 2 { answer.isSaved = true; answer.reactions = [.same: 2] }
+            if index == 2 { answer.isResharedByMe = true; answer.reshareCount = 4; answer.reactions = [.same: 2] }
             if index == 4 { answer.visibility = .friends }
             return answer
         }
@@ -173,7 +173,8 @@ enum MockData {
             let date = cal.date(byAdding: .day, value: -daysAgo, to: now) ?? now
             let q = AppStore.question(for: date)
             return Answer(id: "h\(daysAgo)", questionId: q.id, questionText: q.text, authorId: "me",
-                          text: sampleAnswers[q.id] ?? "", createdAt: date, reactions: reactions[min(index, reactions.count - 1)])
+                          text: sampleAnswers[q.id] ?? "", createdAt: date, reactions: reactions[min(index, reactions.count - 1)],
+                          reshareCount: [6, 11, 3, 1][min(index, 3)])
         }
     }
 

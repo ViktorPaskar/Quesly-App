@@ -23,6 +23,8 @@ enum QIcon: String {
     case pencilSimple = "pencil", pencilSimpleFill = "pencil.line"
     case prohibit = "hand.raised", prohibitFill = "hand.raised.fill"
     case downloadSimple = "arrow.down.to.line"
+    /// Repost to your profile. No brand glyph yet (add `ui-repost` from the UIcons set to replace the SF fallback).
+    case repost = "arrow.2.squarepath"
     case gearSix = "gearshape", gearSixFill = "gearshape.fill"
     case dotsThreeBold = "ellipsis"
 

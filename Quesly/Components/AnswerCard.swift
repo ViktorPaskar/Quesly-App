@@ -19,6 +19,8 @@ struct AnswerCard: View {
     let answer: Answer
     var showsQuestion = false
     var showsAuthor = true
+    /// Shown in your profile for someone else's answer you reposted.
+    var isRepost = false
     /// Demo/screenshot hook: start with the reaction tray open.
     var opensTray = false
     /// Brief brand tint, used when your own answer lands in the feed after posting.
@@ -37,6 +39,11 @@ struct AnswerCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Space.xs) {
+            if isRepost {
+                IconLabel("You reposted", icon: .repost, size: DS.Icon.caption)
+                    .font(.ui(13, .semibold))
+                    .foregroundStyle(Color.qGray)
+            }
             if showsQuestion { questionLine }
 
             HStack(alignment: .top, spacing: DS.Space.s) {
@@ -148,15 +155,15 @@ struct AnswerCard: View {
                       systemImage: (answer.myReaction == .love ? QIcon.heartFill : QIcon.heart).rawValue)
             }
         }
-        // Other people's words stay in Quesly: only your own answer can be shared or copied.
         if isMine {
-            Button { isSharing = true } label: { Label("Share as story", systemImage: QIcon.paperPlaneTilt.rawValue) }
             Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", systemImage: QIcon.copy.rawValue) }
             Divider()
-        }
-        if isMine {
             if answer.isEditable() {
-                Button { isEditing = true } label: { Label("Edit", systemImage: QIcon.pencilSimple.rawValue) }
+                // "Edit · 12 min left": the window is visible, so it never closes by surprise.
+                let minutesLeft = max(1, Int(ceil((Answer.editWindow - Date.now.timeIntervalSince(answer.createdAt)) / 60)))
+                Button { isEditing = true } label: {
+                    Label("Edit · \(minutesLeft) min left", systemImage: QIcon.pencilSimple.rawValue)
+                }
             }
             Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: QIcon.trash.rawValue) }
         } else {
@@ -204,21 +211,46 @@ struct AnswerCard: View {
     /// Threads-style action row: react · share ··· save. Icons only, 44-pt targets.
     private var actions: some View {
         HStack(spacing: DS.Space.m) {
+            // Three actions on every card: react · repost to profile · share outside Quesly.
             if isMine {
                 // Nothing until the first reaction: an empty counter reads like a verdict.
                 if answer.totalReactions > 0 { authorReactions }
+                if answer.reshares > 0 { authorReshares }
             } else {
                 ReactionControl(answer: answer, isTrayOpen: $isTrayOpen) { kind in
                     withAnimation(.qSpring) { store.react(kind, on: answer.id) }
                 }
+                if !isTrayOpen {
+                    iconButton(.repost, tint: answer.isResharedByMe ? .qBrandText : .qGray,
+                               label: answer.isResharedByMe ? "Remove from your profile" : "Repost to your profile") {
+                        withAnimation(.qSpring) { store.toggleReshare(answer.id) }
+                    }
+                    .pop(on: answer.isResharedByMe)
+                    .sensoryFeedback(.success, trigger: answer.isResharedByMe) { _, on in on }
+                }
             }
-            if !isTrayOpen && isMine {
-                iconButton(.paperPlaneTilt, tint: .qGray, label: "Share as story") { isSharing = true }
+            if !isTrayOpen {
+                iconButton(.paperPlaneTilt, tint: .qGray, label: "Share outside Quesly") { isSharing = true }
             }
             Spacer(minLength: 0)
         }
         .frame(minHeight: DS.hitTarget)
         .animation(.qSpring, value: isTrayOpen)
+    }
+
+    /// Only the author sees how often the answer was reposted — never by whom.
+    private var authorReshares: some View {
+        HStack(spacing: 6) {
+            Icon(.repost, size: DS.Icon.inline).foregroundStyle(Color.qGray)
+            Text("\(answer.reshares)")
+                .font(.ui(15, .semibold))
+                .foregroundStyle(Color.qInk)
+                .contentTransition(.numericText())
+            Icon(.lockSimpleFill, size: DS.Icon.caption).foregroundStyle(Color.qGray.opacity(0.7))
+        }
+        .frame(minHeight: DS.hitTarget)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Reposted \(answer.reshares) times. Only you can see this")
     }
 
     /// Only the author sees reaction totals — and who reacted.

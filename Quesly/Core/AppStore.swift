@@ -313,6 +313,19 @@ final class AppStore {
         }
     }
 
+    /// Answers the viewer reposted to their profile.
+    var resharedAnswers: [Answer] {
+        todayAnswers.filter { $0.isResharedByMe && !blockedIds.contains($0.authorId) }
+    }
+
+    /// Reposts someone's answer to your profile (or takes it back). The author is not told who.
+    func toggleReshare(_ answerId: String) {
+        mutateAnswer(answerId) { a in
+            a.isResharedByMe.toggle()
+            a.reshareCount = max(0, a.reshares + (a.isResharedByMe ? 1 : -1))
+        }
+    }
+
     func deleteAnswer(_ answerId: String) {
         myAnswers.removeAll { $0.id == answerId }
         persist()
@@ -548,6 +561,7 @@ final class AppStore {
         var followingIds: Set<String>
         var blockedIds: Set<String>
         var myAnswers: [Answer]
+        /// Reposted answer ids (kept under the old "saved" name so older installs restore).
         var savedIds: Set<String>
         var reactions: [String: ReactionKind]
         var remindersEnabled: Bool
@@ -566,7 +580,7 @@ final class AppStore {
         let snapshot = Snapshot(
             isSignedIn: isSignedIn, onboarding: onboarding, me: me, followingIds: followingIds,
             blockedIds: blockedIds, myAnswers: myAnswers,
-            savedIds: Set(todayAnswers.filter(\.isSaved).map(\.id)), reactions: reactions,
+            savedIds: Set(todayAnswers.filter(\.isResharedByMe).map(\.id)), reactions: reactions,
             remindersEnabled: remindersEnabled, reminderTime: reminderTime, isPrivateAccount: isPrivateAccount,
             defaultVisibility: defaultVisibility, notificationsSeenAt: notificationsSeenAt,
             frozenDays: frozenDays, streakFreezes: streakFreezes
@@ -597,7 +611,7 @@ final class AppStore {
         streakFreezes = s.streakFreezes
         for i in todayAnswers.indices {
             let id = todayAnswers[i].id
-            todayAnswers[i].isSaved = s.savedIds.contains(id)
+            todayAnswers[i].isResharedByMe = s.savedIds.contains(id)
             let seeded = todayAnswers[i].myReaction
             let restored = s.reactions[id]
             if seeded != restored {

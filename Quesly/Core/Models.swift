@@ -141,7 +141,9 @@ enum AnswerVisibility: String, Codable, CaseIterable, Identifiable {
 }
 
 struct Answer: Identifiable, Codable, Hashable {
-    static let editWindow: TimeInterval = 5 * 60
+    /// Long enough to fix a typo or rethink a line, short enough that people reacting see what
+    /// was really posted. Edited answers are marked "edited".
+    static let editWindow: TimeInterval = 15 * 60
 
     var id: String
     var questionId: String
@@ -151,10 +153,22 @@ struct Answer: Identifiable, Codable, Hashable {
     var createdAt: Date
     var reactions: [ReactionKind: Int] = [:]
     var myReaction: ReactionKind? = nil
-    var isSaved: Bool = false
+    /// The viewer reposted this answer to their own profile. Anonymous: the author only ever
+    /// sees how many times it was reposted (`reshares`), never by whom.
+    var isResharedByMe: Bool = false
     var isPinned: Bool = false
     var visibility: AnswerVisibility = .everyone
     var isEdited: Bool = false
+    /// Optional so answers saved before reposts existed still decode.
+    var reshareCount: Int? = nil
+
+    var reshares: Int { reshareCount ?? 0 }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, questionId, questionText, authorId, text, createdAt, reactions, myReaction
+        case isResharedByMe = "isSaved"   // stored under its old name
+        case isPinned, visibility, isEdited, reshareCount
+    }
 
     func count(_ kind: ReactionKind) -> Int { reactions[kind, default: 0] }
     var totalReactions: Int { reactions.values.reduce(0, +) }

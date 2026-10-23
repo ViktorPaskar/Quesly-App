@@ -14,6 +14,8 @@ struct ProfileView: View {
     var body: some View {
         let user = store.user(userId)
         let answers = store.answers(of: userId)
+        // Your profile mixes your answers with the ones you reposted, newest first.
+        let items = isMe ? (answers + store.resharedAnswers).sorted { $0.createdAt > $1.createdAt } : answers
 
         ScrollView {
             VStack(spacing: 0) {
@@ -31,12 +33,13 @@ struct ProfileView: View {
                 .padding(.bottom, DS.Space.xs)
 
                 LazyVStack(spacing: 0) {
-                    ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
-                        AnswerCard(answer: answer, showsQuestion: true, showsAuthor: false)
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
+                        let repost = answer.authorId != userId
+                        AnswerCard(answer: answer, showsQuestion: true, showsAuthor: repost, isRepost: repost)
                             .staggeredAppear(index)
                         Rectangle().fill(Color.qLine).frame(height: 1).padding(.horizontal, DS.Space.screen)
                     }
-                    if answers.isEmpty {
+                    if items.isEmpty {
                         EmptyStateView(
                             icon: .chatCircleTextFill,
                             title: "No answers yet",

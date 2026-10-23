@@ -31,37 +31,27 @@ struct ReactionControl: View {
         .animation(.qSpring, value: isTrayOpen)
     }
 
-    /// Tap = ❤️ (or remove your current reaction). Long-press = choose from all six.
+    /// Outlined smiley (or your current reaction sticker). Tap opens the tray of six reactions;
+    /// double-tapping the answer text still sends ❤️.
     private var trigger: some View {
-        Group {
-            if let mine = answer.myReaction {
-                ReactionSticker(kind: mine, size: 26)
-                    .id(mine)
-                    .transition(.scale(scale: 0.3).combined(with: .opacity))
-            } else {
-                Icon(.heart, size: DS.Icon.action).foregroundStyle(Color.qGray)
-            }
-        }
-        .frame(minWidth: 32, minHeight: DS.hitTarget)
-        .contentShape(Rectangle())
-        .onTapGesture { quickReact() }
-        .onLongPressGesture(minimumDuration: 0.3) {
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
             isTrayOpen = true
+        } label: {
+            Group {
+                if let mine = answer.myReaction {
+                    ReactionSticker(kind: mine, size: 26)
+                        .id(mine)
+                        .transition(.scale(scale: 0.3).combined(with: .opacity))
+                } else {
+                    Icon(.smiley, size: DS.Icon.action).foregroundStyle(Color.qGray)
+                }
+            }
+            .frame(minWidth: 32, minHeight: DS.hitTarget)
+            .contentShape(Rectangle())
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(answer.myReaction.map { "Your reaction: \($0.label)" } ?? "Love")
-        .accessibilityHint("Hold for more reactions")
-        .accessibilityAction { quickReact() }
-        .accessibilityAction(named: "Choose reaction") { isTrayOpen = true }
-    }
-
-    private func quickReact() {
-        let kind = answer.myReaction ?? .love
-        if answer.myReaction == nil { fireBurst(kind) }
-        onPick(kind)
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        .buttonStyle(.pressable)
+        .accessibilityLabel(answer.myReaction.map { "Your reaction: \($0.label). Change reaction" } ?? "React")
     }
 
     private func fireBurst(_ kind: ReactionKind) {

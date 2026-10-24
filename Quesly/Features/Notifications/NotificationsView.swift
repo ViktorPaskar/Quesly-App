@@ -115,7 +115,7 @@ struct NotificationsView: View {
                 .background(Circle().fill(Color.qLime))
         case .posted:
             QueslyMark(color: .qLime, cutout: .qGreen)
-                .frame(width: 20)
+                .frame(width: 26)
                 .frame(width: 40, height: 40)
                 .background(Circle().fill(Color.qGreen))
         }

@@ -21,7 +21,7 @@ struct FeedView: View {
         VStack(spacing: 0) {
             // Logo centred with the streak on the right; the World/Friends switch sits below it.
             ZStack {
-                QueslyLogo(height: 18, markColor: .qInk, textColor: .qInk, background: .qCanvas)
+                QueslyLogo(height: 20, markColor: .qGreen, textColor: .qInk, background: .qLime)
                 HStack {
                     Spacer()
                     StreakChip(days: shownStreak ?? store.streak)
@@ -311,7 +311,7 @@ struct TodayQuestionBanner: View {
             HStack(alignment: .center, spacing: 12) {
                 if !typeSize.isAccessibilitySize {
                     QueslyMark(color: .qGreen, cutout: .qLime)
-                        .frame(width: 24)
+                        .frame(width: 30)
                         .frame(width: 44, height: 44)
                         .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qLime))
                 }

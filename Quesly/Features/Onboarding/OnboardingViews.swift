@@ -122,7 +122,7 @@ private struct NotificationPreview: View {
     var body: some View {
         HStack(spacing: 12) {
             QueslyMark(color: .qLime, cutout: .qGreen)
-                .frame(width: 20)
+                .frame(width: 26)
                 .frame(width: 38, height: 38)
                 .background(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill(Color.qGreen))
             VStack(alignment: .leading, spacing: 2) {

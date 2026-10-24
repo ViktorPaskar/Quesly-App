@@ -9,7 +9,7 @@ struct SplashView: View {
         ZStack {
             BrandGradientBackground(animate: animate)
             VStack(spacing: 12) {
-                QueslyLogo(height: 38, background: .clear, animateDots: true)
+                QueslyLogo(height: 38, background: .clear, animates: true)
                     .scaleEffect(animate ? 1 : 0.85)
                     .opacity(animate ? 1 : 0)
                 Text("ONE QUESTION A DAY. MILLIONS OF STORIES")
@@ -47,7 +47,7 @@ struct LimeTransitionView: View {
                 ConfettiView(count: 36).ignoresSafeArea()
             }
             VStack(spacing: 20) {
-                QueslyMark(color: .qGreen, animateDots: true)
+                QueslyMark(color: .qGreen, animates: true)
                     .frame(width: 84)
                     .scaleEffect(pop ? 1 : 0.4)
                 Text("Answer posted!")

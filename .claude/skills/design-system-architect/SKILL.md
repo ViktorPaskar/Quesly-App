@@ -20,7 +20,7 @@ The design system is the single source of truth. Screens consume tokens and comp
 
 | Token | Role | Light / Dark |
 |---|---|---|
-| `qGreen` | Brand surface, primary filled buttons | #07583D (fixed) |
+| `qGreen` | Brand surface, primary filled buttons | #08563B (fixed) |
 | `qLime` | Accent **on green only** | #D4FF00 (fixed) |
 | `qFlame` | Streak / urgency accent | #FF6A1A |
 | `qInk` | Primary text | #16181A / #F2F4F3 |
@@ -31,7 +31,7 @@ The design system is the single source of truth. Screens consume tokens and comp
 | `qLine` | Separators, outlines | #E9ECEA / #2A2E2C |
 | `qMint` | Selected/brand-tinted fill on neutral | #EAF4EE / #16302A |
 | `qIce` / `qIceSoft` | Streak freeze ❄️ icon / its fill | #2F7FE0 / #7DB8FF · #E6F0FC / #16263B |
-| `qBrandText` | Brand green used as text/icon on neutral bg | #07583D / #7FD49B |
+| `qBrandText` | Brand green used as text/icon on neutral bg | #08563B / #7FD49B |
 
 Data colors (badge tiers, achievement colors) live in models, not in views.
 

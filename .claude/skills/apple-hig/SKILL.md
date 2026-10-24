@@ -37,7 +37,7 @@ Apply the HIG pragmatically: native behaviour by default, brand expression only 
 ## Color & dark mode
 
 - Semantic colors only (`Color.qInk`, `.qGray`, `.qBackground`, `.qSurface`, `.qField`, `.qLine`, `.qMint`, `.qBrandText`) — they have light and dark values.
-- Contrast: text ≥ 4.5:1 (≥ 3:1 for ≥ 18 pt bold). Lime `#D4FF00` on white fails → only on green. White on `#07583D` passes.
+- Contrast: text ≥ 4.5:1 (≥ 3:1 for ≥ 18 pt bold). Lime `#D4FF00` on white fails → only on green. White on `#08563B` passes.
 - Never convey state by color alone (e.g. selected tab also changes icon fill/weight).
 
 ## Icons

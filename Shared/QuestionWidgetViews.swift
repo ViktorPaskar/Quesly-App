@@ -43,7 +43,7 @@ struct QuestionWidgetModel: Equatable {
 
 /// Brand values for the widget. The widget can't see the app's design tokens, so the few it needs live here.
 enum WidgetPalette {
-    static let green = Color(red: 7 / 255, green: 88 / 255, blue: 61 / 255)    // qGreen #07583D
+    static let green = Color(red: 8 / 255, green: 86 / 255, blue: 59 / 255)    // qGreen #07583D
     static let lime = Color(red: 212 / 255, green: 1, blue: 0)                   // qLime  #D4FF00
     static let flame = Color(red: 1, green: 106 / 255, blue: 26 / 255)           // qFlame #FF6A1A
 

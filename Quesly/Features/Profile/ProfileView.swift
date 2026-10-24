@@ -265,14 +265,14 @@ struct ProfileHeader: View {
     private var actions: some View {
         HStack(spacing: DS.Space.xs) {
             if isMe {
-                NavigationLink(value: Route.editProfile) { pill("Edit profile") }
+                NavigationLink(value: Route.editProfile) { pill("Edit profile", style: .mint) }
                     .buttonStyle(.pressable)
                 ShareLink(item: Invite.text(for: store.me.username)) { pill("Share profile") }
                     .buttonStyle(.pressable)
             } else if let user {
                 let following = store.isFollowing(user.id)
                 Button { store.toggleFollow(user.id) } label: {
-                    pill(following ? "Following" : "Follow", filled: !following)
+                    pill(following ? "Following" : "Follow", style: following ? .mint : .green)
                 }
                 .buttonStyle(.pressable)
                 .sensoryFeedback(.success, trigger: following)
@@ -283,14 +283,17 @@ struct ProfileHeader: View {
         }
     }
 
-    private func pill(_ title: String, filled: Bool = false) -> some View {
+    /// Brand trio: green (main action), mint (your own / done state), white (secondary).
+    private enum PillStyle { case green, mint, white }
+
+    private func pill(_ title: String, style: PillStyle = .white) -> some View {
         Text(title)
             .font(.ui(15, .semibold))
-            .foregroundStyle(filled ? Color.white : Color.qInk)
+            .foregroundStyle(style == .green ? Color.qLime : style == .mint ? Color.qBrandText : Color.qInk)
             .frame(maxWidth: .infinity)
             .frame(height: DS.hitTarget)
             .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                .fill(filled ? Color.qGreen : Color.qBlock))
+                .fill(style == .green ? Color.qGreen : style == .mint ? Color.qMint : Color.qBlock))
     }
 }
 
@@ -420,7 +423,7 @@ struct StreakCard: View {
         case .today:
             Circle()
                 .strokeBorder(Color.qGreen, style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
-                .background(Circle().fill(Color.qBlock))
+                .background(Circle().fill(Color.qMint))
                 .frame(width: size, height: size)
         case .missed:
             Circle().fill(Color.qField).frame(width: size, height: size)

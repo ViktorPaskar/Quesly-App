@@ -57,7 +57,7 @@ enum DS {
 extension Color {
     // Brand (fixed in both appearances)
     /// Brand dark green — primary buttons, active states, hero surfaces.
-    static let qGreen = Color(hex: 0x07583D)
+    static let qGreen = Color(hex: 0x08563B)
     static let qGreenDeep = Color(hex: 0x044330)
     static let qGreenLight = Color(hex: 0x5BA21E)
     /// Brand acid lime — accent on green surfaces only (fails contrast as text on white).
@@ -82,10 +82,10 @@ extension Color {
     static let qLine = Color(light: 0xE9ECEA, dark: 0x2A2E2C)
     /// Neutral fill for fields, chips and secondary buttons.
     static let qField = Color(light: 0xF3F5F4, dark: 0x1E2220)
-    /// Brand-tinted fill for selected states on neutral backgrounds.
-    static let qMint = Color(light: 0xEAF4EE, dark: 0x16302A)
+    /// Brand mint #CFFDE5: soft fill for selected states, chips and highlights on neutral backgrounds.
+    static let qMint = Color(light: 0xCFFDE5, dark: 0x16302A)
     /// Brand green used as *text or icon* color on neutral backgrounds (lighter in dark mode).
-    static let qBrandText = Color(light: 0x07583D, dark: 0x7FD49B)
+    static let qBrandText = Color(light: 0x08563B, dark: 0x7FD49B)
     /// App background.
     static let qBackground = Color(light: 0xFFFFFF, dark: 0x0C0E0D)
     /// Elevated surfaces (sheets, popovers).

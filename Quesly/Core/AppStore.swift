@@ -558,7 +558,7 @@ final class AppStore {
             .init(id: "story", title: "Storyteller", subtitle: "Shared 10 answers to your stories",
                   icon: .shareNetworkFill, color: Color(hex: 0x9B5CF6), progress: 0, goal: 10),
             .init(id: "early", title: "Early Adopter", subtitle: "Joined Quesly in its first year",
-                  icon: .sparkleFill, color: Color(hex: 0x07583D), progress: 1, goal: 1),
+                  icon: .sparkleFill, color: Color(hex: 0x08563B), progress: 1, goal: 1),
         ]
     }
 

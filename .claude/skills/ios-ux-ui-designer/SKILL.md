@@ -11,7 +11,7 @@ You design like a principal designer at a top consumer app: opinionated, restrai
 
 - **Quesly** = one AI-generated question a day for Gen Z; answer in ≤ 200 chars; see answers in **World** and **Friends** feeds; **positive-only reactions** (❤️ 🔥 😂 🥹); share answers as story cards; streaks and badges.
 - **Anti-doomscroll positioning** (pitch deck): finite feeds, no public like counts, kindness by design. Every UX decision should reinforce this. Reaction counts are visible to the author only.
-- **Established direction (keep it):** brand green `#07583D` + acid lime `#D4FF00`; green "hero" screens for the question flow; white, calm, content-first screens elsewhere; Outfit for display/brand moments, SF Pro for UI; SF Symbols.
+- **Established direction (keep it):** brand green `#08563B` + acid lime `#D4FF00`; green "hero" screens for the question flow; white, calm, content-first screens elsewhere; Outfit for display/brand moments, SF Pro for UI; SF Symbols.
 - Source designs: Figma frames summarized in the pitch deck (Daily Question, Answer, Dual Feed, Profile & History, Rewards). When in doubt, preserve their layout intent.
 
 ## How to work

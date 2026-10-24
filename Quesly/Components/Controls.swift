@@ -68,41 +68,40 @@ struct FollowPill: View {
     }
 }
 
-/// Two-tab underline switcher ("World / Friends", "Answers / Saved").
-struct UnderlineTabs<T: Hashable & Identifiable>: View {
-    let items: [T]
-    @Binding var selection: T
-    let title: (T) -> String
-    var activeColor: Color = .qBrandText
+/// Text tabs with a sliding underline; equal widths, 44pt tall, hairline underneath.
+struct UnderlineTabs<Item: Hashable & Identifiable>: View {
+    let items: [Item]
+    @Binding var selection: Item
+    let title: KeyPath<Item, String>
     @Namespace private var ns
 
     var body: some View {
         HStack(spacing: 0) {
             ForEach(items) { item in
-                let isActive = item == selection
-                Button {
-                    withAnimation(.qSpring) { selection = item }
-                } label: {
-                    VStack(spacing: 12) {
-                        Text(title(item))
-                            .font(.ui(15, isActive ? .semibold : .medium))
-                            .foregroundStyle(isActive ? activeColor : Color.qGray)
-                        ZStack {
-                            Capsule().fill(Color.qLine).frame(height: 1)
-                            if isActive {
-                                Capsule().fill(activeColor).frame(height: 3)
-                                    .matchedGeometryEffect(id: "underline", in: ns)
+                let on = item == selection
+                Button { withAnimation(.qSmooth) { selection = item } } label: {
+                    Text(item[keyPath: title])
+                        .font(.ui(15, .semibold))
+                        .foregroundStyle(on ? Color.qInk : Color.qGray)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: DS.hitTarget)
+                        .overlay(alignment: .bottom) {
+                            if on {
+                                Capsule().fill(Color.qGreen)
+                                    .frame(height: 3)
+                                    .padding(.horizontal, DS.Space.s)
+                                    .matchedGeometryEffect(id: "line", in: ns)
                             }
                         }
-                        .frame(height: 3)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityAddTraits(isActive ? .isSelected : [])
+                .accessibilityAddTraits(on ? .isSelected : [])
             }
         }
+        .background(alignment: .bottom) { Rectangle().fill(Color.qLine).frame(height: 1) }
         .sensoryFeedback(.selection, trigger: selection)
     }
 }

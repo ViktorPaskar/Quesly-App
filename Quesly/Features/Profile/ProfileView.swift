@@ -294,44 +294,6 @@ struct ProfileHeader: View {
     }
 }
 
-/// Text tabs with a sliding underline; equal widths, 44pt tall, hairline underneath.
-struct UnderlineTabs<Item: Hashable & Identifiable>: View {
-    let items: [Item]
-    @Binding var selection: Item
-    let title: KeyPath<Item, String>
-    @Namespace private var ns
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(items) { item in
-                let on = item == selection
-                Button { withAnimation(.qSmooth) { selection = item } } label: {
-                    Text(item[keyPath: title])
-                        .font(.ui(15, .semibold))
-                        .foregroundStyle(on ? Color.qInk : Color.qGray)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: DS.hitTarget)
-                        .overlay(alignment: .bottom) {
-                            if on {
-                                Capsule().fill(Color.qGreen)
-                                    .frame(height: 3)
-                                    .padding(.horizontal, DS.Space.s)
-                                    .matchedGeometryEffect(id: "line", in: ns)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(on ? .isSelected : [])
-            }
-        }
-        .background(alignment: .bottom) { Rectangle().fill(Color.qLine).frame(height: 1) }
-        .sensoryFeedback(.selection, trigger: selection)
-    }
-}
-
 /// Your streak as a picture: the last seven days as a chain of dots (answered, frozen, missed,
 /// today) and progress to the next freeze.
 struct StreakCard: View {

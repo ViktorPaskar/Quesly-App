@@ -255,11 +255,14 @@ struct ProfileHeader: View {
     // MARK: Stats
 
     private var stats: some View {
-        HStack(spacing: DS.Space.l) {
+        // Spread across the full width: first on the left edge, last on the right, middle centred.
+        HStack(spacing: DS.Space.xs) {
             let answers = store.answers(of: user?.id ?? "").count
             stat(answers, answers == 1 ? "answer" : "answers", route: nil)
+            Spacer(minLength: 0)
             stat(user?.followers ?? 0, (user?.followers ?? 0) == 1 ? "follower" : "followers",
                  route: isMe ? .followers : nil)
+            Spacer(minLength: 0)
             stat(followingCount, "following", route: isMe ? .following : nil)
         }
     }
@@ -283,14 +286,14 @@ struct ProfileHeader: View {
     private var actions: some View {
         HStack(spacing: DS.Space.xs) {
             if isMe {
-                NavigationLink(value: Route.editProfile) { pill("Edit profile", style: .mint) }
+                NavigationLink(value: Route.editProfile) { pill("Edit profile") }
                     .buttonStyle(.pressable)
                 ShareLink(item: Invite.text(for: store.me.username)) { pill("Share profile") }
                     .buttonStyle(.pressable)
             } else if let user {
                 let following = store.isFollowing(user.id)
                 Button { store.toggleFollow(user.id) } label: {
-                    pill(following ? "Following" : "Follow", style: following ? .mint : .green)
+                    pill(following ? "Following" : "Follow", style: following ? .gray : .green)
                 }
                 .buttonStyle(.pressable)
                 .sensoryFeedback(.success, trigger: following)
@@ -301,16 +304,16 @@ struct ProfileHeader: View {
         }
     }
 
-    /// Brand trio: green (main action), mint (your own / done state), light gray (secondary).
-    private enum PillStyle { case green, mint, gray }
+    /// Green with lime text for the one main action (Follow); light gray for everything else.
+    private enum PillStyle { case green, gray }
 
     private func pill(_ title: String, style: PillStyle = .gray) -> some View {
         Text(title)
             .font(.ui(15, .semibold))
-            .foregroundStyle(style == .green ? Color.white : style == .mint ? Color.qBrandText : Color.qInk)
+            .foregroundStyle(style == .green ? Color.qLime : Color.qInk)
             .frame(maxWidth: .infinity)
             .frame(height: 40)
-            .background(Capsule().fill(style == .green ? Color.qGreen : style == .mint ? Color.qMint : Color.qField))
+            .background(Capsule().fill(style == .green ? Color.qGreen : Color.qField))
             .frame(minHeight: DS.hitTarget)
             .contentShape(Rectangle())
     }

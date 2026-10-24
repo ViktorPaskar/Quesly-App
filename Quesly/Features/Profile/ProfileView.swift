@@ -31,10 +31,13 @@ struct ProfileView: View {
                         .padding(.horizontal, DS.Space.m)
                         .padding(.top, DS.Space.xs)
                         .padding(.bottom, DS.Space.l)
-                        .background(GeometryReader { geo in
-                            Color.clear.preference(key: ProfileHeaderTopKey.self,
-                                                   value: geo.frame(in: .named("profileScroll")).minY)
-                        })
+                        .onGeometryChange(for: Bool.self) { geo in
+                            geo.frame(in: .scrollView).minY < -56
+                        } action: { shows in
+                            withAnimation(.qSmooth) { showsMiniTitle = shows }
+                        }
+                    // Scroll target: the point where the tabs pin.
+                    Color.clear.frame(height: 0).id("tabs")
 
                     Section {
                         content
@@ -46,15 +49,9 @@ struct ProfileView: View {
                     } header: {
                         UnderlineTabs(items: tabs, selection: $tab, title: \.title)
                             .background(Color.qBackground)
-                            .id("tabs")
                     }
                 }
                 .padding(.bottom, DS.Space.m)
-            }
-            .coordinateSpace(name: "profileScroll")
-            .onPreferenceChange(ProfileHeaderTopKey.self) { top in
-                let shows = top < -56
-                if shows != showsMiniTitle { withAnimation(.qSmooth) { showsMiniTitle = shows } }
             }
             .task {
                 guard DemoConfig.scrollsProfileToList else { return }
@@ -191,11 +188,6 @@ struct ProfileView: View {
         .frame(height: 52)
         .background(Color.qBackground)
     }
-}
-
-private struct ProfileHeaderTopKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
 /// Profile top, left-aligned like Threads: name and @nick beside the photo, bio, the numbers

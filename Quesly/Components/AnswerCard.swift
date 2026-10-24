@@ -256,6 +256,8 @@ struct AnswerCard: View {
                 .font(.ui(15, .semibold))
                 .foregroundStyle(Color.qInk)
                 .contentTransition(.numericText())
+                .lineLimit(1)
+                .fixedSize()
             Icon(.lockSimpleFill, size: DS.Icon.caption).foregroundStyle(Color.qGray.opacity(0.7))
         }
         .frame(minHeight: DS.hitTarget)
@@ -276,6 +278,8 @@ struct AnswerCard: View {
                     .font(.ui(15, .semibold))
                     .foregroundStyle(Color.qInk)
                     .contentTransition(.numericText())
+                .lineLimit(1)
+                .fixedSize()
                 Icon(.lockSimpleFill, size: DS.Icon.caption).foregroundStyle(Color.qGray.opacity(0.7))
             }
             .frame(minHeight: DS.hitTarget)

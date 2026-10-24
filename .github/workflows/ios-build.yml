@@ -51,7 +51,7 @@ jobs:
             xcrun simctl io "$DEVICE" screenshot "screenshots/$2.png"
           }
           i=1
-          for screen in welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile memory settings editProfile achievements freezeUsed widgets; do
+          for screen in welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile profileList memory settings editProfile achievements freezeUsed widgets; do
             shoot $screen "$(printf '%02d' $i)-$screen"; i=$((i+1))
           done
           # Largest accessibility text size pass (Dynamic Type)

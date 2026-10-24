@@ -34,6 +34,8 @@ struct MemoriesCard: View {
         }
         .task {
             guard DemoConfig.opensMemory, opened == nil else { return }
+            // The calendar itself opens in a sheet; let it settle before stacking the detail.
+            try? await Task.sleep(for: .milliseconds(700))
             opened = store.myAnswers.first { $0.id == "h2" }
         }
     }

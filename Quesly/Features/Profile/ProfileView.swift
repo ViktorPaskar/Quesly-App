@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// Profile in a Threads / Instagram-style layout: name + ringed avatar, bio, social proof,
-/// actions, streak week and badges, then answers.
+/// Profile: centred identity, stats, streak and badges in white blocks on the canvas, then answers.
 struct ProfileView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -26,11 +25,12 @@ struct ProfileView: View {
             : list == .saved ? store.bookmarkedAnswers
             : (answers + store.resharedAnswers).sorted { $0.createdAt > $1.createdAt }
 
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(spacing: 0) {
                 ProfileHeader(user: user, isMe: isMe)
                     .padding(.horizontal, DS.Space.m)
-                    .padding(.top, 8)
+                    .padding(.top, DS.Space.xs)
 
                 HStack(spacing: 6) {
                     if isMe {
@@ -42,8 +42,9 @@ struct ProfileView: View {
                     Spacer()
                 }
                 .padding(.horizontal, DS.Space.m)
-                .padding(.top, DS.Space.l)
+                .padding(.top, DS.Space.xl)
                 .padding(.bottom, DS.Space.xxs)
+                .id("list")
 
                 // Same white cards as the feed.
                 LazyVStack(spacing: DS.Space.xs) {
@@ -63,11 +64,17 @@ struct ProfileView: View {
                                 : isMe ? "Answer today's question to start your story." : "Their answers will show up here.")
                     }
                 }
-                .padding(.horizontal, DS.Space.s)
+                .padding(.horizontal, DS.Space.m)
                 .padding(.top, DS.Space.xs)
                 .animation(.qSmooth, value: list)
             }
-            .padding(.bottom, 16)
+            .padding(.bottom, DS.Space.m)
+        }
+        .task {
+            guard DemoConfig.scrollsProfileToList else { return }
+            try? await Task.sleep(for: .milliseconds(500))
+            proxy.scrollTo("list", anchor: .top)
+        }
         }
         .background(Color.qCanvas)
         .safeAreaInset(edge: .top, spacing: 0) { topBar(user) }
@@ -97,10 +104,6 @@ struct ProfileView: View {
                     .padding(.leading, DS.Space.s)
             }
             Spacer()
-            ShareLink(item: Invite.text(for: user?.username ?? "")) {
-                Icon(.export, size: DS.Icon.action).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
-            }
-            .accessibilityLabel("Share profile")
             if isMe {
                 NavigationLink(value: Route.settings) {
                     Icon(.gearSix, size: DS.Icon.action).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
@@ -123,163 +126,350 @@ struct ProfileView: View {
     }
 }
 
+/// Profile top: identity centred on the canvas, one stats block, then (on your own profile)
+/// the streak and badges. Everything sits on one 16pt grid.
 struct ProfileHeader: View {
     @Environment(AppStore.self) private var store
     let user: AppUser?
     let isMe: Bool
     @State private var appeared = false
-    @Environment(\.dynamicTypeSize) private var typeSize
 
-    private var streak: Int { isMe ? store.streak : (user?.streak ?? 0) }
     private var followingCount: Int { isMe ? store.followingUsers.count : (user?.following ?? 0) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Space.s) {
-            // Identity block: avatar, name, place, bio, actions.
-            VStack(alignment: .leading, spacing: DS.Space.m) {
-                HStack(alignment: .center, spacing: DS.Space.m) {
-                    AvatarRing(user: user, size: 76, isActiveToday: isMe ? store.hasAnsweredToday : false)
-                        .scaleEffect(appeared ? 1 : 0.6)
-                        .opacity(appeared ? 1 : 0)
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 8) {
-                            Text(user?.username ?? "")
-                                .font(.display(28, .bold))
-                                .foregroundStyle(Color.qInk)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                            if let badge = user?.badge {
-                                HexBadge(color: badge.color, icon: badge.icon).frame(width: 20, height: 20)
-                            }
-                        }
-                        if let location = user?.location, !location.isEmpty {
-                            IconLabel(location, icon: .mapPinFill)
-                                .font(.ui(15))
-                                .foregroundStyle(Color.qGray)
-                                .lineLimit(2)
-                        }
-                    }
-                    Spacer(minLength: 0)
-                }
-
-                if let bio = user?.bio, !bio.isEmpty {
-                    Text(bio)
-                        .font(.ui(16))
-                        .foregroundStyle(Color.qInk)
-                        .lineSpacing(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                actions
-            }
-            .block()
-            .staggeredAppear(0)
-
-            statTiles.staggeredAppear(1)
-
+        VStack(spacing: DS.Space.s) {
+            identity.staggeredAppear(0)
+            stats.staggeredAppear(1)
             if isMe {
-                MemoriesCard().staggeredAppear(2)
+                StreakCard().staggeredAppear(2)
                 BadgesStrip().block().staggeredAppear(3)
             }
         }
         .onAppear { withAnimation(.spring(response: 0.55, dampingFraction: 0.65).delay(0.05)) { appeared = true } }
     }
 
-    /// Big-number tiles (answers or streak, followers, following), like balances in a banking app.
-    private var statTiles: some View {
-        let layout = typeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(spacing: DS.Space.s))
-            : AnyLayout(HStackLayout(spacing: DS.Space.s))
-        return layout {
-            // Your own streak lives in the memories block below, so here it's your answer count.
-            if isMe {
-                let count = store.answers(of: store.me.id).count
-                tile(count, count == 1 ? "Answer" : "Answers", icon: .chatCircleTextFill,
-                     tint: .qBrandText, fill: .qMint, route: nil)
-            } else {
-                tile(streak, "Day streak", icon: .fireFill, tint: .qFlame, fill: Color.qFlameSoft, route: nil)
+    // MARK: Identity
+
+    private var identity: some View {
+        VStack(spacing: 0) {
+            Avatar(user: user, size: 96)
+                .scaleEffect(appeared ? 1 : 0.6)
+                .opacity(appeared ? 1 : 0)
+
+            HStack(spacing: DS.Space.xs) {
+                Text(user?.username ?? "")
+                    .font(.display(26, .bold))
+                    .foregroundStyle(Color.qInk)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                if let badge = user?.badge {
+                    HexBadge(color: badge.color, icon: badge.icon).frame(width: 20, height: 20)
+                }
             }
-            tile(user?.followers ?? 0, "Followers", icon: .userFill, tint: .qIce, fill: .qIceSoft,
-                 route: isMe ? .followers : nil)
-            tile(followingCount, "Following", icon: .userPlusFill, tint: .qViolet,
-                 fill: .qVioletSoft, route: isMe ? .following : nil)
+            .padding(.top, DS.Space.s)
+
+            if let location = user?.location, !location.isEmpty {
+                IconLabel(location, icon: .mapPinFill, size: DS.Icon.caption)
+                    .font(.ui(15))
+                    .foregroundStyle(Color.qGray)
+                    .lineLimit(1)
+                    .padding(.top, DS.Space.xxs)
+            }
+
+            if let bio = user?.bio, !bio.isEmpty {
+                Text(bio)
+                    .font(.ui(15))
+                    .foregroundStyle(Color.qInk)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, DS.Space.s)
+                    .padding(.top, DS.Space.s)
+            }
+
+            actions.padding(.top, DS.Space.l)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, DS.Space.xs)
+    }
+
+    private var actions: some View {
+        HStack(spacing: DS.Space.xs) {
+            if isMe {
+                NavigationLink(value: Route.editProfile) { pill("Edit profile") }
+                    .buttonStyle(.pressable)
+                ShareLink(item: Invite.text(for: store.me.username)) { pill("Share profile") }
+                    .buttonStyle(.pressable)
+            } else if let user {
+                let following = store.isFollowing(user.id)
+                Button { store.toggleFollow(user.id) } label: {
+                    pill(following ? "Following" : "Follow", filled: !following)
+                }
+                .buttonStyle(.pressable)
+                .sensoryFeedback(.success, trigger: following)
+                .animation(.qSpring, value: following)
+                ShareLink(item: Invite.text(for: user.username)) { pill("Share profile") }
+                    .buttonStyle(.pressable)
+            }
         }
     }
 
-    /// bunq / Revolut-style tile: a tinted icon chip, then the big number and a short label.
-    /// Each tile has its own meaning colour (brand green, flame, ice, violet) only on the chip.
-    @ViewBuilder
-    private func tile(_ value: Int, _ label: String, icon: QIcon, tint: Color, fill: Color, route: Route?) -> some View {
-        let content = VStack(alignment: .leading, spacing: DS.Space.s) {
-            IconChip(icon: icon, tint: tint, fill: fill)
-            VStack(alignment: .leading, spacing: 2) {
-                CountUpText(value: value)
-                    .font(.display(22, .bold))
-                    .foregroundStyle(Color.qInk)
-                Text(label).font(.ui(13)).foregroundStyle(Color.qGray)
-                    .lineLimit(1)
+    private func pill(_ title: String, filled: Bool = false) -> some View {
+        Text(title)
+            .font(.ui(15, .semibold))
+            .foregroundStyle(filled ? Color.white : Color.qInk)
+            .frame(maxWidth: .infinity)
+            .frame(height: DS.hitTarget)
+            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
+                .fill(filled ? Color.qGreen : Color.qBlock))
+    }
+
+    // MARK: Stats
+
+    /// One block, three equal columns split by hairlines, like the balance row in a banking app.
+    private var stats: some View {
+        HStack(spacing: 0) {
+            if isMe {
+                let count = store.answers(of: store.me.id).count
+                stat(count, count == 1 ? "Answer" : "Answers", route: nil)
+            } else {
+                stat(user?.streak ?? 0, "Day streak", route: nil)
             }
+            hairline
+            stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)
+            hairline
+            stat(followingCount, "Following", route: isMe ? .following : nil)
         }
-        .block(padding: DS.Space.m)
+        .padding(.vertical, DS.Space.m)
+        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+    }
+
+    private var hairline: some View {
+        Rectangle().fill(Color.qLine).frame(width: 1, height: 32)
+    }
+
+    @ViewBuilder
+    private func stat(_ value: Int, _ label: String, route: Route?) -> some View {
+        let content = VStack(spacing: 2) {
+            CountUpText(value: value)
+                .font(.display(22, .bold))
+                .foregroundStyle(Color.qInk)
+            Text(label)
+                .font(.ui(13))
+                .foregroundStyle(Color.qGray)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
         if let route {
             NavigationLink(value: route) { content }.buttonStyle(.pressable)
         } else {
             content
         }
     }
-
-    private var actions: some View {
-        HStack(spacing: 8) {
-            if isMe {
-                NavigationLink(value: Route.editProfile) { outlined("Edit profile") }
-                    .buttonStyle(.pressable)
-                ShareLink(item: Invite.text(for: store.me.username)) { outlined("Share profile") }
-                    .buttonStyle(.pressable)
-            } else if let user {
-                let following = store.isFollowing(user.id)
-                Button { store.toggleFollow(user.id) } label: {
-                    Text(following ? "Following" : "Follow")
-                        .font(.ui(15, .semibold))
-                        .foregroundStyle(following ? Color.qInk : .white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 40)
-                        .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                            .fill(following ? Color.qField : Color.qGreen))
-                }
-                .buttonStyle(.pressable)
-                .sensoryFeedback(.success, trigger: following)
-                .animation(.qSpring, value: following)
-                ShareLink(item: Invite.text(for: user.username)) { outlined("Share profile") }
-                    .buttonStyle(.pressable)
-            }
-        }
-    }
-
-    private func outlined(_ title: String) -> some View {
-        Text(title)
-            .font(.ui(15, .semibold))
-            .foregroundStyle(Color.qInk)
-            .frame(maxWidth: .infinity)
-            .frame(height: 40)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
-    }
 }
 
-/// Avatar with a slowly rotating brand-gradient ring (like an IG story ring).
-/// Avatar with a brand ring that means something: "answered today".
-struct AvatarRing: View {
-    let user: AppUser?
-    var size: CGFloat = 84
-    var isActiveToday = false
+/// Your streak as a picture: the last seven days as a chain of dots (answered, frozen, missed,
+/// today), progress to the next freeze, and a row that opens the full calendar of memories.
+struct StreakCard: View {
+    @Environment(AppStore.self) private var store
+    @State private var showsCalendar = false
+    @State private var showsFreezeInfo = false
+
+    private let calendar = Calendar.current
+
+    private var week: [Date] {
+        let today = calendar.startOfDay(for: .now)
+        return (0..<7).reversed().compactMap { calendar.date(byAdding: .day, value: -$0, to: today) }
+    }
 
     var body: some View {
-        ZStack {
-            if isActiveToday {
-                Circle().stroke(Color.qGreen, lineWidth: 2.5)
-            }
-            Avatar(user: user, size: isActiveToday ? size - 10 : size, showsBadge: true)
+        VStack(alignment: .leading, spacing: 0) {
+            header
+            weekStrip.padding(.top, DS.Space.l)
+            freezeProgress.padding(.top, DS.Space.l)
+            Rectangle().fill(Color.qLine).frame(height: 1)
+                .padding(.top, DS.Space.m)
+            calendarRow
         }
-        .frame(width: size, height: size)
+        .padding(.horizontal, DS.Space.m)
+        .padding(.top, DS.Space.m)
+        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+        .sheet(isPresented: $showsCalendar) {
+            NavigationStack {
+                ScrollView { MemoriesCard().padding(DS.Space.m) }
+                    .background(Color.qCanvas)
+                    .navigationTitle("Memories")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+        }
+        .task {
+            guard DemoConfig.opensMemory else { return }
+            showsCalendar = true
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: DS.Space.s) {
+            IconChip(icon: .fireFill, tint: .qFlame, fill: Color.qFlameSoft)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("\(store.streak)-day streak")
+                    .font(.ui(17, .semibold))
+                    .foregroundStyle(Color.qInk)
+                Text(store.hasAnsweredToday ? "See you tomorrow" : "Answer today to keep it")
+                    .font(.ui(13))
+                    .foregroundStyle(Color.qGray)
+            }
+            Spacer(minLength: DS.Space.xs)
+            Button { showsFreezeInfo = true } label: {
+                HStack(spacing: DS.Space.xxs) {
+                    Icon(.snowflake, size: DS.Icon.caption, weight: .semibold)
+                    Text("\(store.streakFreezes)").font(.ui(15, .semibold))
+                }
+                .foregroundStyle(Color.qIce)
+                .padding(.horizontal, DS.Space.s)
+                .frame(height: 32)
+                .background(Capsule().fill(Color.qIceSoft))
+                .frame(minHeight: DS.hitTarget)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.pressable)
+            .accessibilityLabel("\(store.streakFreezes) streak freezes")
+            .popover(isPresented: $showsFreezeInfo) {
+                Text("Miss a day and a freeze keeps your streak alive automatically. You earn one for every 7-day streak, up to \(AppStore.maxFreezes).")
+                    .font(.ui(15))
+                    .foregroundStyle(Color.qInk)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(DS.Space.m)
+                    .frame(width: 290)
+                    .presentationCompactAdaptation(.popover)
+            }
+        }
+    }
+
+    // MARK: Week
+
+    private enum DayState { case answered, frozen, today, missed }
+
+    private func state(_ day: Date) -> DayState {
+        if store.answeredDays.contains(day) { return .answered }
+        if store.frozenDays.contains(day) { return .frozen }
+        return calendar.isDateInToday(day) ? .today : .missed
+    }
+
+    private func kept(_ day: Date?) -> Bool {
+        guard let day else { return false }
+        let s = state(day)
+        return s == .answered || s == .frozen
+    }
+
+    private var weekStrip: some View {
+        let days = week
+        return HStack(spacing: 0) {
+            ForEach(Array(days.enumerated()), id: \.offset) { i, day in
+                let isToday = calendar.isDateInToday(day)
+                VStack(spacing: DS.Space.xs) {
+                    Text(day.formatted(.dateTime.weekday(.narrow)))
+                        .font(.ui(12, isToday ? .semibold : .regular))
+                        .foregroundStyle(isToday ? Color.qInk : Color.qGray)
+                    dot(state(day))
+                        .frame(maxWidth: .infinity)
+                        .background {
+                            // The chain: a bar joins neighbouring kept days.
+                            HStack(spacing: 0) {
+                                chainHalf(kept(day) && kept(i > 0 ? days[i - 1] : nil))
+                                chainHalf(kept(day) && kept(i < days.count - 1 ? days[i + 1] : nil))
+                            }
+                            .frame(height: 6)
+                        }
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Last 7 days: \(days.filter { store.answeredDays.contains($0) }.count) answered")
+    }
+
+    private func chainHalf(_ on: Bool) -> some View {
+        Rectangle().fill(on ? Color.qGreen : .clear)
+    }
+
+    @ViewBuilder
+    private func dot(_ state: DayState) -> some View {
+        let size: CGFloat = 34
+        switch state {
+        case .answered:
+            Icon(.checkBold, size: DS.Icon.caption, weight: .bold)
+                .foregroundStyle(Color.qLime)
+                .frame(width: size, height: size)
+                .background(Circle().fill(Color.qGreen))
+        case .frozen:
+            Icon(.snowflake, size: DS.Icon.caption, weight: .semibold)
+                .foregroundStyle(Color.qIce)
+                .frame(width: size, height: size)
+                .background(Circle().fill(Color.qIceSoft))
+                .overlay(Circle().stroke(Color.qGreen, lineWidth: 2))
+        case .today:
+            Circle()
+                .strokeBorder(Color.qGreen, style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
+                .background(Circle().fill(Color.qBlock))
+                .frame(width: size, height: size)
+        case .missed:
+            Circle().fill(Color.qField).frame(width: size, height: size)
+        }
+    }
+
+    // MARK: Freeze progress
+
+    private var freezeProgress: some View {
+        let full = store.streakFreezes >= AppStore.maxFreezes
+        let into = store.streak % 7
+        let left = 7 - into
+        return VStack(alignment: .leading, spacing: DS.Space.xs) {
+            HStack {
+                Text(full ? "Freezes full" : "Next freeze")
+                    .font(.ui(13, .semibold))
+                    .foregroundStyle(Color.qInk)
+                Spacer()
+                Text(full ? "\(AppStore.maxFreezes) of \(AppStore.maxFreezes)" : left == 1 ? "1 day to go" : "\(left) days to go")
+                    .font(.ui(13))
+                    .foregroundStyle(Color.qGray)
+            }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.qField)
+                    Capsule().fill(Color.qIce)
+                        .frame(width: geo.size.width * (full ? 1 : CGFloat(into) / 7))
+                }
+            }
+            .frame(height: 6)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var calendarRow: some View {
+        Button { showsCalendar = true } label: {
+            HStack(spacing: DS.Space.s) {
+                Icon(.calendar, size: DS.Icon.row)
+                    .foregroundStyle(Color.qBrandText)
+                Text("Memories")
+                    .font(.ui(15, .semibold))
+                    .foregroundStyle(Color.qInk)
+                Spacer()
+                Text("\(store.answeredDays.count) days")
+                    .font(.ui(15))
+                    .foregroundStyle(Color.qGray)
+                Icon(.caretRightBold, size: DS.Icon.caption)
+                    .foregroundStyle(Color.qGray)
+            }
+            .frame(height: 52)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.pressable)
+        .accessibilityHint("Opens your calendar of answers")
     }
 }
 

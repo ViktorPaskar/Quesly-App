@@ -7,7 +7,7 @@ enum ProfileTab: String, CaseIterable, Identifiable {
     var title: String { rawValue.capitalized }
 }
 
-/// Profile: who you are (name, @nick, numbers, bio, actions) centred on the canvas, then sticky
+/// Profile on a white screen: who you are (name, @nick, numbers, bio, actions) centred, then sticky
 /// tabs: Answers, Reposts and, on your own profile only, Calendar and the private Saved list.
 struct ProfileView: View {
     @Environment(AppStore.self) private var store
@@ -32,8 +32,7 @@ struct ProfileView: View {
 
                     Section {
                         content
-                            .padding(.horizontal, DS.Space.m)
-                            .padding(.top, DS.Space.s)
+                            .padding(.top, tab == .calendar ? DS.Space.m : 0)
                             .frame(maxWidth: .infinity, minHeight: 360, alignment: .top)
                             .contentShape(Rectangle())
                             .simultaneousGesture(swipe)
@@ -41,7 +40,7 @@ struct ProfileView: View {
                     } header: {
                         UnderlineTabs(items: tabs, selection: $tab, title: \.title)
                             .padding(.horizontal, DS.Space.m)
-                            .background(Color.qCanvas)
+                            .background(Color.qBackground)
                             .id("tabs")
                     }
                 }
@@ -53,7 +52,7 @@ struct ProfileView: View {
                 proxy.scrollTo("tabs", anchor: .top)
             }
         }
-        .background(Color.qCanvas)
+        .background(Color.qBackground)
         .safeAreaInset(edge: .top, spacing: 0) { topBar(user) }
         .toolbar(.hidden, for: .navigationBar)
         .confirmationDialog("Block @\(user?.username ?? "")?", isPresented: $confirmBlock, titleVisibility: .visible) {
@@ -75,14 +74,16 @@ struct ProfileView: View {
                 StreakCard()
                 MemoriesCard(showsHeader: false)
             }
+            .padding(.horizontal, DS.Space.m)
         } else {
             let items = answers(for: tab)
-            VStack(spacing: DS.Space.xs) {
+            // On white, answers are full-width rows split by hairlines (Threads), not floating cards.
+            VStack(spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
                     AnswerCard(answer: answer, showsQuestion: true, showsAuthor: answer.authorId != userId)
-                        .background(Color.qBlock)
-                        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
+                        .padding(.bottom, DS.Space.xs)
                         .staggeredAppear(index)
+                    Rectangle().fill(Color.qLine).frame(height: 1)
                 }
                 if items.isEmpty { emptyState }
             }
@@ -144,7 +145,7 @@ struct ProfileView: View {
             }
             Spacer()
             if streak > 0 {
-                StreakChip(days: streak).padding(.trailing, DS.Space.xxs)
+                StreakChip(days: streak, fill: .qField).padding(.trailing, DS.Space.xxs)
             }
             if isMe {
                 NavigationLink(value: Route.settings) {
@@ -164,11 +165,11 @@ struct ProfileView: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 52)
-        .background(Color.qCanvas)
+        .background(Color.qBackground)
     }
 }
 
-/// Profile top, centred on the canvas: photo, name, @nick, the three numbers, bio, place, actions.
+/// Profile top, centred: photo, name, @nick, the three numbers, bio, place, actions.
 struct ProfileHeader: View {
     @Environment(AppStore.self) private var store
     let user: AppUser?
@@ -283,17 +284,17 @@ struct ProfileHeader: View {
         }
     }
 
-    /// Brand trio: green (main action), mint (your own / done state), white (secondary).
-    private enum PillStyle { case green, mint, white }
+    /// Brand trio: green (main action), mint (your own / done state), light gray (secondary).
+    private enum PillStyle { case green, mint, gray }
 
-    private func pill(_ title: String, style: PillStyle = .white) -> some View {
+    private func pill(_ title: String, style: PillStyle = .gray) -> some View {
         Text(title)
             .font(.ui(15, .semibold))
             .foregroundStyle(style == .green ? Color.qLime : style == .mint ? Color.qBrandText : Color.qInk)
             .frame(maxWidth: .infinity)
             .frame(height: DS.hitTarget)
             .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                .fill(style == .green ? Color.qGreen : style == .mint ? Color.qMint : Color.qBlock))
+                .fill(style == .green ? Color.qGreen : style == .mint ? Color.qMint : Color.qField))
     }
 }
 
@@ -317,7 +318,7 @@ struct StreakCard: View {
             freezeProgress.padding(.top, DS.Space.l)
         }
         .padding(DS.Space.m)
-        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+        .outlinedBlock()
     }
 
     private var header: some View {

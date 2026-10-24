@@ -282,6 +282,8 @@ struct CaughtUpFooter: View {
 /// 🔥 streak counter in the feed header — a gentle nudge to come back tomorrow.
 struct StreakChip: View {
     let days: Int
+    /// White on the gray feed canvas; a light gray fill on white screens.
+    var fill: Color = .qBlock
 
     var body: some View {
         HStack(spacing: 4) {
@@ -295,7 +297,7 @@ struct StreakChip: View {
         }
         .padding(.horizontal, 12)
         .frame(height: 32)
-        .background(Capsule().fill(Color.qBlock))
+        .background(Capsule().fill(fill))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(days) day streak")
     }

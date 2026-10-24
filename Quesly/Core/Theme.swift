@@ -210,6 +210,14 @@ extension View {
             .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
     }
 
+    /// Block on a white screen: white fill, hairline outline (no shadow), same radius as `block`.
+    func outlinedBlock() -> some View {
+        let shape = RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+        return self
+            .background(shape.fill(Color.qBackground))
+            .overlay(shape.strokeBorder(Color.qLine, lineWidth: 1))
+    }
+
     /// Fades a list item in, staggered by `index`. Skipped entirely under Reduce Motion.
     func staggeredAppear(_ index: Int) -> some View {
         modifier(StaggeredAppear(index: index))

@@ -27,6 +27,9 @@ struct AnswerCard: View {
     var isHighlighted = false
     /// Your own answer pinned on top of the feeds.
     var isPinnedMine = false
+    /// Profile row: small author line, date and private counts as one meta line under the text,
+    /// and no action row on your own answers (share, copy, edit and delete live in the long-press menu).
+    var isCompact = false
 
     @State private var isTrayOpen = false
     @State private var isSharing = false
@@ -58,7 +61,10 @@ struct AnswerCard: View {
                     .padding(.bottom, DS.Space.s)
             }
             if showsQuestion { questionLine.padding(.bottom, DS.Space.s) }
-            if showsAuthor { header.padding(.bottom, DS.Space.s) }
+            if showsAuthor {
+                Group { if isCompact { compactHeader } else { header } }
+                    .padding(.bottom, isCompact ? DS.Space.xs : DS.Space.s)
+            }
 
             Text(answer.text)
                 .font(.ui(17))
@@ -71,11 +77,12 @@ struct AnswerCard: View {
                 .overlay { DoubleTapPop(kind: .love, trigger: popTrigger) }
                 .contextMenu { menuItems } preview: { preview }
 
-            actions.padding(.top, DS.Space.xxs)
+            if isCompact && !showsAuthor { meta.padding(.top, DS.Space.xs) }
+            if !(isCompact && isMine) { actions.padding(.top, DS.Space.xxs) }
         }
         .padding(.horizontal, DS.Space.m)
         .padding(.top, DS.Space.m)
-        .padding(.bottom, DS.Space.xxs)   // + the action row's own air ≈ 16 pt visually
+        .padding(.bottom, isCompact && isMine ? DS.Space.m : DS.Space.xxs)   // the action row brings its own air
         .background(isHighlighted ? Color.qMint : Color.clear)
         .sheet(isPresented: $isSharing) {
             ShareStorySheet(answer: answer)
@@ -108,7 +115,7 @@ struct AnswerCard: View {
                 .foregroundStyle(Color.qBrandText)
                 .lineLimit(2)
             Spacer(minLength: DS.Space.xs)
-            if !showsAuthor {
+            if !showsAuthor && !isCompact {
                 Text(RelativeTime.dayLabel(answer.createdAt))
                     .font(.ui(13)).foregroundStyle(Color.qGray)
             }
@@ -147,6 +154,47 @@ struct AnswerCard: View {
         .animation(.qSpring, value: store.isFollowing(answer.authorId))
     }
 
+    /// Compact author line: 28-pt avatar, "name · 9m", "…" on the right.
+    private var compactHeader: some View {
+        HStack(spacing: DS.Space.xs) {
+            NavigationLink(value: Route.profile(answer.authorId)) {
+                HStack(spacing: DS.Space.xs) {
+                    Avatar(user: author, size: 28)
+                    (Text(author?.username ?? "unknown").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
+                        + Text(" · " + RelativeTime.short(answer.createdAt)).font(.ui(15)).foregroundStyle(Color.qGray))
+                        .lineLimit(1)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(author?.username ?? "") profile")
+            Spacer(minLength: DS.Space.xs)
+            moreMenu
+        }
+    }
+
+    /// "Oct 23 · 55 reactions · 6 reposts". Counts only on your own answers (only you see them);
+    /// tapping them opens who reacted.
+    private var meta: some View {
+        var parts = [RelativeTime.dayLabel(answer.createdAt)]
+        if isMine && answer.totalReactions > 0 {
+            parts.append(answer.totalReactions == 1 ? "1 reaction" : "\(answer.totalReactions) reactions")
+        }
+        if isMine && answer.reshares > 0 {
+            parts.append(answer.reshares == 1 ? "1 repost" : "\(answer.reshares) reposts")
+        }
+        if answer.isEdited { parts.append("edited") }
+        let opens = isMine && answer.totalReactions > 0
+        return Text(parts.joined(separator: " · "))
+            .font(.ui(13))
+            .foregroundStyle(Color.qGray)
+            .lineLimit(1)
+            .frame(minHeight: 20)
+            .contentShape(Rectangle())
+            .onTapGesture { if opens { showReactions = true } }
+            .accessibilityAddTraits(opens ? .isButton : [])
+            .accessibilityHint(opens ? "Only you can see this. Shows who reacted" : "")
+    }
+
     /// Shared by the "…" menu and the long-press context menu.
     @ViewBuilder
     private var menuItems: some View {
@@ -159,6 +207,7 @@ struct AnswerCard: View {
             }
         }
         if isMine {
+            Button { isSharing = true } label: { Label("Share", systemImage: QIcon.paperPlaneTilt.rawValue) }
             Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", systemImage: QIcon.copy.rawValue) }
             Divider()
             if answer.isEditable() {

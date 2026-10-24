@@ -107,18 +107,20 @@ struct MemoriesCard: View {
         .accessibilityLabel(label)
     }
 
+    private func key<Dot: View>(_ title: String, @ViewBuilder dot: () -> Dot) -> some View {
+        HStack(spacing: DS.Space.xxs) {
+            dot().frame(width: 10, height: 10)
+            Text(title)
+        }
+    }
+
     private var legend: some View {
         HStack(spacing: DS.Space.m) {
-            HStack(spacing: DS.Space.xxs) {
-                Circle().fill(Color.qGreen).frame(width: 10, height: 10)
-                Text("Answered")
-            }
-            HStack(spacing: DS.Space.xxs) {
-                Icon(.snowflake, size: DS.Icon.caption).foregroundStyle(Color.qIce)
-                Text("Freeze")
-            }
-            Spacer()
-            Text("Tap a day to reread it")
+            key("Answered") { Circle().fill(Color.qGreen) }
+            key("Today") { Circle().fill(Color.qLime) }
+            key("Freeze") { Circle().strokeBorder(Color.qIce, lineWidth: 1.5) }
+            key("Missed") { Circle().strokeBorder(Color.qGray.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [2, 2])) }
+            Spacer(minLength: 0)
         }
         .font(.ui(12))
         .foregroundStyle(Color.qGray)
@@ -212,23 +214,24 @@ private struct DayCell: View {
         ZStack {
             switch state {
             case .answered:
-                Circle().fill(Color.qGreen)
-                Text(number).font(.ui(13, .semibold)).foregroundStyle(.white)
+                Circle().fill(isToday ? Color.qLime : Color.qGreen)
+                Text(number).font(.ui(13, .semibold)).foregroundStyle(isToday ? Color.qGreen : .white)
             case .frozen:
                 Circle().fill(Color.qIceSoft)
                 Icon(.snowflake, size: DS.Icon.caption, weight: .semibold).foregroundStyle(Color.qIce)
             case .missed:
-                Text(number).font(.ui(13)).foregroundStyle(Color.qGray)
+                if isToday {
+                    Circle().strokeBorder(Color.qGreen, lineWidth: 1.5)
+                    Text(number).font(.ui(13, .semibold)).foregroundStyle(Color.qInk)
+                } else {
+                    Circle().strokeBorder(Color.qGray.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2, 3]))
+                    Text(number).font(.ui(13)).foregroundStyle(Color.qGray)
+                }
             case .future:
                 Text(number).font(.ui(13)).foregroundStyle(Color.qGray.opacity(0.45))
             }
         }
         .frame(width: 36, height: 36)
-        .overlay {
-            if isToday && state != .answered {
-                Circle().strokeBorder(Color.qBrandText, lineWidth: 1.5)
-            }
-        }
     }
 
     private var accessibilityText: String {

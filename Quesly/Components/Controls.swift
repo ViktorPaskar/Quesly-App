@@ -81,7 +81,7 @@ struct UnderlineTabs<Item: Hashable & Identifiable>: View {
                 let on = item == selection
                 Button { withAnimation(.qSmooth) { selection = item } } label: {
                     Text(item[keyPath: title])
-                        .font(.ui(15, .semibold))
+                        .font(.ui(15, on ? .semibold : .regular))
                         .foregroundStyle(on ? Color.qInk : Color.qGray)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
@@ -89,9 +89,8 @@ struct UnderlineTabs<Item: Hashable & Identifiable>: View {
                         .frame(height: DS.hitTarget)
                         .overlay(alignment: .bottom) {
                             if on {
-                                Capsule().fill(Color.qGreen)
-                                    .frame(height: 3)
-                                    .padding(.horizontal, DS.Space.s)
+                                Rectangle().fill(Color.qInk)
+                                    .frame(height: 2)
                                     .matchedGeometryEffect(id: "line", in: ns)
                             }
                         }

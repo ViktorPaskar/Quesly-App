@@ -16,6 +16,8 @@ struct ProfileView: View {
     var isTabRoot = false
     @State private var confirmBlock = false
     @State private var tab: ProfileTab = DemoConfig.initialProfileTab
+    /// Mini avatar + @nick in the top bar once the name scrolls away.
+    @State private var showsMiniTitle = false
 
     private var isMe: Bool { userId == store.me.id }
     private var tabs: [ProfileTab] { isMe ? ProfileTab.allCases : [.answers, .reposts] }
@@ -28,7 +30,11 @@ struct ProfileView: View {
                     ProfileHeader(user: user, isMe: isMe)
                         .padding(.horizontal, DS.Space.m)
                         .padding(.top, DS.Space.xs)
-                        .padding(.bottom, DS.Space.xl)
+                        .padding(.bottom, DS.Space.l)
+                        .background(GeometryReader { geo in
+                            Color.clear.preference(key: ProfileHeaderTopKey.self,
+                                                   value: geo.frame(in: .named("profileScroll")).minY)
+                        })
 
                     Section {
                         content
@@ -39,12 +45,16 @@ struct ProfileView: View {
                             .animation(.qSmooth, value: tab)
                     } header: {
                         UnderlineTabs(items: tabs, selection: $tab, title: \.title)
-                            .padding(.horizontal, DS.Space.m)
                             .background(Color.qBackground)
                             .id("tabs")
                     }
                 }
                 .padding(.bottom, DS.Space.m)
+            }
+            .coordinateSpace(name: "profileScroll")
+            .onPreferenceChange(ProfileHeaderTopKey.self) { top in
+                let shows = top < -56
+                if shows != showsMiniTitle { withAnimation(.qSmooth) { showsMiniTitle = shows } }
             }
             .task {
                 guard DemoConfig.scrollsProfileToList else { return }
@@ -77,13 +87,15 @@ struct ProfileView: View {
             .padding(.horizontal, DS.Space.m)
         } else {
             let items = answers(for: tab)
-            // On white, answers are full-width rows split by hairlines (Threads), not floating cards.
+            // On white, answers are rows split by inset hairlines (Threads), not floating cards.
             VStack(spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
-                    AnswerCard(answer: answer, showsQuestion: true, showsAuthor: answer.authorId != userId)
-                        .padding(.bottom, DS.Space.xs)
+                    if index > 0 {
+                        Rectangle().fill(Color.qLine).frame(height: 1).padding(.horizontal, DS.Space.m)
+                    }
+                    AnswerCard(answer: answer, showsQuestion: true, showsAuthor: answer.authorId != userId,
+                               isCompact: true)
                         .staggeredAppear(index)
-                    Rectangle().fill(Color.qLine).frame(height: 1)
                 }
                 if items.isEmpty { emptyState }
             }
@@ -129,24 +141,23 @@ struct ProfileView: View {
     // MARK: Top bar
 
     private func topBar(_ user: AppUser?) -> some View {
-        let streak = isMe ? store.streak : (user?.streak ?? 0)
-        return HStack(spacing: 4) {
+        HStack(spacing: DS.Space.xxs) {
             if !isTabRoot {
                 Button { dismiss() } label: {
                     Icon(.caretLeftBold, size: DS.Icon.action).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
                 }
                 .accessibilityLabel("Back")
             }
+            if isMe && store.streak > 0 {
+                StreakChip(days: store.streak, fill: .qField).padding(.leading, DS.Space.xs)
+            }
             if store.isPrivateAccount && isMe {
                 IconLabel("Private", icon: .lockSimpleFill, size: DS.Icon.caption)
                     .font(.ui(13, .semibold))
                     .foregroundStyle(Color.qGray)
-                    .padding(.leading, DS.Space.s)
+                    .padding(.leading, DS.Space.xs)
             }
             Spacer()
-            if streak > 0 {
-                StreakChip(days: streak, fill: .qField).padding(.trailing, DS.Space.xxs)
-            }
             if isMe {
                 NavigationLink(value: Route.settings) {
                     Icon(.gearSix, size: DS.Icon.action).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
@@ -163,13 +174,32 @@ struct ProfileView: View {
                 .accessibilityLabel("More")
             }
         }
-        .padding(.horizontal, 8)
+        .overlay {
+            if showsMiniTitle {
+                HStack(spacing: DS.Space.xs) {
+                    Avatar(user: user, size: 24)
+                    Text(user?.username ?? "")
+                        .font(.ui(15, .semibold))
+                        .foregroundStyle(Color.qInk)
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: 200)
+                .transition(.opacity)
+            }
+        }
+        .padding(.horizontal, DS.Space.xs)
         .frame(height: 52)
         .background(Color.qBackground)
     }
 }
 
-/// Profile top, centred: photo, name, @nick, the three numbers, bio, place, actions.
+private struct ProfileHeaderTopKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+}
+
+/// Profile top, left-aligned like Threads: name and @nick beside the photo, bio, the numbers
+/// as one line of text, then two equal actions.
 struct ProfileHeader: View {
     @Environment(AppStore.self) private var store
     let user: AppUser?
@@ -179,85 +209,80 @@ struct ProfileHeader: View {
     private var followingCount: Int { isMe ? store.followingUsers.count : (user?.following ?? 0) }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Avatar(user: user, size: 88)
-                .scaleEffect(appeared ? 1 : 0.6)
-                .opacity(appeared ? 1 : 0)
-
-            Text(user?.displayName ?? "")
-                .font(.display(24, .bold))
-                .foregroundStyle(Color.qInk)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .padding(.top, DS.Space.s)
-            Text("@\(user?.username ?? "")")
-                .font(.ui(15))
-                .foregroundStyle(Color.qGray)
-                .lineLimit(1)
-                .padding(.top, 2)
-
-            stats.padding(.top, DS.Space.l)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center, spacing: DS.Space.m) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(user?.displayName ?? "")
+                        .font(.display(28, .bold))
+                        .foregroundStyle(Color.qInk)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    nickLine
+                }
+                Spacer(minLength: 0)
+                Avatar(user: user, size: 64)
+                    .scaleEffect(appeared ? 1 : 0.6)
+                    .opacity(appeared ? 1 : 0)
+            }
 
             if let bio = user?.bio, !bio.isEmpty {
                 Text(bio)
                     .font(.ui(15))
-                    .foregroundStyle(Color.qInk)
-                    .multilineTextAlignment(.center)
+                    .foregroundStyle(Color.qInk.opacity(0.85))
                     .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, DS.Space.xs)
-                    .padding(.top, DS.Space.l)
-            }
-            if let location = user?.location, !location.isEmpty {
-                IconLabel(location, icon: .mapPinFill, size: DS.Icon.caption)
-                    .font(.ui(13))
-                    .foregroundStyle(Color.qGray)
-                    .lineLimit(1)
-                    .padding(.top, DS.Space.xs)
+                    .padding(.top, DS.Space.m)
             }
 
+            stats.padding(.top, DS.Space.m)
             actions.padding(.top, DS.Space.l)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .staggeredAppear(0)
         .onAppear { withAnimation(.spring(response: 0.55, dampingFraction: 0.65).delay(0.05)) { appeared = true } }
     }
 
-    // MARK: Stats
-
-    /// Three equal columns split by hairlines.
-    private var stats: some View {
-        HStack(spacing: 0) {
-            stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil)
-            hairline
-            stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)
-            hairline
-            stat(followingCount, "Following", route: isMe ? .following : nil)
+    /// "@nick", plus "· 🔥 2-day streak" on someone else's profile (yours sits in the top bar).
+    private var nickLine: some View {
+        HStack(spacing: DS.Space.xxs) {
+            Text("@\(user?.username ?? "")")
+                .foregroundStyle(Color.qGray)
+                .lineLimit(1)
+            if !isMe, let streak = user?.streak, streak > 0 {
+                Text("·").foregroundStyle(Color.qGray)
+                Icon(.fireFill, size: DS.Icon.caption).foregroundStyle(Color.qFlame)
+                Text("\(streak)-day streak")
+                    .font(.ui(15, .semibold))
+                    .foregroundStyle(Color.qInk)
+                    .lineLimit(1)
+            }
         }
+        .font(.ui(15))
     }
 
-    private var hairline: some View {
-        Rectangle().fill(Color.qLine).frame(width: 1, height: 28)
+    // MARK: Stats
+
+    private var stats: some View {
+        HStack(spacing: DS.Space.l) {
+            let answers = store.answers(of: user?.id ?? "").count
+            stat(answers, answers == 1 ? "answer" : "answers", route: nil)
+            stat(user?.followers ?? 0, (user?.followers ?? 0) == 1 ? "follower" : "followers",
+                 route: isMe ? .followers : nil)
+            stat(followingCount, "following", route: isMe ? .following : nil)
+        }
     }
 
     @ViewBuilder
     private func stat(_ value: Int, _ label: String, route: Route?) -> some View {
-        let content = VStack(spacing: 2) {
-            CountUpText(value: value)
-                .font(.display(20, .bold))
-                .foregroundStyle(Color.qInk)
-            Text(label)
-                .font(.ui(13))
-                .foregroundStyle(Color.qGray)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity)
-        .contentShape(Rectangle())
+        let text = (Text("\(value) ").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
+            + Text(label).font(.ui(15)).foregroundStyle(Color.qGray))
+            .lineLimit(1)
         if let route {
-            NavigationLink(value: route) { content }.buttonStyle(.pressable)
+            NavigationLink(value: route) { text }
+                .buttonStyle(.pressable)
+                .frame(minHeight: DS.hitTarget)
         } else {
-            content
+            text.frame(minHeight: DS.hitTarget)
         }
     }
 
@@ -290,32 +315,24 @@ struct ProfileHeader: View {
     private func pill(_ title: String, style: PillStyle = .gray) -> some View {
         Text(title)
             .font(.ui(15, .semibold))
-            .foregroundStyle(style == .green ? Color.qLime : style == .mint ? Color.qBrandText : Color.qInk)
+            .foregroundStyle(style == .green ? Color.white : style == .mint ? Color.qBrandText : Color.qInk)
             .frame(maxWidth: .infinity)
-            .frame(height: DS.hitTarget)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                .fill(style == .green ? Color.qGreen : style == .mint ? Color.qMint : Color.qField))
+            .frame(height: 40)
+            .background(Capsule().fill(style == .green ? Color.qGreen : style == .mint ? Color.qMint : Color.qField))
+            .frame(minHeight: DS.hitTarget)
+            .contentShape(Rectangle())
     }
 }
 
-/// Your streak as a picture: the last seven days as a chain of dots (answered, frozen, missed,
-/// today) and progress to the next freeze.
+/// Calendar tab, top block: the streak, freezes in stock and a 7-step bar to the next freeze.
 struct StreakCard: View {
     @Environment(AppStore.self) private var store
     @State private var showsFreezeInfo = false
 
-    private let calendar = Calendar.current
-
-    private var week: [Date] {
-        let today = calendar.startOfDay(for: .now)
-        return (0..<7).reversed().compactMap { calendar.date(byAdding: .day, value: -$0, to: today) }
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: DS.Space.m) {
             header
-            weekStrip.padding(.top, DS.Space.l)
-            freezeProgress.padding(.top, DS.Space.l)
+            freezeProgress
         }
         .padding(DS.Space.m)
         .outlinedBlock()
@@ -323,10 +340,13 @@ struct StreakCard: View {
 
     private var header: some View {
         HStack(spacing: DS.Space.s) {
-            IconChip(icon: .fireFill, tint: .qFlame, fill: Color.qFlameSoft)
+            Icon(.fireFill, size: DS.Icon.action)
+                .foregroundStyle(Color.qFlame)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(Color.qFlameSoft))
             VStack(alignment: .leading, spacing: 0) {
                 Text("\(store.streak)-day streak")
-                    .font(.ui(17, .semibold))
+                    .font(.display(20, .bold))
                     .foregroundStyle(Color.qInk)
                 Text(store.hasAnsweredToday ? "See you tomorrow" : "Answer today to keep it")
                     .font(.ui(13))
@@ -336,17 +356,18 @@ struct StreakCard: View {
             Button { showsFreezeInfo = true } label: {
                 HStack(spacing: DS.Space.xxs) {
                     Icon(.snowflake, size: DS.Icon.caption, weight: .semibold)
-                    Text("\(store.streakFreezes)").font(.ui(15, .semibold))
+                    Text(store.streakFreezes == 1 ? "1 freeze" : "\(store.streakFreezes) freezes")
+                        .font(.ui(13, .semibold))
                 }
                 .foregroundStyle(Color.qIce)
                 .padding(.horizontal, DS.Space.s)
-                .frame(height: 32)
+                .frame(height: 28)
                 .background(Capsule().fill(Color.qIceSoft))
                 .frame(minHeight: DS.hitTarget)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
-            .accessibilityLabel("\(store.streakFreezes) streak freezes")
+            .accessibilityHint("Explains streak freezes")
             .popover(isPresented: $showsFreezeInfo) {
                 Text("Miss a day and a freeze keeps your streak alive automatically. You earn one for every 7-day streak, up to \(AppStore.maxFreezes).")
                     .font(.ui(15))
@@ -359,83 +380,10 @@ struct StreakCard: View {
         }
     }
 
-    // MARK: Week
-
-    private enum DayState { case answered, frozen, today, missed }
-
-    private func state(_ day: Date) -> DayState {
-        if store.answeredDays.contains(day) { return .answered }
-        if store.frozenDays.contains(day) { return .frozen }
-        return calendar.isDateInToday(day) ? .today : .missed
-    }
-
-    private func kept(_ day: Date?) -> Bool {
-        guard let day else { return false }
-        let s = state(day)
-        return s == .answered || s == .frozen
-    }
-
-    private var weekStrip: some View {
-        let days = week
-        return HStack(spacing: 0) {
-            ForEach(Array(days.enumerated()), id: \.offset) { i, day in
-                let isToday = calendar.isDateInToday(day)
-                VStack(spacing: DS.Space.xs) {
-                    Text(day.formatted(.dateTime.weekday(.narrow)))
-                        .font(.ui(12, isToday ? .semibold : .regular))
-                        .foregroundStyle(isToday ? Color.qInk : Color.qGray)
-                    dot(state(day))
-                        .frame(maxWidth: .infinity)
-                        .background {
-                            // The chain: a bar joins neighbouring kept days.
-                            HStack(spacing: 0) {
-                                chainHalf(kept(day) && kept(i > 0 ? days[i - 1] : nil))
-                                chainHalf(kept(day) && kept(i < days.count - 1 ? days[i + 1] : nil))
-                            }
-                            .frame(height: 6)
-                        }
-                }
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Last 7 days: \(days.filter { store.answeredDays.contains($0) }.count) answered")
-    }
-
-    private func chainHalf(_ on: Bool) -> some View {
-        Rectangle().fill(on ? Color.qGreen : .clear)
-    }
-
-    @ViewBuilder
-    private func dot(_ state: DayState) -> some View {
-        let size: CGFloat = 34
-        switch state {
-        case .answered:
-            Icon(.checkBold, size: DS.Icon.caption, weight: .bold)
-                .foregroundStyle(Color.qLime)
-                .frame(width: size, height: size)
-                .background(Circle().fill(Color.qGreen))
-        case .frozen:
-            Icon(.snowflake, size: DS.Icon.caption, weight: .semibold)
-                .foregroundStyle(Color.qIce)
-                .frame(width: size, height: size)
-                .background(Circle().fill(Color.qIceSoft))
-                .overlay(Circle().stroke(Color.qGreen, lineWidth: 2))
-        case .today:
-            Circle()
-                .strokeBorder(Color.qGreen, style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
-                .background(Circle().fill(Color.qMint))
-                .frame(width: size, height: size)
-        case .missed:
-            Circle().fill(Color.qField).frame(width: size, height: size)
-        }
-    }
-
-    // MARK: Freeze progress
-
+    /// One segment per day of the current 7-day run.
     private var freezeProgress: some View {
         let full = store.streakFreezes >= AppStore.maxFreezes
-        let into = store.streak % 7
+        let into = full ? 7 : store.streak % 7
         let left = 7 - into
         return VStack(alignment: .leading, spacing: DS.Space.xs) {
             HStack {
@@ -443,18 +391,17 @@ struct StreakCard: View {
                     .font(.ui(13, .semibold))
                     .foregroundStyle(Color.qInk)
                 Spacer()
-                Text(full ? "\(AppStore.maxFreezes) of \(AppStore.maxFreezes)" : left == 1 ? "1 day to go" : "\(left) days to go")
-                    .font(.ui(13))
-                    .foregroundStyle(Color.qGray)
-            }
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.qField)
-                    Capsule().fill(Color.qIce)
-                        .frame(width: geo.size.width * (full ? 1 : CGFloat(into) / 7))
+                if !full {
+                    Text(left == 1 ? "1 day to go" : "\(left) days to go")
+                        .font(.ui(13))
+                        .foregroundStyle(Color.qGray)
                 }
             }
-            .frame(height: 6)
+            HStack(spacing: DS.Space.xxs) {
+                ForEach(0..<7, id: \.self) { i in
+                    Capsule().fill(i < into ? Color.qIce : Color.qField).frame(height: 6)
+                }
+            }
         }
         .accessibilityElement(children: .combine)
     }

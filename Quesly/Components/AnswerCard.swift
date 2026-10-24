@@ -60,10 +60,10 @@ struct AnswerCard: View {
                     .foregroundStyle(Color.qBrandText)
                     .padding(.bottom, DS.Space.s)
             }
-            if showsQuestion { questionLine.padding(.bottom, DS.Space.s) }
+            if showsQuestion { questionLine.padding(.bottom, isCompact ? DS.Space.m : DS.Space.s) }
             if showsAuthor {
                 Group { if isCompact { compactHeader } else { header } }
-                    .padding(.bottom, isCompact ? DS.Space.xs : DS.Space.s)
+                    .padding(.bottom, DS.Space.s)
             }
 
             Text(answer.text)
@@ -77,12 +77,13 @@ struct AnswerCard: View {
                 .overlay { DoubleTapPop(kind: .love, trigger: popTrigger) }
                 .contextMenu { menuItems } preview: { preview }
 
-            if isCompact && !showsAuthor { meta.padding(.top, DS.Space.xs) }
-            if !(isCompact && isMine) { actions.padding(.top, DS.Space.xxs) }
+            if isCompact && !showsAuthor { meta.padding(.top, DS.Space.s) }
+            if !(isCompact && isMine) { actions.padding(.top, isCompact ? DS.Space.xs : DS.Space.xxs) }
         }
         .padding(.horizontal, DS.Space.m)
-        .padding(.top, DS.Space.m)
-        .padding(.bottom, isCompact && isMine ? DS.Space.m : DS.Space.xxs)   // the action row brings its own air
+        // Profile rows breathe more than feed cards: 24 pt above, 24 (or the action row's air) below.
+        .padding(.top, isCompact ? DS.Space.xl : DS.Space.m)
+        .padding(.bottom, isCompact ? (isMine ? DS.Space.xl : DS.Space.s) : DS.Space.xxs)
         .background(isHighlighted ? Color.qMint : Color.clear)
         .sheet(isPresented: $isSharing) {
             ShareStorySheet(answer: answer)
@@ -172,27 +173,40 @@ struct AnswerCard: View {
         }
     }
 
-    /// "Oct 23 · 55 reactions · 6 reposts". Counts only on your own answers (only you see them);
-    /// tapping them opens who reacted.
+    /// "Oct 23 · [stickers] 55 · 6 reposts". Counts only on your own answers (only you see them);
+    /// the reactions open who reacted and how.
     private var meta: some View {
-        var parts = [RelativeTime.dayLabel(answer.createdAt)]
-        if isMine && answer.totalReactions > 0 {
-            parts.append(answer.totalReactions == 1 ? "1 reaction" : "\(answer.totalReactions) reactions")
+        HStack(spacing: DS.Space.xs) {
+            Text(RelativeTime.dayLabel(answer.createdAt) + (answer.isEdited ? " · edited" : ""))
+            if isMine && answer.totalReactions > 0 {
+                Text("·")
+                Button { showReactions = true } label: {
+                    HStack(spacing: DS.Space.xxs) {
+                        HStack(spacing: -6) {
+                            ForEach(answer.topReactions.prefix(3)) { kind in
+                                ReactionSticker(kind: kind, size: 22)
+                            }
+                        }
+                        Text("\(answer.totalReactions)")
+                            .font(.ui(13, .semibold))
+                            .foregroundStyle(Color.qInk)
+                            .fixedSize()
+                    }
+                    .frame(minHeight: DS.hitTarget)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.pressable)
+                .accessibilityLabel("\(answer.totalReactions) reactions. Only you can see this. Show who reacted")
+            }
+            if isMine && answer.reshares > 0 {
+                Text("·")
+                Text(answer.reshares == 1 ? "1 repost" : "\(answer.reshares) reposts")
+            }
         }
-        if isMine && answer.reshares > 0 {
-            parts.append(answer.reshares == 1 ? "1 repost" : "\(answer.reshares) reposts")
-        }
-        if answer.isEdited { parts.append("edited") }
-        let opens = isMine && answer.totalReactions > 0
-        return Text(parts.joined(separator: " · "))
-            .font(.ui(13))
-            .foregroundStyle(Color.qGray)
-            .lineLimit(1)
-            .frame(minHeight: 20)
-            .contentShape(Rectangle())
-            .onTapGesture { if opens { showReactions = true } }
-            .accessibilityAddTraits(opens ? .isButton : [])
-            .accessibilityHint(opens ? "Only you can see this. Shows who reacted" : "")
+        .font(.ui(13))
+        .foregroundStyle(Color.qGray)
+        .lineLimit(1)
+        .frame(minHeight: 24)
     }
 
     /// Shared by the "…" menu and the long-press context menu.
@@ -261,7 +275,7 @@ struct AnswerCard: View {
     /// react · repost · share on the left, bookmark on the right (under "…").
     /// Glyphs sit on the card's 16-pt edges; each keeps a full 44-pt tap area.
     private var actions: some View {
-        HStack(spacing: DS.Space.xl) {
+        HStack(spacing: isCompact ? DS.Space.xxl : DS.Space.xl) {
             if isMine {
                 // Nothing until the first reaction: an empty counter reads like a verdict.
                 if answer.totalReactions > 0 { authorReactions }

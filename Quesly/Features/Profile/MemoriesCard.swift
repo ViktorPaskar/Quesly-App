@@ -7,6 +7,8 @@ struct MemoriesCard: View {
     @State private var monthOffset = 0
     @State private var opened: Answer?
     @State private var showsFreezeInfo = false
+    /// Off inside the profile Calendar tab, where the streak card above already says it.
+    var showsHeader = true
 
     private let calendar = Calendar.current
     private static let monthsBack = 12
@@ -18,7 +20,7 @@ struct MemoriesCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Space.s) {
-            header
+            if showsHeader { header }
             monthBar
             MonthGrid(month: month, answered: store.answeredDays, frozen: store.frozenDays) { day in
                 opened = store.myAnswer(on: day)
@@ -31,12 +33,6 @@ struct MemoriesCard: View {
             MemoryDetailSheet(answer: answer)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
-        }
-        .task {
-            guard DemoConfig.opensMemory, opened == nil else { return }
-            // The calendar itself opens in a sheet; let it settle before stacking the detail.
-            try? await Task.sleep(for: .milliseconds(700))
-            opened = store.myAnswers.first { $0.id == "h2" }
         }
     }
 

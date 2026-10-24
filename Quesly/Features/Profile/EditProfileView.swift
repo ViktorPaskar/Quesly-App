@@ -53,6 +53,10 @@ struct EditProfileView: View {
                     importPhoto(item)
                 }
 
+                field("Name") {
+                    TextField("Your name", text: Binding(get: { draft.name ?? "" }, set: { draft.name = $0 }))
+                        .textContentType(.name)
+                }
                 field("Nickname") {
                     TextField("Nickname", text: $draft.username)
                         .textInputAutocapitalization(.never)

@@ -10,9 +10,10 @@ enum MockData {
     static let me = AppUser(
         id: "me",
         username: "misslilly_57",
+        name: "Lilly Laurent",
         email: "amanda57@gmail.com",
         phone: "+33 123 45 67 89",
-        location: "Metz, France",
+        location: "Paris, France",
         bio: "I love slow mornings, deep talks, and people who are real. Sometimes I overthink, sometimes I just laugh it off. Living in Paris, learning to enjoy the in-between moments ☕️",
         avatarHue: 0.08,
         badge: .gold,
@@ -22,20 +23,20 @@ enum MockData {
     )
 
     static let users: [AppUser] = [
-        .init(id: "u1", username: "van.derss2", bio: "Grandma's stories > everything.", avatarHue: 0.55, badge: .red, followers: 120, following: 98, streak: 6),
-        .init(id: "u2", username: "alexo91", bio: "Plants, coffee and long walks 🌿", avatarHue: 0.32, badge: .purple, followers: 342, following: 210, streak: 12),
-        .init(id: "u3", username: "funnnnyyy1", bio: "Chasing mountains.", avatarHue: 0.12, followers: 88, following: 140, streak: 2),
-        .init(id: "u4", username: "mr.smith", bio: "Side projects all day.", avatarHue: 0.62, badge: .blue, followers: 501, following: 77, streak: 21),
-        .init(id: "u5", username: "john.john", bio: "There's a coin and a coffee. I enjoy the little things in life.", avatarHue: 0.02, badge: .red, followers: 342, following: 89, streak: 4),
-        .init(id: "u6", username: "chill_mara", bio: "Gamer, dreamer.", avatarHue: 0.85, followers: 60, following: 61, streak: 1),
-        .init(id: "u7", username: "AnnaViva", bio: "Dancing through Lyon 💃", avatarHue: 0.95, badge: .green, followers: 77, following: 120, streak: 9),
-        .init(id: "u8", username: "arturo_sun", bio: "Sunsets collector.", avatarHue: 0.1, followers: 51, following: 44, streak: 3),
-        .init(id: "u9", username: "koko_lilly", bio: "Art student, Bordeaux.", avatarHue: 0.75, followers: 33, following: 50, streak: 5),
-        .init(id: "u10", username: "nata.ver", bio: "Books & bikes.", avatarHue: 0.0, followers: 21, following: 18, streak: 2),
-        .init(id: "u11", username: "leo.martin", bio: "Paris • film photography", avatarHue: 0.45, followers: 410, following: 300, streak: 7),
-        .init(id: "u12", username: "camille_b", bio: "Always hungry, always curious.", avatarHue: 0.9, badge: .purple, followers: 980, following: 410, streak: 15),
-        .init(id: "u13", username: "yasmine.k", bio: "Med student. Coffee-powered.", avatarHue: 0.05, followers: 220, following: 180, streak: 4),
-        .init(id: "u14", username: "theo_runs", bio: "Marathon in progress 🏃", avatarHue: 0.58, badge: .blue, followers: 150, following: 120, streak: 30),
+        .init(id: "u1", username: "van.derss2", name: "Vanessa Ders", bio: "Grandma's stories > everything.", avatarHue: 0.55, badge: .red, followers: 120, following: 98, streak: 6),
+        .init(id: "u2", username: "alexo91", name: "Alex Moreau", bio: "Plants, coffee and long walks 🌿", avatarHue: 0.32, badge: .purple, followers: 342, following: 210, streak: 12),
+        .init(id: "u3", username: "funnnnyyy1", name: "Hugo Bernard", bio: "Chasing mountains.", avatarHue: 0.12, followers: 88, following: 140, streak: 2),
+        .init(id: "u4", username: "mr.smith", name: "Mark Smith", bio: "Side projects all day.", avatarHue: 0.62, badge: .blue, followers: 501, following: 77, streak: 21),
+        .init(id: "u5", username: "john.john", name: "John Walker", bio: "There's a coin and a coffee. I enjoy the little things in life.", avatarHue: 0.02, badge: .red, followers: 342, following: 89, streak: 4),
+        .init(id: "u6", username: "chill_mara", name: "Mara Lenoir", bio: "Gamer, dreamer.", avatarHue: 0.85, followers: 60, following: 61, streak: 1),
+        .init(id: "u7", username: "AnnaViva", name: "Anna Viva", bio: "Dancing through Lyon 💃", avatarHue: 0.95, badge: .green, followers: 77, following: 120, streak: 9),
+        .init(id: "u8", username: "arturo_sun", name: "Arturo Sol", bio: "Sunsets collector.", avatarHue: 0.1, followers: 51, following: 44, streak: 3),
+        .init(id: "u9", username: "koko_lilly", name: "Lilly Kovac", bio: "Art student, Bordeaux.", avatarHue: 0.75, followers: 33, following: 50, streak: 5),
+        .init(id: "u10", username: "nata.ver", name: "Natalia Vernet", bio: "Books & bikes.", avatarHue: 0.0, followers: 21, following: 18, streak: 2),
+        .init(id: "u11", username: "leo.martin", name: "Léo Martin", bio: "Paris • film photography", avatarHue: 0.45, followers: 410, following: 300, streak: 7),
+        .init(id: "u12", username: "camille_b", name: "Camille Blanc", bio: "Always hungry, always curious.", avatarHue: 0.9, badge: .purple, followers: 980, following: 410, streak: 15),
+        .init(id: "u13", username: "yasmine.k", name: "Yasmine Karim", bio: "Med student. Coffee-powered.", avatarHue: 0.05, followers: 220, following: 180, streak: 4),
+        .init(id: "u14", username: "theo_runs", name: "Théo Roux", bio: "Marathon in progress 🏃", avatarHue: 0.58, badge: .blue, followers: 150, following: 120, streak: 30),
     ]
 
     /// Users that `me` follows (drives the Friends feed).

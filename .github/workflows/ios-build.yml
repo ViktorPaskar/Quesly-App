@@ -50,13 +50,16 @@ jobs:
             sleep 9
             xcrun simctl io "$DEVICE" screenshot "screenshots/$2.png"
           }
+          ALL="welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile profileList memory settings editProfile achievements freezeUsed widgets"
+          # While we redesign one section at a time, only that section is shot. Set FOCUS="$ALL" for everything.
+          FOCUS="profile profileList profileReposts memory profileSaved otherProfile editProfile"
           i=1
-          for screen in welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile profileList memory settings editProfile achievements freezeUsed widgets; do
+          for screen in $FOCUS; do
             shoot $screen "$(printf '%02d' $i)-$screen"; i=$((i+1))
           done
           # Largest accessibility text size pass (Dynamic Type)
           xcrun simctl ui "$DEVICE" content_size accessibility-extra-large || true
-          for screen in feed profile settings; do
+          for screen in profile; do
             shoot $screen "xl-$screen"
           done
           xcrun simctl ui "$DEVICE" content_size large || true

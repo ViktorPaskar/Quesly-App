@@ -7,7 +7,7 @@ enum DemoConfig {
     enum Screen: String {
         case welcome, findFriends, notifyPrime, question, composer
         case feed, feedEnd, feedError, offline, tray, friends, otherProfile, share, reactions, story
-        case discover, notifications, profile, profileList, memory, menu, settings, editProfile, achievements
+        case discover, notifications, profile, profileList, profileReposts, profileSaved, memory, menu, settings, editProfile, achievements
         case freezeUsed, widgets
         /// Auto-playing walkthrough recorded to video by CI: question → answer → feed → react → story → tabs → settings.
         case tour
@@ -55,7 +55,7 @@ enum DemoConfig {
         switch screen {
         case .discover: return .discover
         case .notifications: return .notifications
-        case .profile, .profileList, .memory, .achievements, .menu, .settings, .editProfile: return .profile
+        case .profile, .profileList, .profileReposts, .profileSaved, .memory, .achievements, .menu, .settings, .editProfile: return .profile
         default: return .feed
         }
     }
@@ -83,7 +83,16 @@ enum DemoConfig {
     static var opensReactionsSheet: Bool { screen == .reactions }
     static var opensStory: Bool { screen == .story }
     static var opensMemory: Bool { screen == .memory }
-    static var scrollsProfileToList: Bool { screen == .profileList }
+    static var scrollsProfileToList: Bool { [.profileList, .profileReposts, .profileSaved, .memory].contains(screen) }
+    /// Which profile tab a demo launch opens on.
+    static var initialProfileTab: ProfileTab {
+        switch screen {
+        case .profileReposts: return .reposts
+        case .profileSaved: return .saved
+        case .memory: return .calendar
+        default: return .answers
+        }
+    }
     static var showsWidgetGallery: Bool { screen == .widgets }
     static var scrollsFeedToEnd: Bool { screen == .feedEnd }
     static var forcesOffline: Bool { screen == .offline }

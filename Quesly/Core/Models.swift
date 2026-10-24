@@ -5,6 +5,8 @@ import SwiftUI
 struct AppUser: Identifiable, Codable, Hashable {
     var id: String
     var username: String
+    /// Display name shown above @username on the profile. Optional so older saved data still loads.
+    var name: String? = nil
     var email: String = ""
     var phone: String = ""
     var location: String = ""
@@ -15,6 +17,11 @@ struct AppUser: Identifiable, Codable, Hashable {
     var followers: Int = 0
     var following: Int = 0
     var streak: Int = 0
+
+    var displayName: String {
+        guard let name, !name.trimmingCharacters(in: .whitespaces).isEmpty else { return username }
+        return name
+    }
 
     var initials: String {
         let letters = username.filter { $0.isLetter }

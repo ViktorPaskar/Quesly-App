@@ -1,80 +1,57 @@
 import SwiftUI
 
-/// Profile: centred identity, stats, streak and badges in white blocks on the canvas, then answers.
+/// Profile sections, switched by the underline slider or a horizontal swipe.
+enum ProfileTab: String, CaseIterable, Identifiable {
+    case answers, reposts, calendar, saved
+    var id: String { rawValue }
+    var title: String { rawValue.capitalized }
+}
+
+/// Profile: who you are (name, @nick, numbers, bio, actions) centred on the canvas, then sticky
+/// tabs: Answers, Reposts and, on your own profile only, Calendar and the private Saved list.
 struct ProfileView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     let userId: String
     var isTabRoot = false
     @State private var confirmBlock = false
-    @State private var list: ListKind = .answers
-
-    /// Your profile: your answers (plus reposts) or your private Saved list.
-    enum ListKind: String, CaseIterable, Identifiable {
-        case answers = "Answers", saved = "Saved"
-        var id: String { rawValue }
-    }
+    @State private var tab: ProfileTab = DemoConfig.initialProfileTab
 
     private var isMe: Bool { userId == store.me.id }
+    private var tabs: [ProfileTab] { isMe ? ProfileTab.allCases : [.answers, .reposts] }
 
     var body: some View {
         let user = store.user(userId)
-        let answers = store.answers(of: userId)
-        // Answers mixes your own with the ones you reposted, newest first.
-        let items: [Answer] = !isMe ? answers
-            : list == .saved ? store.bookmarkedAnswers
-            : (answers + store.resharedAnswers).sorted { $0.createdAt > $1.createdAt }
-
         ScrollViewReader { proxy in
-        ScrollView {
-            VStack(spacing: 0) {
-                ProfileHeader(user: user, isMe: isMe)
-                    .padding(.horizontal, DS.Space.m)
-                    .padding(.top, DS.Space.xs)
+            ScrollView {
+                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    ProfileHeader(user: user, isMe: isMe)
+                        .padding(.horizontal, DS.Space.m)
+                        .padding(.top, DS.Space.xs)
+                        .padding(.bottom, DS.Space.xl)
 
-                HStack(spacing: 6) {
-                    if isMe {
-                        PillTabs(items: ListKind.allCases, selection: $list, title: \.rawValue)
-                    } else {
-                        Text("Answers").font(.ui(17, .semibold)).foregroundStyle(Color.qInk)
-                        Text("\(answers.count)").font(.ui(15)).foregroundStyle(Color.qGray)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, DS.Space.m)
-                .padding(.top, DS.Space.xl)
-                .padding(.bottom, DS.Space.xxs)
-                .id("list")
-
-                // Same white cards as the feed.
-                LazyVStack(spacing: DS.Space.xs) {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
-                        let other = answer.authorId != userId
-                        AnswerCard(answer: answer, showsQuestion: true, showsAuthor: other,
-                                   isRepost: other && list == .answers)
-                            .background(Color.qBlock)
-                            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
-                            .staggeredAppear(index)
-                    }
-                    if items.isEmpty {
-                        EmptyStateView(
-                            icon: list == .saved ? .bookmarkSimpleFill : .chatCircleTextFill,
-                            title: list == .saved ? "Nothing saved yet" : "No answers yet",
-                            message: list == .saved ? "Tap the bookmark on an answer to keep it here. Only you can see this list."
-                                : isMe ? "Answer today's question to start your story." : "Their answers will show up here.")
+                    Section {
+                        content
+                            .padding(.horizontal, DS.Space.m)
+                            .padding(.top, DS.Space.s)
+                            .frame(maxWidth: .infinity, minHeight: 360, alignment: .top)
+                            .contentShape(Rectangle())
+                            .simultaneousGesture(swipe)
+                            .animation(.qSmooth, value: tab)
+                    } header: {
+                        UnderlineTabs(items: tabs, selection: $tab, title: \.title)
+                            .padding(.horizontal, DS.Space.m)
+                            .background(Color.qCanvas)
+                            .id("tabs")
                     }
                 }
-                .padding(.horizontal, DS.Space.m)
-                .padding(.top, DS.Space.xs)
-                .animation(.qSmooth, value: list)
+                .padding(.bottom, DS.Space.m)
             }
-            .padding(.bottom, DS.Space.m)
-        }
-        .task {
-            guard DemoConfig.scrollsProfileToList else { return }
-            try? await Task.sleep(for: .milliseconds(500))
-            proxy.scrollTo("list", anchor: .top)
-        }
+            .task {
+                guard DemoConfig.scrollsProfileToList else { return }
+                try? await Task.sleep(for: .milliseconds(500))
+                proxy.scrollTo("tabs", anchor: .top)
+            }
         }
         .background(Color.qCanvas)
         .safeAreaInset(edge: .top, spacing: 0) { topBar(user) }
@@ -89,8 +66,70 @@ struct ProfileView: View {
         }
     }
 
+    // MARK: Tabs
+
+    @ViewBuilder
+    private var content: some View {
+        if tab == .calendar {
+            VStack(spacing: DS.Space.s) {
+                StreakCard()
+                MemoriesCard(showsHeader: false)
+            }
+        } else {
+            let items = answers(for: tab)
+            VStack(spacing: DS.Space.xs) {
+                ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
+                    AnswerCard(answer: answer, showsQuestion: true, showsAuthor: answer.authorId != userId)
+                        .background(Color.qBlock)
+                        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
+                        .staggeredAppear(index)
+                }
+                if items.isEmpty { emptyState }
+            }
+        }
+    }
+
+    private func answers(for tab: ProfileTab) -> [Answer] {
+        switch tab {
+        case .answers: return store.answers(of: userId)
+        case .reposts: return isMe ? store.resharedAnswers : []
+        case .saved: return store.bookmarkedAnswers
+        case .calendar: return []
+        }
+    }
+
+    @ViewBuilder
+    private var emptyState: some View {
+        switch tab {
+        case .reposts:
+            EmptyStateView(icon: .repost, title: "No reposts yet",
+                           message: isMe ? "Repost an answer you love and it stays here on your profile."
+                               : "Answers they repost will show up here.")
+        case .saved:
+            EmptyStateView(icon: .bookmarkSimpleFill, title: "Nothing saved yet",
+                           message: "Tap the bookmark on an answer to keep it here. Only you can see this list.")
+        default:
+            EmptyStateView(icon: .chatCircleTextFill, title: "No answers yet",
+                           message: isMe ? "Answer today's question to start your story." : "Their answers will show up here.")
+        }
+    }
+
+    /// Horizontal swipe moves to the neighbouring tab, like paging.
+    private var swipe: some Gesture {
+        DragGesture(minimumDistance: 24).onEnded { value in
+            let dx = value.translation.width, dy = value.translation.height
+            guard abs(dx) > 60, abs(dx) > abs(dy) * 1.5, let i = tabs.firstIndex(of: tab) else { return }
+            let next = dx < 0 ? i + 1 : i - 1
+            guard tabs.indices.contains(next) else { return }
+            withAnimation(.qSmooth) { tab = tabs[next] }
+        }
+    }
+
+    // MARK: Top bar
+
     private func topBar(_ user: AppUser?) -> some View {
-        HStack(spacing: 4) {
+        let streak = isMe ? store.streak : (user?.streak ?? 0)
+        return HStack(spacing: 4) {
             if !isTabRoot {
                 Button { dismiss() } label: {
                     Icon(.caretLeftBold, size: DS.Icon.action).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
@@ -104,6 +143,9 @@ struct ProfileView: View {
                     .padding(.leading, DS.Space.s)
             }
             Spacer()
+            if streak > 0 {
+                StreakChip(days: streak).padding(.trailing, DS.Space.xxs)
+            }
             if isMe {
                 NavigationLink(value: Route.settings) {
                     Icon(.gearSix, size: DS.Icon.action).foregroundStyle(Color.qInk).frame(width: 44, height: 44)
@@ -126,8 +168,7 @@ struct ProfileView: View {
     }
 }
 
-/// Profile top: identity centred on the canvas, one stats block, then (on your own profile)
-/// the streak and badges. Everything sits on one 16pt grid.
+/// Profile top, centred on the canvas: photo, name, @nick, the three numbers, bio, place, actions.
 struct ProfileHeader: View {
     @Environment(AppStore.self) private var store
     let user: AppUser?
@@ -137,44 +178,24 @@ struct ProfileHeader: View {
     private var followingCount: Int { isMe ? store.followingUsers.count : (user?.following ?? 0) }
 
     var body: some View {
-        VStack(spacing: DS.Space.s) {
-            identity.staggeredAppear(0)
-            stats.staggeredAppear(1)
-            if isMe {
-                StreakCard().staggeredAppear(2)
-                BadgesStrip().block().staggeredAppear(3)
-            }
-        }
-        .onAppear { withAnimation(.spring(response: 0.55, dampingFraction: 0.65).delay(0.05)) { appeared = true } }
-    }
-
-    // MARK: Identity
-
-    private var identity: some View {
         VStack(spacing: 0) {
-            Avatar(user: user, size: 96)
+            Avatar(user: user, size: 88)
                 .scaleEffect(appeared ? 1 : 0.6)
                 .opacity(appeared ? 1 : 0)
 
-            HStack(spacing: DS.Space.xs) {
-                Text(user?.username ?? "")
-                    .font(.display(26, .bold))
-                    .foregroundStyle(Color.qInk)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                if let badge = user?.badge {
-                    HexBadge(color: badge.color, icon: badge.icon).frame(width: 20, height: 20)
-                }
-            }
-            .padding(.top, DS.Space.s)
+            Text(user?.displayName ?? "")
+                .font(.display(24, .bold))
+                .foregroundStyle(Color.qInk)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .padding(.top, DS.Space.s)
+            Text("@\(user?.username ?? "")")
+                .font(.ui(15))
+                .foregroundStyle(Color.qGray)
+                .lineLimit(1)
+                .padding(.top, 2)
 
-            if let location = user?.location, !location.isEmpty {
-                IconLabel(location, icon: .mapPinFill, size: DS.Icon.caption)
-                    .font(.ui(15))
-                    .foregroundStyle(Color.qGray)
-                    .lineLimit(1)
-                    .padding(.top, DS.Space.xxs)
-            }
+            stats.padding(.top, DS.Space.l)
 
             if let bio = user?.bio, !bio.isEmpty {
                 Text(bio)
@@ -183,15 +204,63 @@ struct ProfileHeader: View {
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, DS.Space.s)
-                    .padding(.top, DS.Space.s)
+                    .padding(.horizontal, DS.Space.xs)
+                    .padding(.top, DS.Space.l)
+            }
+            if let location = user?.location, !location.isEmpty {
+                IconLabel(location, icon: .mapPinFill, size: DS.Icon.caption)
+                    .font(.ui(13))
+                    .foregroundStyle(Color.qGray)
+                    .lineLimit(1)
+                    .padding(.top, DS.Space.xs)
             }
 
             actions.padding(.top, DS.Space.l)
         }
         .frame(maxWidth: .infinity)
-        .padding(.bottom, DS.Space.xs)
+        .staggeredAppear(0)
+        .onAppear { withAnimation(.spring(response: 0.55, dampingFraction: 0.65).delay(0.05)) { appeared = true } }
     }
+
+    // MARK: Stats
+
+    /// Three equal columns split by hairlines.
+    private var stats: some View {
+        HStack(spacing: 0) {
+            stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil)
+            hairline
+            stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)
+            hairline
+            stat(followingCount, "Following", route: isMe ? .following : nil)
+        }
+    }
+
+    private var hairline: some View {
+        Rectangle().fill(Color.qLine).frame(width: 1, height: 28)
+    }
+
+    @ViewBuilder
+    private func stat(_ value: Int, _ label: String, route: Route?) -> some View {
+        let content = VStack(spacing: 2) {
+            CountUpText(value: value)
+                .font(.display(20, .bold))
+                .foregroundStyle(Color.qInk)
+            Text(label)
+                .font(.ui(13))
+                .foregroundStyle(Color.qGray)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        if let route {
+            NavigationLink(value: route) { content }.buttonStyle(.pressable)
+        } else {
+            content
+        }
+    }
+
+    // MARK: Actions
 
     private var actions: some View {
         HStack(spacing: DS.Space.xs) {
@@ -223,58 +292,50 @@ struct ProfileHeader: View {
             .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
                 .fill(filled ? Color.qGreen : Color.qBlock))
     }
+}
 
-    // MARK: Stats
+/// Text tabs with a sliding underline; equal widths, 44pt tall, hairline underneath.
+struct UnderlineTabs<Item: Hashable & Identifiable>: View {
+    let items: [Item]
+    @Binding var selection: Item
+    let title: KeyPath<Item, String>
+    @Namespace private var ns
 
-    /// One block, three equal columns split by hairlines, like the balance row in a banking app.
-    private var stats: some View {
+    var body: some View {
         HStack(spacing: 0) {
-            if isMe {
-                let count = store.answers(of: store.me.id).count
-                stat(count, count == 1 ? "Answer" : "Answers", route: nil)
-            } else {
-                stat(user?.streak ?? 0, "Day streak", route: nil)
+            ForEach(items) { item in
+                let on = item == selection
+                Button { withAnimation(.qSmooth) { selection = item } } label: {
+                    Text(item[keyPath: title])
+                        .font(.ui(15, .semibold))
+                        .foregroundStyle(on ? Color.qInk : Color.qGray)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: DS.hitTarget)
+                        .overlay(alignment: .bottom) {
+                            if on {
+                                Capsule().fill(Color.qGreen)
+                                    .frame(height: 3)
+                                    .padding(.horizontal, DS.Space.s)
+                                    .matchedGeometryEffect(id: "line", in: ns)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
             }
-            hairline
-            stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)
-            hairline
-            stat(followingCount, "Following", route: isMe ? .following : nil)
         }
-        .padding(.vertical, DS.Space.m)
-        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
-    }
-
-    private var hairline: some View {
-        Rectangle().fill(Color.qLine).frame(width: 1, height: 32)
-    }
-
-    @ViewBuilder
-    private func stat(_ value: Int, _ label: String, route: Route?) -> some View {
-        let content = VStack(spacing: 2) {
-            CountUpText(value: value)
-                .font(.display(22, .bold))
-                .foregroundStyle(Color.qInk)
-            Text(label)
-                .font(.ui(13))
-                .foregroundStyle(Color.qGray)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity)
-        .contentShape(Rectangle())
-        if let route {
-            NavigationLink(value: route) { content }.buttonStyle(.pressable)
-        } else {
-            content
-        }
+        .background(alignment: .bottom) { Rectangle().fill(Color.qLine).frame(height: 1) }
+        .sensoryFeedback(.selection, trigger: selection)
     }
 }
 
 /// Your streak as a picture: the last seven days as a chain of dots (answered, frozen, missed,
-/// today), progress to the next freeze, and a row that opens the full calendar of memories.
+/// today) and progress to the next freeze.
 struct StreakCard: View {
     @Environment(AppStore.self) private var store
-    @State private var showsCalendar = false
     @State private var showsFreezeInfo = false
 
     private let calendar = Calendar.current
@@ -289,27 +350,9 @@ struct StreakCard: View {
             header
             weekStrip.padding(.top, DS.Space.l)
             freezeProgress.padding(.top, DS.Space.l)
-            Rectangle().fill(Color.qLine).frame(height: 1)
-                .padding(.top, DS.Space.m)
-            calendarRow
         }
-        .padding(.horizontal, DS.Space.m)
-        .padding(.top, DS.Space.m)
+        .padding(DS.Space.m)
         .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
-        .sheet(isPresented: $showsCalendar) {
-            NavigationStack {
-                ScrollView { MemoriesCard().padding(DS.Space.m) }
-                    .background(Color.qCanvas)
-                    .navigationTitle("Memories")
-                    .navigationBarTitleDisplayMode(.inline)
-            }
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
-        }
-        .task {
-            guard DemoConfig.opensMemory else { return }
-            showsCalendar = true
-        }
     }
 
     private var header: some View {
@@ -448,28 +491,6 @@ struct StreakCard: View {
             .frame(height: 6)
         }
         .accessibilityElement(children: .combine)
-    }
-
-    private var calendarRow: some View {
-        Button { showsCalendar = true } label: {
-            HStack(spacing: DS.Space.s) {
-                Icon(.calendar, size: DS.Icon.row)
-                    .foregroundStyle(Color.qBrandText)
-                Text("Memories")
-                    .font(.ui(15, .semibold))
-                    .foregroundStyle(Color.qInk)
-                Spacer()
-                Text("\(store.answeredDays.count) days")
-                    .font(.ui(15))
-                    .foregroundStyle(Color.qGray)
-                Icon(.caretRightBold, size: DS.Icon.caption)
-                    .foregroundStyle(Color.qGray)
-            }
-            .frame(height: 52)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.pressable)
-        .accessibilityHint("Opens your calendar of answers")
     }
 }
 

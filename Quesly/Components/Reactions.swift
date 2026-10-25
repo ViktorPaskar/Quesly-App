@@ -1,217 +1,150 @@
 import SwiftUI
 import UIKit
 
-/// The viewer's reaction control: one button that opens a tray of six positive reactions.
-struct ReactionControl: View {
-    let answer: Answer
-    @Binding var isTrayOpen: Bool
+/// Six word stickers in a row, no labels (SAME, AWW, LIKE, DEEP, COOL, HUGS). Your current one
+/// sits on a gray disc; tapping it again removes it.
+struct ReactionPopover: View {
+    static let height: CGFloat = 56
+    let selected: ReactionKind?
     let onPick: (ReactionKind) -> Void
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var burst: ReactionKind?
-    @State private var burstTrigger = 0
-
-    var body: some View {
-        ZStack(alignment: .leading) {
-            if isTrayOpen {
-                tray.transition(.asymmetric(
-                    insertion: .scale(scale: 0.4, anchor: .leading).combined(with: .opacity),
-                    removal: .scale(scale: 0.6, anchor: .leading).combined(with: .opacity)))
-            } else {
-                trigger.transition(.scale(scale: 0.6).combined(with: .opacity))
-            }
-        }
-        .overlay(alignment: .bottomLeading) {
-            if let burst, !reduceMotion {
-                EmojiBurst(kind: burst, trigger: burstTrigger)
-                    .offset(x: 6, y: -14)
-                    .allowsHitTesting(false)
-            }
-        }
-        .animation(.qSpring, value: isTrayOpen)
-    }
-
-    /// Outlined smiley (or your current reaction sticker). Tap opens the tray of six reactions;
-    /// double-tapping the answer text still sends ❤️.
-    private var trigger: some View {
-        Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            isTrayOpen = true
-        } label: {
-            Group {
-                if let mine = answer.myReaction {
-                    ReactionSticker(kind: mine, size: 26)
-                        .id(mine)
-                        .transition(.scale(scale: 0.3).combined(with: .opacity))
-                } else {
-                    Icon(.smiley, size: DS.Icon.action).foregroundStyle(Color.qGray)
-                }
-            }
-            .glyphHitArea()
-        }
-        .buttonStyle(.pressable)
-        .accessibilityLabel(answer.myReaction.map { "Your reaction: \($0.label). Change reaction" } ?? "React")
-    }
-
-    private func fireBurst(_ kind: ReactionKind) {
-        burst = kind
-        burstTrigger += 1
-    }
-
-    private var tray: some View {
-        HStack(spacing: 2) {
-            ForEach(Array(ReactionKind.allCases.enumerated()), id: \.element) { index, kind in
-                TrayEmoji(kind: kind, index: index, isSelected: answer.myReaction == kind) {
-                    if answer.myReaction != kind { fireBurst(kind) }
-                    onPick(kind)
-                    isTrayOpen = false
-                }
-            }
-            Button { isTrayOpen = false } label: {
-                Icon(.xBold, size: DS.Icon.caption)
-                    .foregroundStyle(Color.qGray)
-                    .frame(width: 32, height: 44)
-            }
-            .accessibilityLabel("Close reactions")
-        }
-        .padding(.leading, 8)
-        .padding(.trailing, 2)
-        .background(
-            Capsule().fill(Color.qSurface)
-                .shadow(color: .black.opacity(0.1), radius: 10, y: 3)
-        )
-        .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
-    }
-}
-
-private struct TrayEmoji: View {
-    let kind: ReactionKind
-    let index: Int
-    let isSelected: Bool
-    let action: () -> Void
     @State private var shown = false
 
     var body: some View {
-        Button(action: action) {
-            ReactionSticker(kind: kind, size: kind == .same ? 34 : 32)
-                .frame(minWidth: 38, minHeight: 46)
-                .padding(.horizontal, kind == .same ? 4 : 0)
-                .background(Capsule().fill(isSelected ? Color.qMint : .clear))
-                .scaleEffect(shown ? 1 : 0.3)
-                .offset(y: shown ? 0 : 10)
+        HStack(spacing: 0) {
+            ForEach(Array(ReactionKind.allCases.enumerated()), id: \.element) { index, kind in
+                Button { onPick(kind) } label: {
+                    ReactionSticker(kind: kind, size: 46)
+                        .frame(width: 52, height: 48)
+                        .background(Circle().fill(selected == kind ? Color.qField : .clear).frame(width: 48, height: 48))
+                        .scaleEffect(shown ? 1 : 0.3)
+                        .offset(y: shown ? 0 : 8)
+                        .animation(.spring(response: 0.35, dampingFraction: 0.55).delay(Double(index) * 0.03), value: shown)
+                }
+                .buttonStyle(PressableStyle(scale: 1.2))
+                .accessibilityLabel(kind.label)
+                .accessibilityHint(kind.meaning)
+                .accessibilityAddTraits(selected == kind ? .isSelected : [])
+            }
         }
-        .buttonStyle(PressableStyle(scale: 1.25))
-        .sensoryFeedback(.impact(weight: .medium), trigger: isSelected)
-        .accessibilityLabel(kind.label)
-        .onAppear {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.55).delay(Double(index) * 0.04)) { shown = true }
-        }
+        .padding(.vertical, DS.Space.xxs)
+        .padding(.horizontal, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(Color.qBackground)
+                .shadow(color: .black.opacity(0.16), radius: 12, y: 8)
+        )
+        .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).stroke(Color.black.opacity(0.06), lineWidth: 0.5))
+        .onAppear { shown = true }
     }
 }
 
-/// Author-only list of who reacted, filterable by emoji (Instagram-style).
+/// Author-only: who reacted and with which sticker. Friends first, filterable by sticker.
 struct ReactionsSheet: View {
     @Environment(AppStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
     let answer: Answer
     @State private var filter: ReactionKind?
 
     var body: some View {
-        let all = store.reactors(for: answer)
+        let all = store.reactors(for: answer).sorted { a, b in
+            store.isFollowing(a.user.id) && !store.isFollowing(b.user.id)
+        }
         let shown = filter.map { f in all.filter { $0.kind == f } } ?? all
         NavigationStack {
             VStack(spacing: 0) {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: DS.Space.xs) {
-                        chip(title: "All \(all.count)", isOn: filter == nil) { filter = nil }
-                        ForEach(answer.topReactions) { kind in
-                            chip(title: "\(answer.count(kind))", kind: kind, isOn: filter == kind) { filter = kind }
-                        }
+                HStack {
+                    Text("Reactions")
+                        .font(.display(20, .bold))
+                        .tracking(-0.2)
+                        .foregroundStyle(Color.qInk)
+                    Spacer()
+                    HStack(spacing: DS.Space.xxs) {
+                        Icon(.lockSimpleFill, size: 14)
+                        Text("Only you can see this")
                     }
-                    .padding(.horizontal, DS.Space.screen)
-                    .padding(.vertical, DS.Space.s)
-                }
-                Divider()
-                List(shown) { item in
-                    NavigationLink(value: Route.profile(item.user.id)) {
-                        HStack(spacing: DS.Space.s) {
-                            Avatar(user: item.user, size: 40)
-                            Text(item.user.username).font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-                            Spacer()
-                            ReactionSticker(kind: item.kind, size: 30)
-                        }
-                    }
-                    .listRowSeparator(.hidden)
-                }
-                .listStyle(.plain)
-                .animation(.qSmooth, value: filter)
-                IconLabel("Only you can see who reacted", icon: .lockSimpleFill, size: DS.Icon.caption)
                     .font(.ui(13))
                     .foregroundStyle(Color.qGray)
+                }
+                .padding(.horizontal, DS.Space.m)
+                .padding(.top, DS.Space.s)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: DS.Space.xs) {
+                        allChip(count: answer.totalReactions)
+                        ForEach(answer.topReactions) { kind in stickerChip(kind) }
+                    }
+                    .padding(.horizontal, DS.Space.m)
                     .padding(.vertical, DS.Space.s)
+                }
+                Rectangle().fill(Color.qLine).frame(height: 0.5)
+
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(shown) { item in
+                            NavigationLink(value: Route.profile(item.user.id)) { row(item) }
+                                .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.top, DS.Space.xxs)
+                    .animation(.qSmooth, value: filter)
+                }
             }
-            .navigationTitle("Reactions")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-            }
+            .background(Color.qBackground)
+            .toolbar(.hidden, for: .navigationBar)
             .withQueslyRoutes()
         }
     }
 
-    private func chip(title: String, kind: ReactionKind? = nil, isOn: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: { withAnimation(.qSpring) { action() } }) {
-            HStack(spacing: 6) {
-                if let kind { ReactionSticker(kind: kind, size: 22) }
-                Text(title)
+    private func row(_ item: AppStore.Reactor) -> some View {
+        HStack(spacing: DS.Space.s) {
+            Avatar(user: item.user, size: 40)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(item.user.username).font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
+                if store.isFollowing(item.user.id) {
+                    Text("Friend").font(.ui(13)).foregroundStyle(Color.qGray)
+                }
             }
-                .font(.ui(15, .semibold))
-                .foregroundStyle(isOn ? Color.qBackground : Color.qInk)
-                .padding(.horizontal, DS.Space.s)
-                .frame(height: 34)
-                .background(Capsule().fill(isOn ? Color.qInk : Color.qField))
+            Spacer()
+            ReactionSticker(kind: item.kind, size: 40)
+        }
+        .padding(.horizontal, DS.Space.m)
+        .frame(height: 56)
+        .contentShape(Rectangle())
+    }
+
+    private func allChip(count: Int) -> some View {
+        let on = filter == nil
+        return Button { withAnimation(.qSpring) { filter = nil } } label: {
+            (Text("All ").foregroundStyle(on ? Color.white : Color.qInk)
+                + Text("\(count)").foregroundStyle(on ? Color.white.opacity(0.7) : Color.qGray))
+                .font(.ui(14, .semibold))
+                .padding(.horizontal, 14)
+                .frame(height: 36)
+                .background(Capsule().fill(on ? Color.qInk : Color.qField))
         }
         .buttonStyle(.pressable)
-        .accessibilityAddTraits(isOn ? .isSelected : [])
+        .accessibilityAddTraits(on ? .isSelected : [])
     }
-}
 
-/// A handful of emoji that float up and fade out.
-struct EmojiBurst: View {
-    let kind: ReactionKind
-    let trigger: Int
-
-    var body: some View {
-        ZStack {
-            ForEach(0..<7, id: \.self) { i in
-                BurstParticle(kind: kind, index: i, trigger: trigger)
+    private func stickerChip(_ kind: ReactionKind) -> some View {
+        let on = filter == kind
+        return Button { withAnimation(.qSpring) { filter = kind } } label: {
+            HStack(spacing: 6) {
+                ReactionSticker(kind: kind, size: 30)
+                Text("\(answer.count(kind))")
+                    .font(.ui(14, .medium))
+                    .foregroundStyle(on ? Color.white.opacity(0.85) : Color.qGray)
             }
+            .padding(.horizontal, 10)
+            .frame(height: 36)
+            .background(Capsule().fill(on ? Color.qInk : Color.qField))
         }
+        .buttonStyle(.pressable)
+        .accessibilityLabel("\(kind.label), \(answer.count(kind))")
+        .accessibilityAddTraits(on ? .isSelected : [])
     }
 }
 
-private struct BurstParticle: View {
-    let kind: ReactionKind
-    let index: Int
-    let trigger: Int
-    @State private var progress: CGFloat = 1
-
-    var body: some View {
-        let angle = CGFloat(index) / 7 * .pi - .pi        // fan upwards
-        let distance: CGFloat = 46 + CGFloat(index % 3) * 14
-        ReactionSticker(kind: kind, size: 20 + CGFloat(index % 3) * 5)
-            .offset(x: cos(angle) * distance * progress,
-                    y: sin(angle) * distance * progress - 20 * progress)
-            .scaleEffect(progress < 1 ? 1.1 : 0.6)
-            .opacity(progress < 1 ? 1 - Double(progress) : 0)
-            .onChange(of: trigger) { _, _ in
-                progress = 0
-                withAnimation(.easeOut(duration: 0.7)) { progress = 1 }
-            }
-    }
-}
-
-/// Big emoji that pops in the middle of a card on double-tap.
+/// Big sticker that pops in the middle of an answer on double-tap.
 struct DoubleTapPop: View {
     let kind: ReactionKind
     let trigger: Int
@@ -274,43 +207,17 @@ private struct ConfettiPiece: View {
     }
 }
 
-/// A reaction drawn like the site's stickers: 3D emoji on a lime disc with a white rim,
-/// or the green SAME word pill. `size` is the disc diameter.
+/// A word sticker (speech bubble with a white rim, art 50 × 36). `size` is the width.
 struct ReactionSticker: View {
     let kind: ReactionKind
-    var size: CGFloat = 28
+    var size: CGFloat = 34
 
     var body: some View {
-        Group {
-            if let asset = kind.assetName {
-                Image(asset)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: size * 0.64, height: size * 0.64)
-                    .frame(width: size, height: size)
-                    .background(
-                        Circle()
-                            .fill(RadialGradient(colors: [Color(hex: 0xF1FF9A), .qLime, Color(hex: 0xB5DA00)],
-                                                 center: UnitPoint(x: 0.35, y: 0.3),
-                                                 startRadius: 0, endRadius: size * 0.6))
-                            .padding(size * 0.06)
-                            .background(Circle().fill(.white))
-                    )
-            } else {
-                Text("SAME")
-                    .font(.display(size * 0.38, .black))
-                    .foregroundStyle(Color.qLime)
-                    .padding(.horizontal, size * 0.28)
-                    .frame(height: size * 0.8)
-                    .background(
-                        Capsule().fill(Color.qGreen)
-                            .padding(size * 0.06)
-                            .background(Capsule().fill(.white))
-                    )
-                    .fixedSize()
-            }
-        }
-        .shadow(color: Color(hex: 0x022A1E).opacity(0.25), radius: size * 0.1, y: size * 0.06)
-        .accessibilityLabel(kind.label)
+        Image(kind.assetName)
+            .resizable()
+            .aspectRatio(50.0 / 36.0, contentMode: .fit)
+            .frame(width: size, height: size * 0.72)
+            .shadow(color: .black.opacity(0.18), radius: 2, x: 0, y: 1)
+            .accessibilityLabel(kind.label)
     }
 }

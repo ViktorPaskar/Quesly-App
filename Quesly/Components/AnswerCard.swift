@@ -14,93 +14,75 @@ enum Route: Hashable {
     case blocked
 }
 
+/// One answer. Two layouts on the same 4-pt grid:
+/// • feed (default): X-style row: 40-pt avatar, then everything aligned to the name's left edge:
+///   16 · name row 20 · 4 · text 16/24 · 16 · action glyphs 24 · 8 · "Reacted by" 20 · 16.
+/// • compact (profile): question, answer, date, then the counter pill (yours) or actions.
 struct AnswerCard: View {
     @Environment(AppStore.self) private var store
     let answer: Answer
     var showsQuestion = false
     var showsAuthor = true
-    /// Shown in your profile for someone else's answer you reposted.
-    var isRepost = false
-    /// Demo/screenshot hook: start with the reaction tray open.
+    /// Demo/screenshot hook: start with the sticker popover open.
     var opensTray = false
     /// Brief brand tint, used when your own answer lands in the feed after posting.
     var isHighlighted = false
-    /// Your own answer pinned on top of the feeds.
-    var isPinnedMine = false
-    /// Profile row: small author line, date and private counts as one meta line under the text,
-    /// and no action row on your own answers (share, copy, edit and delete live in the long-press menu).
+    /// Profile row layout (see type comment).
     var isCompact = false
 
     @State private var isTrayOpen = false
-    @State private var isSharing = false
+    @State private var isSharingStory = false
     @State private var isEditing = false
     @State private var isReporting = false
     @State private var showReactions = false
     @State private var confirmDelete = false
     @State private var popTrigger = 0
+    @State private var stickerPop = 0
 
     private var author: AppUser? { store.user(answer.authorId) }
     private var isMine: Bool { answer.authorId == store.me.id }
+    private var link: URL { URL(string: "https://quesly.me/a/\(answer.id)")! }
+    /// Profile rows use the profile's 20-pt margins; feed cards 16.
+    private var inset: CGFloat { isCompact ? DS.Space.screen : DS.Space.m }
 
-    /// Card grid (all on the 4-pt scale, one 16-pt inset on every side):
-    /// header row — 40-pt avatar, name + time centred on it, "…" on the right edge;
-    /// 12 pt; the answer at full card width, aligned with the avatar's left edge;
-    /// 4 pt; the action row — glyphs (not their 44-pt hit areas) aligned to the same edges.
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if isRepost {
-                IconLabel("You reposted", icon: .repost, size: DS.Icon.caption)
-                    .font(.ui(13, .semibold))
-                    .foregroundStyle(Color.qGray)
-                    .padding(.bottom, DS.Space.s)
-            }
-            if isPinnedMine {
-                IconLabel("Your answer", icon: .pushPinFill, size: DS.Icon.caption)
-                    .font(.ui(13, .semibold))
-                    .foregroundStyle(Color.qBrandText)
-                    .padding(.bottom, DS.Space.s)
-            }
-            if showsQuestion { questionLine.padding(.bottom, isCompact ? DS.Space.m : DS.Space.s) }
-            if showsAuthor {
-                Group { if isCompact { compactHeader } else { header } }
-                    .padding(.bottom, DS.Space.s)
-            }
-
-            Text(answer.text)
-                .font(.ui(17))
-                .lineSpacing(3)
-                .foregroundStyle(Color.qInk)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-                .onTapGesture(count: 2) { doubleTapReact() }
-                .overlay { DoubleTapPop(kind: .love, trigger: popTrigger) }
-                .contextMenu { menuItems } preview: { preview }
-
-            if isCompact && !showsAuthor { meta.padding(.top, DS.Space.s) }
-            if !(isCompact && isMine) { actions.padding(.top, isCompact ? DS.Space.xs : DS.Space.xxs) }
+        Group {
+            if isCompact { compactBody } else { feedBody }
         }
-        .padding(.horizontal, DS.Space.m)
-        // Profile rows breathe more than feed cards: 24 pt above, 24 (or the action row's air) below.
-        .padding(.top, isCompact ? DS.Space.xl : DS.Space.m)
-        .padding(.bottom, isCompact ? (isMine ? DS.Space.xl : DS.Space.s) : DS.Space.xxs)
+        .padding(.horizontal, inset)
+        .padding(.vertical, DS.Space.m)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(isHighlighted ? Color.qMint : Color.clear)
-        .sheet(isPresented: $isSharing) {
-            ShareStorySheet(answer: answer)
-                .presentationDetents([.large])
+        // Tap anywhere on the card closes the sticker popover.
+        .overlay {
+            if isTrayOpen {
+                Color.black.opacity(0.001).onTapGesture { withAnimation(.qSpring) { isTrayOpen = false } }
+            }
+        }
+        // The popover floats 8 pt above the card, 8 pt from the screen's left edge.
+        .overlay(alignment: .topLeading) {
+            if isTrayOpen {
+                ReactionPopover(selected: answer.myReaction) { pick($0) }
+                    .offset(x: DS.Space.xs, y: -(ReactionPopover.height + DS.Space.xs))
+                    .transition(.scale(scale: 0.6, anchor: .bottomLeading).combined(with: .opacity))
+            }
+        }
+        .zIndex(isTrayOpen ? 10 : 0)
+        .animation(.qSpring, value: isTrayOpen)
+        .sheet(isPresented: $isSharingStory) {
+            ShareStorySheet(answer: answer).presentationDetents([.large])
         }
         .sheet(isPresented: $isEditing) {
-            EditAnswerSheet(answer: answer)
-                .presentationDetents([.medium, .large])
+            EditAnswerSheet(answer: answer).presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $isReporting) {
-            ReportSheet(answer: answer)
-                .presentationDetents([.medium, .large])
+            ReportSheet(answer: answer).presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $showReactions) {
             ReactionsSheet(answer: answer)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
+                .presentationCornerRadius(24)
         }
         .confirmationDialog("Delete this answer?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { store.deleteAnswer(answer.id) }
@@ -109,121 +91,121 @@ struct AnswerCard: View {
         .onChange(of: opensTray) { _, open in withAnimation(.qSpring) { isTrayOpen = open } }
     }
 
-    private var questionLine: some View {
-        HStack(alignment: .firstTextBaseline, spacing: DS.Space.xs) {
-            Text(answer.questionText)
-                .font(.ui(13, .semibold))
-                .foregroundStyle(Color.qBrandText)
-                .lineLimit(2)
-            Spacer(minLength: DS.Space.xs)
-            if !showsAuthor && !isCompact {
-                Text(RelativeTime.dayLabel(answer.createdAt))
-                    .font(.ui(13)).foregroundStyle(Color.qGray)
+    // MARK: Layouts
+
+    private var feedBody: some View {
+        HStack(alignment: .top, spacing: DS.Space.s) {
+            NavigationLink(value: Route.profile(answer.authorId)) { Avatar(user: author, size: 40) }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(author?.username ?? "") profile")
+            VStack(alignment: .leading, spacing: 0) {
+                nameRow
+                answerText(size: 16, lineHeight: 24).padding(.top, DS.Space.xxs)
+                actions.padding(.top, 6)          // 16 to the glyphs, minus the 44-pt zone's 10
+                reactionsLine.padding(.top, DS.Space.xs)
             }
         }
     }
 
-    /// Avatar, then name · badge · time on one line, vertically centred on the avatar.
-    private var header: some View {
-        HStack(alignment: .center, spacing: DS.Space.s) {
+    @ViewBuilder
+    private var compactBody: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if showsAuthor {
+                compactAuthor.padding(.bottom, DS.Space.s)
+            }
+            if showsQuestion {
+                Text(answer.questionText)
+                    .font(.ui(13, .semibold))
+                    .foregroundStyle(Color.qBrandText)
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            answerText(size: 17, lineHeight: 24).padding(.top, showsQuestion ? 6 : 0)
+            if showsAuthor || !isMine {
+                if !showsAuthor { dateLine.padding(.top, DS.Space.xs) }
+                actions.padding(.top, 6)
+            } else {
+                dateLine.padding(.top, DS.Space.xs)
+                if answer.totalReactions > 0 { counterPill.padding(.top, DS.Space.xs) }
+            }
+        }
+    }
+
+    private func answerText(size: CGFloat, lineHeight: CGFloat) -> some View {
+        Text(answer.text)
+            .font(.ui(size))
+            .lineSpacing(lineHeight - size * 1.21)   // Inter's natural line is ≈ 1.21 × size
+            .foregroundStyle(Color.qInk)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2) { doubleTapReact() }
+            .overlay { DoubleTapPop(kind: .like, trigger: popTrigger) }
+            .contextMenu { menuItems } preview: { preview }
+    }
+
+    // MARK: Header rows
+
+    private var timeText: String {
+        RelativeTime.short(answer.createdAt) + (answer.isEdited ? " · edited" : "")
+    }
+
+    /// 20-pt row: name 15/600 + time 15/400 ink3, "…" on the right edge.
+    private var nameRow: some View {
+        HStack(spacing: DS.Space.xs) {
             NavigationLink(value: Route.profile(answer.authorId)) {
-                HStack(alignment: .center, spacing: DS.Space.s) {
-                    Avatar(user: author, size: 40)
-                    HStack(spacing: 6) {
-                        Text(author?.username ?? "unknown")
-                            .font(.ui(15, .semibold))
-                            .foregroundStyle(Color.qInk)
-                            .lineLimit(1)
-                        if let badge = author?.badge {
-                            HexBadge(color: badge.color, icon: badge.icon).frame(width: 14, height: 14)
-                        }
-                        Text(RelativeTime.short(answer.createdAt) + (answer.isEdited ? " · edited" : ""))
-                            .font(.ui(15)).foregroundStyle(Color.qGray)
-                            .lineLimit(1)
-                    }
-                }
+                (Text(author?.username ?? "unknown").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
+                    + Text(" " + timeText).font(.ui(15)).foregroundStyle(Color.qGray))
+                    .lineLimit(1)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(author?.username ?? "") profile")
             Spacer(minLength: DS.Space.xs)
-            if !isMine && !store.isFollowing(answer.authorId) {
-                FollowPill(isFollowing: false, compact: true) { store.toggleFollow(answer.authorId) }
-                    .transition(.opacity)
-            }
             moreMenu
         }
-        .animation(.qSpring, value: store.isFollowing(answer.authorId))
+        .frame(height: 20)
     }
 
-    /// Compact author line: 28-pt avatar, "name · 9m", "…" on the right.
-    private var compactHeader: some View {
+    private var compactAuthor: some View {
         HStack(spacing: DS.Space.xs) {
             NavigationLink(value: Route.profile(answer.authorId)) {
                 HStack(spacing: DS.Space.xs) {
-                    Avatar(user: author, size: 28)
+                    Avatar(user: author, size: 36)
                     (Text(author?.username ?? "unknown").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-                        + Text(" · " + RelativeTime.short(answer.createdAt)).font(.ui(15)).foregroundStyle(Color.qGray))
+                        + Text(" · " + timeText).font(.ui(15)).foregroundStyle(Color.qGray))
                         .lineLimit(1)
                 }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(author?.username ?? "") profile")
             Spacer(minLength: DS.Space.xs)
             moreMenu
         }
     }
 
-    /// "Oct 23 · [stickers] 55 · 6 reposts". Counts only on your own answers (only you see them);
-    /// the reactions open who reacted and how.
-    private var meta: some View {
-        HStack(spacing: DS.Space.xs) {
-            Text(RelativeTime.dayLabel(answer.createdAt) + (answer.isEdited ? " · edited" : ""))
-            if isMine && answer.totalReactions > 0 {
-                Text("·")
-                Button { showReactions = true } label: {
-                    HStack(spacing: DS.Space.xxs) {
-                        HStack(spacing: -6) {
-                            ForEach(answer.topReactions.prefix(3)) { kind in
-                                ReactionSticker(kind: kind, size: 22)
-                            }
-                        }
-                        Text("\(answer.totalReactions)")
-                            .font(.ui(13, .semibold))
-                            .foregroundStyle(Color.qInk)
-                            .fixedSize()
-                    }
-                    .frame(minHeight: DS.hitTarget)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.pressable)
-                .accessibilityLabel("\(answer.totalReactions) reactions. Only you can see this. Show who reacted")
-            }
-            if isMine && answer.reshares > 0 {
-                Text("·")
-                Text(answer.reshares == 1 ? "1 repost" : "\(answer.reshares) reposts")
-            }
-        }
-        .font(.ui(13))
-        .foregroundStyle(Color.qGray)
-        .lineLimit(1)
-        .frame(minHeight: 24)
+    private var dateLine: some View {
+        Text(RelativeTime.dayLabel(answer.createdAt) + (answer.isEdited ? " · edited" : ""))
+            .font(.ui(13))
+            .foregroundStyle(Color.qGray)
     }
 
-    /// Shared by the "…" menu and the long-press context menu.
+    /// 20-pt glyph in a 44-pt zone that takes no extra room in the row.
+    private var moreMenu: some View {
+        Menu { menuItems } label: {
+            Icon(.dotsThreeBold, size: 20)
+                .foregroundStyle(Color.qGray)
+                .frame(width: DS.hitTarget, height: DS.hitTarget)
+                .contentShape(Rectangle())
+                .padding(-12)
+        }
+        .accessibilityLabel("More")
+    }
+
+    // MARK: Menu
+
     @ViewBuilder
     private var menuItems: some View {
-        if !isMine {
-            Button {
-                withAnimation(.qSpring) { store.react(.love, on: answer.id) }
-            } label: {
-                Label(answer.myReaction == .love ? "Remove love" : "Love it",
-                      systemImage: (answer.myReaction == .love ? QIcon.heartFill : QIcon.heart).rawValue)
-            }
-        }
+        Button { UIPasteboard.general.url = link } label: { Label("Copy link", image: QIcon.link.assetName) }
         if isMine {
-            Button { isSharing = true } label: { Label("Share", systemImage: QIcon.paperPlaneTilt.rawValue) }
-            Button { UIPasteboard.general.string = answer.text } label: { Label("Copy text", systemImage: QIcon.copy.rawValue) }
-            Divider()
+            Button { isSharingStory = true } label: { Label("Share as story", systemImage: QIcon.paperPlaneTilt.rawValue) }
             if answer.isEditable() {
                 // "Edit · 12 min left": the window is visible, so it never closes by surprise.
                 let minutesLeft = max(1, Int(ceil((Answer.editWindow - Date.now.timeIntervalSince(answer.createdAt)) / 60)))
@@ -233,7 +215,10 @@ struct AnswerCard: View {
             }
             Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: QIcon.trash.rawValue) }
         } else {
-            Button(role: .destructive) { isReporting = true } label: { Label("Report or block", systemImage: QIcon.flag.rawValue) }
+            Button { withAnimation(.qSmooth) { store.hideAnswer(answer.id) } } label: {
+                Label("Not interested", image: QIcon.notInterested.assetName)
+            }
+            Button(role: .destructive) { isReporting = true } label: { Label("Report", image: QIcon.flag.assetName) }
         }
     }
 
@@ -261,114 +246,180 @@ struct AnswerCard: View {
         .environment(store)
     }
 
-    private var moreMenu: some View {
-        Menu {
-            menuItems
-        } label: {
-            Icon(.dotsThreeBold, size: DS.Icon.action)
-                .foregroundStyle(Color.qGray)
-                .glyphHitArea()
-        }
-        .accessibilityLabel("More")
-    }
+    // MARK: Actions
 
-    /// react · repost · share on the left, bookmark on the right (under "…").
-    /// Glyphs sit on the card's 16-pt edges; each keeps a full 44-pt tap area.
+    /// React · Repost · Share, then Save on the right. Each is a 44-pt zone around a 24-pt glyph;
+    /// the row is pulled out by the zone's 10 pt so the glyphs sit exactly on the text edges.
     private var actions: some View {
-        HStack(spacing: isCompact ? DS.Space.xxl : DS.Space.xl) {
-            if isMine {
-                // Nothing until the first reaction: an empty counter reads like a verdict.
-                if answer.totalReactions > 0 { authorReactions }
-                if answer.reshares > 0 { authorReshares }
-            } else {
-                ReactionControl(answer: answer, isTrayOpen: $isTrayOpen) { kind in
-                    withAnimation(.qSpring) { store.react(kind, on: answer.id) }
-                }
-                if !isTrayOpen {
-                    iconButton(.repost, tint: answer.isResharedByMe ? .qBrandText : .qGray,
-                               label: answer.isResharedByMe ? "Remove from your profile" : "Repost to your profile") {
-                        withAnimation(.qSpring) { store.toggleReshare(answer.id) }
-                    }
-                    .pop(on: answer.isResharedByMe)
-                    .sensoryFeedback(.success, trigger: answer.isResharedByMe) { _, on in on }
-                }
+        HStack(spacing: 0) {
+            reactButton
+            zoneButton(label: answer.isResharedByMe ? "Reposted, tap to undo" : "Repost") {
+                withAnimation(.qSpring) { store.toggleReshare(answer.id) }
+            } glyph: {
+                Icon(answer.isResharedByMe ? .repostActive : .repost, size: 24)
+                    .foregroundStyle(answer.isResharedByMe ? Color.qGreen : Color.qGray)
             }
-            if !isTrayOpen {
-                iconButton(.paperPlaneTilt, tint: .qGray, label: "Share outside Quesly") { isSharing = true }
+            .pop(on: answer.isResharedByMe)
+            .sensoryFeedback(.success, trigger: answer.isResharedByMe) { _, on in on }
+            ShareLink(item: link) {
+                Icon(.shareForward, size: 24)
+                    .foregroundStyle(Color.qGray)
+                    .frame(width: DS.hitTarget, height: DS.hitTarget)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.pressable)
+            .accessibilityLabel("Share outside Quesly")
             Spacer(minLength: 0)
-            if !isMine && !isTrayOpen {
-                iconButton(answer.isBookmarked ? .bookmarkSimpleFill : .bookmarkSimple,
-                           tint: answer.isBookmarked ? .qBrandText : .qGray,
-                           label: answer.isBookmarked ? "Remove from saved" : "Save to your profile") {
-                    withAnimation(.qSpring) { store.toggleBookmark(answer.id) }
-                }
-                .pop(on: answer.isBookmarked)
-                .sensoryFeedback(.selection, trigger: answer.isBookmarked)
+            zoneButton(label: answer.isBookmarked ? "Saved" : "Save answer") {
+                withAnimation(.qSpring) { store.toggleBookmark(answer.id) }
+            } glyph: {
+                Icon(answer.isBookmarked ? .bookmarkSimpleFill : .bookmarkSimple, size: 24)
+                    .foregroundStyle(answer.isBookmarked ? Color.qInk : Color.qGray)
             }
+            .pop(on: answer.isBookmarked)
+            .sensoryFeedback(.selection, trigger: answer.isBookmarked)
         }
-        .frame(minHeight: DS.hitTarget)
-        .animation(.qSpring, value: isTrayOpen)
+        .padding(.horizontal, -10)
+        .padding(.bottom, -10)
     }
 
-    /// Only the author sees how often the answer was reposted — never by whom.
-    private var authorReshares: some View {
-        HStack(spacing: 6) {
-            Icon(.repost, size: DS.Icon.inline).foregroundStyle(Color.qGray)
-            Text("\(answer.reshares)")
-                .font(.ui(15, .semibold))
-                .foregroundStyle(Color.qInk)
-                .contentTransition(.numericText())
-                .lineLimit(1)
-                .fixedSize()
-            Icon(.lockSimpleFill, size: DS.Icon.caption).foregroundStyle(Color.qGray.opacity(0.7))
-        }
-        .frame(minHeight: DS.hitTarget)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Reposted \(answer.reshares) times. Only you can see this")
-    }
-
-    /// Only the author sees reaction totals — and who reacted.
-    private var authorReactions: some View {
-        Button { showReactions = true } label: {
-            HStack(spacing: 6) {
-                HStack(spacing: -6) {
-                    ForEach(answer.topReactions.prefix(3)) { kind in
-                        ReactionSticker(kind: kind, size: 24)
-                    }
+    /// Smiley, or the sticker you gave (34 pt, left edge on the text edge). While the popover is
+    /// open the smiley sits on a 44-pt gray disc.
+    private var reactButton: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            withAnimation(.qSpring) { isTrayOpen.toggle() }
+        } label: {
+            ZStack(alignment: .leading) {
+                if isTrayOpen {
+                    Circle().fill(Color.qField)
                 }
-                Text("\(answer.totalReactions)")
-                    .font(.ui(15, .semibold))
-                    .foregroundStyle(Color.qInk)
-                    .contentTransition(.numericText())
-                .lineLimit(1)
-                .fixedSize()
-                Icon(.lockSimpleFill, size: DS.Icon.caption).foregroundStyle(Color.qGray.opacity(0.7))
+                if let mine = answer.myReaction, !isTrayOpen {
+                    ReactionSticker(kind: mine, size: 34)
+                        .id(mine)
+                        .padding(.leading, 10)
+                        .keyframeAnimator(initialValue: 1.0, trigger: stickerPop) { view, scale in
+                            view.scaleEffect(scale)
+                        } keyframes: { _ in
+                            SpringKeyframe(1.25, duration: 0.12)
+                            SpringKeyframe(0.95, duration: 0.12)
+                            SpringKeyframe(1.0, duration: 0.2)
+                        }
+                } else {
+                    Icon(.smiley, size: 24)
+                        .foregroundStyle(isTrayOpen ? Color.qInk : Color.qGray)
+                        .frame(width: DS.hitTarget, height: DS.hitTarget)
+                }
             }
-            .frame(minHeight: DS.hitTarget)
+            .frame(width: DS.hitTarget, height: DS.hitTarget, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
-        .accessibilityLabel("\(answer.totalReactions) reactions. Only you can see this. Show who reacted")
+        .accessibilityLabel(answer.myReaction.map { "Your reaction: \($0.label). Change reaction" } ?? "React")
     }
 
-    private func iconButton(_ icon: QIcon, tint: Color, label: String, action: @escaping () -> Void) -> some View {
+    private func zoneButton<G: View>(label: String, action: @escaping () -> Void, @ViewBuilder glyph: () -> G) -> some View {
         Button(action: action) {
-            Icon(icon, size: DS.Icon.action)
-                .foregroundStyle(tint)
-                .glyphHitArea()
+            glyph()
+                .frame(width: DS.hitTarget, height: DS.hitTarget)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
         .accessibilityLabel(label)
     }
 
+    private func pick(_ kind: ReactionKind) {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.55)) {
+            store.react(kind, on: answer.id)
+            isTrayOpen = false
+        }
+        stickerPop += 1
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
     private func doubleTapReact() {
-        guard !isMine else { return }
         popTrigger += 1
-        if answer.myReaction != .love {
-            withAnimation(.qSpring) { store.react(.love, on: answer.id) }
+        if answer.myReaction != .like {
+            withAnimation(.qSpring) { store.react(.like, on: answer.id) }
         }
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    }
+
+    // MARK: Reactions line
+
+    /// Yours: the counter pill (only you see numbers). Others': faces and names, never a number.
+    @ViewBuilder
+    private var reactionsLine: some View {
+        if isMine {
+            if answer.totalReactions > 0 { counterPill }
+        } else if let line = store.reactedBy(answer) {
+            ReactedByLine(line: line)
+        }
+    }
+
+    /// Top 3 stickers · total · chevron. Opens who reacted.
+    private var counterPill: some View {
+        Button { showReactions = true } label: {
+            HStack(spacing: DS.Space.xs) {
+                HStack(spacing: 2) {
+                    ForEach(answer.topReactions.prefix(3)) { ReactionSticker(kind: $0, size: 32) }
+                }
+                Text("\(answer.totalReactions)")
+                    .font(.ui(15, .semibold))
+                    .foregroundStyle(Color.qInk)
+                    .monospacedDigit()
+                Icon(.caretRightBold, size: 16).foregroundStyle(Color.qGray)
+            }
+            .padding(.leading, DS.Space.xs)
+            .padding(.trailing, 10)
+            .frame(height: 36)
+            .background(Capsule().fill(Color.qField))
+        }
+        .buttonStyle(.pressable)
+        .accessibilityLabel("\(answer.totalReactions) reactions. See who reacted")
+    }
+}
+
+/// "Reacted by you, funnnyyy1 and others" with up to two faces, or stickers + "People reacted"
+/// when nobody you follow reacted.
+struct ReactedByLine: View {
+    let line: AppStore.ReactedBy
+
+    var body: some View {
+        HStack(spacing: DS.Space.xs) {
+            if line.names.isEmpty {
+                HStack(spacing: 2) {
+                    ForEach(line.stickers) { ReactionSticker(kind: $0, size: 30) }
+                }
+                Text("People reacted")
+            } else {
+                HStack(spacing: -6) {
+                    ForEach(line.faces) { user in
+                        Avatar(user: user, size: 20)
+                            .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
+                    }
+                }
+                sentence
+            }
+        }
+        .font(.ui(13))
+        .foregroundStyle(Color.qInk2)
+        .lineLimit(1)
+        .frame(height: 20)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var sentence: Text {
+        func bold(_ s: String) -> Text { Text(s).font(.ui(13, .semibold)).foregroundStyle(Color.qInk) }
+        var t = Text("Reacted by ")
+        let n = line.names
+        switch (n.count, line.hasOthers) {
+        case (1, false): t = t + bold(n[0])
+        case (1, true): t = t + bold(n[0]) + Text(" and others")
+        case (_, false): t = t + bold(n[0]) + Text(" and ") + bold(n[1])
+        default: t = t + bold(n[0]) + Text(", ") + bold(n[1]) + Text(" and others")
+        }
+        return t
     }
 }
 

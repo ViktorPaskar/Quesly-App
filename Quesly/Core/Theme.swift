@@ -57,31 +57,36 @@ enum DS {
 extension Color {
     // Brand (fixed in both appearances)
     /// Brand dark green — primary buttons, active states, hero surfaces.
-    static let qGreen = Color(hex: 0x08563B)
+    static let qGreen = Color(hex: 0x08563B)   // brand file colour (spec draft said #0B4F36)
     static let qGreenDeep = Color(hex: 0x044330)
     static let qGreenLight = Color(hex: 0x5BA21E)
     /// Brand acid lime — accent on green surfaces only (fails contrast as text on white).
     static let qLime = Color(hex: 0xD4FF00)
-    static let qFlame = Color(hex: 0xFF6A1A)
+    static let qFlame = Color(hex: 0xFF6A1F)
     /// Soft fills for icon chips; each tint carries one meaning (streak, following, badges).
-    static let qFlameSoft = Color(hex: 0xFF6A1A, opacity: 0.12)
+    static let qFlameSoft = Color(hex: 0xFFEDE3)
     static let qViolet = Color(hex: 0x7C4DEB)
     static let qVioletSoft = Color(hex: 0x7C4DEB, opacity: 0.12)
     static let qGold = Color(hex: 0xB97C0C)
     static let qGoldSoft = Color(hex: 0xE2A72E, opacity: 0.16)
     /// Streak freeze ❄️ (icon/text) and its soft fill.
-    static let qIce = Color(light: 0x2F7FE0, dark: 0x7DB8FF)
-    static let qIceSoft = Color(light: 0xE6F0FC, dark: 0x16263B)
+    static let qIce = Color(light: 0x2D6BE4, dark: 0x7DB8FF)
+    static let qIceSoft = Color(light: 0xE6EEFD, dark: 0x16263B)
+    static let qDanger = Color(hex: 0xFF3B30)
 
     // Semantic roles (adapt to light / dark)
     /// Primary text.
-    static let qInk = Color(light: 0x16181A, dark: 0xF2F4F3)
-    /// Secondary text (≥ 4.5:1 on background).
-    static let qGray = Color(light: 0x6B6F73, dark: 0x9EA3A7)
+    static let qInk = Color(light: 0x0A0A0A, dark: 0xF2F4F3)
+    /// Secondary text: bios, "Reacted by …".
+    static let qInk2 = Color(light: 0x3A3A3C, dark: 0xC7C7CC)
+    /// Tertiary text: time, captions, inactive icons (spec `ink3`).
+    static let qGray = Color(light: 0x6C6C70, dark: 0x9EA3A7)
+    /// Disabled controls, missed-day rings.
+    static let qGray4 = Color(hex: 0xC7C7CC)
     /// Hairline separators and outlines.
-    static let qLine = Color(light: 0xE9ECEA, dark: 0x2A2E2C)
+    static let qLine = Color(light: 0xECECEE, dark: 0x2A2E2C)
     /// Neutral fill for fields, chips and secondary buttons.
-    static let qField = Color(light: 0xF3F5F4, dark: 0x1E2220)
+    static let qField = Color(light: 0xF2F2F4, dark: 0x1E2220)
     /// Brand mint #CFFDE5: soft fill for selected states, chips and highlights on neutral backgrounds.
     static let qMint = Color(light: 0xCFFDE5, dark: 0x16302A)
     /// Brand green used as *text or icon* color on neutral backgrounds (lighter in dark mode).
@@ -90,8 +95,8 @@ extension Color {
     static let qBackground = Color(light: 0xFFFFFF, dark: 0x0C0E0D)
     /// Elevated surfaces (sheets, popovers).
     static let qSurface = Color(light: 0xFFFFFF, dark: 0x161917)
-    /// Soft gray canvas behind blocks (profile, notifications, discover, settings).
-    static let qCanvas = Color(light: 0xF1F3F2, dark: 0x0C0E0D)
+    /// Screen background. Strictly white in the 2026 redesign; blocks are outlined, not tinted.
+    static let qCanvas = Color(light: 0xFFFFFF, dark: 0x0C0E0D)
     /// White rounded block that sits on `qCanvas`.
     static let qBlock = Color(light: 0xFFFFFF, dark: 0x181B19)
 
@@ -119,13 +124,19 @@ extension Color {
 // MARK: - Typography
 
 extension Font {
-    /// UI text on the SF Pro scale. Sizes snap to the type scale and scale with Dynamic Type.
-    ///
-    /// Scale: 12 caption · 13 footnote · 15 subheadline · 16 callout · 17 body · 20 title3 · 22 title2 · 28 title · 34 largeTitle
+    /// UI text in Inter at the exact size, scaling with Dynamic Type relative to the nearest
+    /// Apple text style. Weights: 400 / 500 / 600 / 700.
     static func ui(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        // The scale matches Apple's text-style point sizes exactly, so we can use the styles
-        // themselves and get Dynamic Type for free.
-        .system(scale(size).1, design: .default, weight: weight)
+        .custom(interName(weight), size: size, relativeTo: scale(size).1)
+    }
+
+    private static func interName(_ weight: Font.Weight) -> String {
+        switch weight {
+        case .bold, .heavy, .black: return "Inter-Bold"
+        case .semibold: return "Inter-SemiBold"
+        case .medium: return "Inter-Medium"
+        default: return "Inter-Regular"
+        }
     }
 
     /// Brand display face (Outfit). Use only for the question, hero titles and brand moments.
@@ -207,12 +218,12 @@ extension View {
         self
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+            .outlinedBlock()
     }
 
     /// Block on a white screen: white fill, hairline outline (no shadow), same radius as `block`.
-    func outlinedBlock() -> some View {
-        let shape = RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+    func outlinedBlock(radius: CGFloat = DS.Radius.l) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         return self
             .background(shape.fill(Color.qBackground))
             .overlay(shape.strokeBorder(Color.qLine, lineWidth: 1))

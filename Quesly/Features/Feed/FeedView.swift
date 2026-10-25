@@ -1,9 +1,12 @@
 import SwiftUI
 
+/// World / Friends feeds on white: wordmark + streak, Threads-style tabs, then flat answer rows
+/// split by 0.5-pt hairlines. World opens with the question card; Friends with your own answer.
 struct FeedView: View {
     @Environment(AppStore.self) private var store
     @State private var scope: FeedScope = DemoConfig.initialFeedScope
     @State private var showQuestion = false
+    @State private var showStreak = false
     @Environment(NetworkMonitor.self) private var network
     @Environment(\.scrollToTopSignal) private var scrollToTopSignal
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -11,7 +14,7 @@ struct FeedView: View {
     private var tour: DemoTour { DemoTour.shared }
 
     @State private var storyLaunch: StoryLaunch?
-    // "Feed unlocked" moment after posting: cards reveal one by one, the streak ticks up.
+    // "Feed unlocked" moment after posting: rows reveal one by one, the streak ticks up.
     @State private var revealCount = Int.max
     @State private var shownStreak: Int?
     @State private var highlightsMine = false
@@ -19,20 +22,24 @@ struct FeedView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Logo centred with the streak on the right; the World/Friends switch sits below it.
-            ZStack {
-                QueslyLogo(height: 20, markColor: .qGreen, textColor: .qInk, background: .qLime)
-                HStack {
-                    Spacer()
-                    StreakChip(days: shownStreak ?? store.streak)
-                }
+            HStack {
+                Image("brand-wordmark")
+                    .renderingMode(.template)
+                    .resizable()
+                    .aspectRatio(1900.0 / 602.0, contentMode: .fit)
+                    .frame(height: 20)
+                    .foregroundStyle(Color.qInk)
+                    .accessibilityLabel("Quesly")
+                Spacer()
+                Button { showStreak = true } label: { StreakChip(days: shownStreak ?? store.streak) }
+                    .buttonStyle(.pressable)
+                    .accessibilityHint("Opens your streak calendar")
             }
-            .padding(.horizontal, DS.Space.screen)
-            .frame(height: 48)
+            .padding(.horizontal, DS.Space.m)
+            .frame(height: 44)
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
-            PillTabs(items: FeedScope.allCases, selection: $scope, title: \.rawValue)
-                .padding(.bottom, DS.Space.xxs)
+            UnderlineTabs(items: FeedScope.allCases, selection: $scope, title: \.rawValue)
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
             if !network.isOnline {
@@ -48,7 +55,7 @@ struct FeedView: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.qSmooth, value: network.isOnline)
         }
-        .background(Color.qCanvas)
+        .background(Color.qBackground)
         .toolbar(.hidden, for: .navigationBar)
         .fullScreenCover(isPresented: $showQuestion) {
             DailyQuestionView(onSubmitted: {
@@ -59,6 +66,23 @@ struct FeedView: View {
         }
         .fullScreenCover(item: $storyLaunch) { launch in
             StoryViewer(stories: launch.stories, start: launch.start)
+        }
+        .sheet(isPresented: $showStreak) {
+            NavigationStack {
+                ScrollView {
+                    VStack(spacing: DS.Space.s) {
+                        StreakCard()
+                        MemoriesCard(showsHeader: false)
+                    }
+                    .padding(.horizontal, DS.Space.screen)
+                    .padding(.vertical, DS.Space.m)
+                }
+                .background(Color.qBackground)
+                .navigationTitle("Your streak")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
         }
         .sensoryFeedback(.success, trigger: unlockHaptic)
         .task(id: store.unlockCelebrationAt) { await celebrateUnlock() }
@@ -74,101 +98,111 @@ struct FeedView: View {
 
     private func feedPage(_ scope: FeedScope) -> some View {
         let answers = store.feed(scope)
-        let othersCount = answers.filter { $0.authorId != store.me.id }.count
+        let mine = answers.first { $0.authorId == store.me.id }
+        let others = answers.filter { $0.authorId != store.me.id }
+        let trayTarget = others.first?.id
         return ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        Color.clear.frame(height: 0).id("top")
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    Color.clear.frame(height: 0).id("top")
 
-                        FriendStoriesRow { index in
-                            storyLaunch = StoryLaunch(stories: store.friendStories, start: index)
-                        }
-
-                        // Scrolls away with the content instead of permanently taking ~130 pt.
+                    if scope == .world {
                         TodayQuestionBanner(question: store.todayQuestion) {
                             if !store.hasAnsweredToday { showQuestion = true }
                         }
+                    }
+                    if !store.hasAnsweredToday {
+                        AnswerPrompt { showQuestion = true }
+                    }
+                    if store.freezeJustUsed != nil {
+                        FreezeUsedNote(streak: store.streak) {
+                            withAnimation(.qSmooth) { store.freezeJustUsed = nil }
+                        }
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
 
-                        if !store.hasAnsweredToday {
-                            AnswerPrompt { showQuestion = true }
-                        }
-                        if store.freezeJustUsed != nil {
-                            FreezeUsedNote(streak: store.streak) {
-                                withAnimation(.qSmooth) { store.freezeJustUsed = nil }
-                            }
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                        }
-                        if let error = store.feedError {
-                            ErrorStateView(message: error) {
-                                Task { await store.reloadFeed() }
-                            }
-                        } else if store.isLoadingFeed && othersCount == 0 {
-                            ForEach(0..<4, id: \.self) { _ in AnswerCardSkeleton() }
-                        } else {
-                            ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
-                                let isShown = index < revealCount
-                                Group {
-                                    AnswerCard(answer: answer,
-                                               opensTray: (DemoConfig.opensReactionTray || tour.openTray)
-                                                   && answer.id == answers.first(where: { $0.authorId != store.me.id })?.id,
-                                               isHighlighted: highlightsMine && answer.authorId == store.me.id,
-                                               isPinnedMine: answer.authorId == store.me.id)
-                                }
-                                // Each answer is its own white card on the gray canvas.
-                                .background(Color.qBlock)
-                                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
-                                .padding(.horizontal, DS.Space.s)
-                                .padding(.top, DS.Space.xs)
-                                .opacity(isShown ? 1 : 0)
-                                .offset(y: isShown ? 0 : 16)
-                                .staggeredAppear(index)
-                            }
-                        }
+                    if let mine {
+                        Text("Your answer")
+                            .font(.ui(13, .semibold))
+                            .foregroundStyle(Color.qGray)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, DS.Space.m)
+                            .padding(.top, DS.Space.s)
+                        AnswerCard(answer: mine, isHighlighted: highlightsMine)
+                        hairline
+                    }
 
-                        if store.feedError != nil || store.isLoadingFeed {
-                            EmptyView()
-                        } else if scope == .friends && othersCount == 0 {
-                            EmptyStateView(icon: .userFill,
-                                           title: "Your friends are quiet",
-                                           message: "None of the people you follow answered yet. Invite friends or discover new people.") {
-                                VStack(spacing: DS.Space.s) {
-                                    ShareLink(item: Invite.text(for: store.me.username)) {
-                                        Text("Invite friends")
-                                            .font(.ui(16, .semibold))
-                                            .foregroundStyle(.white)
-                                            .frame(maxWidth: .infinity).frame(height: 50)
-                                            .background(Capsule().fill(Color.qGreen))
-                                    }
-                                    .buttonStyle(.pressable)
-                                    Button("Discover people", action: onDiscover)
-                                        .font(.ui(16))
-                                        .foregroundStyle(Color.qBrandText)
-                                        .frame(height: DS.hitTarget)
-                                }
+                    if let error = store.feedError {
+                        ErrorStateView(message: error) {
+                            Task { await store.reloadFeed() }
+                        }
+                    } else if store.isLoadingFeed && others.isEmpty {
+                        ForEach(0..<4, id: \.self) { _ in AnswerCardSkeleton() }
+                    } else {
+                        ForEach(Array(others.enumerated()), id: \.element.id) { index, answer in
+                            let isShown = index + 1 < revealCount
+                            VStack(spacing: 0) {
+                                AnswerCard(answer: answer,
+                                           opensTray: (DemoConfig.opensReactionTray || tour.openTray) && answer.id == trayTarget)
+                                if index < others.count - 1 { hairline }
                             }
-                        } else if othersCount > 0 {
-                            CaughtUpFooter(count: othersCount, scope: scope) {
-                                withAnimation(.qSmooth) { proxy.scrollTo("top", anchor: .top) }
-                            }
-                            .id("end")
+                            .zIndex(Double(index))
+                            .opacity(isShown ? 1 : 0)
+                            .offset(y: isShown ? 0 : 16)
+                            .staggeredAppear(index)
                         }
                     }
-                    .padding(.bottom, DS.Space.s)
-                    .animation(.qSmooth, value: scope)
+
+                    if store.feedError != nil || store.isLoadingFeed {
+                        EmptyView()
+                    } else if scope == .friends && others.isEmpty {
+                        EmptyStateView(icon: .userFill,
+                                       title: "Your friends are quiet",
+                                       message: "None of the people you follow answered yet. Invite friends or discover new people.") {
+                            VStack(spacing: DS.Space.s) {
+                                ShareLink(item: Invite.text(for: store.me.username)) {
+                                    Text("Invite friends")
+                                        .font(.ui(16, .semibold))
+                                        .foregroundStyle(.white)
+                                        .frame(maxWidth: .infinity).frame(height: 50)
+                                        .background(Capsule().fill(Color.qGreen))
+                                }
+                                .buttonStyle(.pressable)
+                                Button("Discover people", action: onDiscover)
+                                    .font(.ui(16))
+                                    .foregroundStyle(Color.qBrandText)
+                                    .frame(height: DS.hitTarget)
+                            }
+                        }
+                    } else if !others.isEmpty {
+                        hairline
+                        CaughtUpFooter(count: others.count, scope: scope) {
+                            withAnimation(.qSmooth) { proxy.scrollTo("top", anchor: .top) }
+                        }
+                        .id("end")
+                    }
                 }
-                .refreshable { await store.reloadFeed() }
-                .onChange(of: scrollToTopSignal) { _, _ in
-                    withAnimation(.qSmooth) { proxy.scrollTo("top", anchor: .top) }
-                }
-                .task {
-                    guard DemoConfig.scrollsFeedToEnd else { return }
-                    try? await Task.sleep(for: .milliseconds(800))
-                    proxy.scrollTo("end", anchor: .bottom)
-                }
+                .padding(.bottom, DS.Space.s)
+                .animation(.qSmooth, value: scope)
             }
+            .refreshable { await store.reloadFeed() }
+            .onChange(of: scrollToTopSignal) { _, _ in
+                withAnimation(.qSmooth) { proxy.scrollTo("top", anchor: .top) }
+            }
+            .task {
+                guard DemoConfig.scrollsFeedToEnd else { return }
+                try? await Task.sleep(for: .milliseconds(800))
+                proxy.scrollTo("end", anchor: .bottom)
+            }
+        }
     }
 
-    /// The moment the day's answers unlock: your card lands first and glows, the others
+    /// 0.5-pt full-width separator between answers.
+    private var hairline: some View {
+        Rectangle().fill(Color.qLine).frame(height: 0.5)
+    }
+
+    /// The moment the day's answers unlock: your answer lands first and glows, the others
     /// follow one by one, the streak ticks up with a success haptic.
     private func celebrateUnlock() async {
         guard let at = store.unlockCelebrationAt else { return }
@@ -230,7 +264,7 @@ private struct FreezeUsedNote: View {
         }
         .padding(DS.Space.m)
         .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qIceSoft))
-        .padding(.horizontal, DS.Space.screen)
+        .padding(.horizontal, DS.Space.m)
         .padding(.top, DS.Space.s)
     }
 }
@@ -264,7 +298,7 @@ struct CaughtUpFooter: View {
                 .foregroundStyle(Color.qInk)
                 .padding(.horizontal, DS.Space.m)
                 .frame(height: 36)
-                .background(Capsule().fill(Color.qBlock))
+                .background(Capsule().fill(Color.qField))
             }
             .padding(.top, DS.Space.xxs)
             Button("Back to top", action: onBackToTop)
@@ -279,23 +313,23 @@ struct CaughtUpFooter: View {
     }
 }
 
-/// 🔥 streak counter in the feed header — a gentle nudge to come back tomorrow.
+/// 🔥 streak counter (feed and profile headers): gray pill, flame 16, number in Outfit.
 struct StreakChip: View {
     let days: Int
-    /// White on the gray feed canvas; a light gray fill on white screens.
-    var fill: Color = .qBlock
+    var fill: Color = .qField
 
     var body: some View {
-        HStack(spacing: 4) {
-            Icon(.fireFill, size: DS.Icon.inline)
+        HStack(spacing: DS.Space.xxs) {
+            Icon(.fireFill, size: 16)
                 .foregroundStyle(Color.qFlame)
                 .pop(on: days)
             Text("\(days)")
-                .font(.ui(15, .semibold))
+                .font(.display(15, .bold))
                 .foregroundStyle(Color.qInk)
                 .contentTransition(.numericText())
         }
-        .padding(.horizontal, 12)
+        .padding(.leading, 10)
+        .padding(.trailing, 12)
         .frame(height: 32)
         .background(Capsule().fill(fill))
         .accessibilityElement(children: .ignore)
@@ -303,42 +337,52 @@ struct StreakChip: View {
     }
 }
 
+/// World's opening card: today's question on brand green, with friends who answered.
 struct TodayQuestionBanner: View {
+    @Environment(AppStore.self) private var store
     let question: DailyQuestion
     var onTap: () -> Void = {}
-    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
+        let friends = store.friendStories.compactMap { store.user($0.authorId) }
         Button(action: onTap) {
-            HStack(alignment: .center, spacing: 12) {
-                if !typeSize.isAccessibilitySize {
-                    QueslyMark(color: .qGreen, cutout: .qLime)
-                        .frame(width: 30)
-                        .frame(width: 44, height: 44)
-                        .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qLime))
+            VStack(alignment: .leading, spacing: 0) {
+                Text("TODAY'S QUESTION")
+                    .font(.ui(12, .semibold))
+                    .tracking(1)
+                    .foregroundStyle(Color.qLime)
+                Text(question.text)
+                    .font(.display(20, .semibold))
+                    .lineSpacing(2)
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, DS.Space.xxs)
+                HStack(spacing: DS.Space.xs) {
+                    if !friends.isEmpty {
+                        HStack(spacing: -6) {
+                            ForEach(friends.prefix(2)) { user in
+                                Avatar(user: user, size: 20)
+                                    .overlay(Circle().stroke(Color.qGreen, lineWidth: 2))
+                            }
+                        }
+                    }
+                    Text("\(store.answeredTodayCount.formatted()) answers"
+                         + (friends.isEmpty ? "" : " · \(friends.count) friend\(friends.count == 1 ? "" : "s")"))
+                        .font(.ui(13))
+                        .foregroundStyle(.white.opacity(0.75))
                 }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Today's Question")
-                        .font(.ui(13, .semibold))
-                        .foregroundStyle(Color.qLime)
-                    Text(question.text.uppercased())
-                        .font(.display(17, .bold))
-                        .foregroundStyle(.white)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(typeSize.isAccessibilitySize ? nil : 3)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                .padding(.top, DS.Space.s)
             }
+            .padding(DS.Space.m)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.qGreen))
             .padding(.horizontal, DS.Space.m)
-            .padding(.vertical, DS.Space.m)
-            .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qGreen))
-            .padding(.horizontal, DS.Space.screen)
-            .padding(.top, DS.Space.s)
+            .padding(.top, DS.Space.m)
             .padding(.bottom, DS.Space.xxs)
         }
         .buttonStyle(.pressable)
+        .accessibilityElement(children: .combine)
     }
 }
 

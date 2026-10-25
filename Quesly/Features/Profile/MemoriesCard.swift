@@ -27,8 +27,9 @@ struct MemoriesCard: View {
             }
             legend
         }
-        .padding(DS.Space.m)
-        .outlinedBlock()
+        .padding(.top, DS.Space.xxs)
+        .padding([.horizontal, .bottom], DS.Space.m)
+        .outlinedBlock(radius: 24)
         .sheet(item: $opened) { answer in
             MemoryDetailSheet(answer: answer)
                 .presentationDetents([.medium, .large])
@@ -87,7 +88,7 @@ struct MemoriesCard: View {
     private var monthBar: some View {
         HStack(spacing: 0) {
             Text(month.formatted(.dateTime.month(.wide).year()))
-                .font(.ui(15, .semibold))
+                .font(.ui(17, .semibold))
                 .foregroundStyle(Color.qInk)
             Spacer()
             monthButton(.caretLeftBold, label: "Previous month", enabled: monthOffset > -Self.monthsBack) { monthOffset -= 1 }
@@ -99,7 +100,7 @@ struct MemoriesCard: View {
     private func monthButton(_ icon: QIcon, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button { withAnimation(.qSmooth) { action() } } label: {
             Icon(icon, size: DS.Icon.inline)
-                .foregroundStyle(enabled ? Color.qInk : Color.qGray.opacity(0.4))
+                .foregroundStyle(enabled ? Color.qGreen : Color.qGray4)
                 .frame(width: DS.hitTarget, height: 36)
                 .contentShape(Rectangle())
         }
@@ -123,8 +124,8 @@ struct MemoriesCard: View {
             Spacer(minLength: 0)
         }
         .font(.ui(12))
-        .foregroundStyle(Color.qGray)
-        .padding(.top, DS.Space.xxs)
+        .foregroundStyle(Color.qInk2)
+        .padding(.top, DS.Space.s)
         .accessibilityHidden(true)
     }
 }
@@ -161,11 +162,11 @@ private struct MonthGrid: View {
         LazyVGrid(columns: columns, spacing: DS.Space.xxs) {
             ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
                 Text(symbol)
-                    .font(.ui(12))
+                    .font(.ui(12, .semibold))
                     .foregroundStyle(Color.qGray)
-                    .frame(height: 20)
+                    .frame(height: 24)
             }
-            ForEach(0..<leadingBlanks, id: \.self) { _ in Color.clear.frame(height: 40) }
+            ForEach(0..<leadingBlanks, id: \.self) { _ in Color.clear.frame(height: 44) }
             ForEach(days, id: \.self) { day in
                 DayCell(day: day,
                         state: state(for: day, today: today),
@@ -204,7 +205,7 @@ private struct DayCell: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 40)
+        .frame(height: 44)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)
         .accessibilityAddTraits(state == .answered ? .isButton : [])
@@ -215,7 +216,7 @@ private struct DayCell: View {
             switch state {
             case .answered:
                 Circle().fill(isToday ? Color.qLime : Color.qGreen)
-                Text(number).font(.ui(13, .semibold)).foregroundStyle(isToday ? Color.qGreen : .white)
+                Text(number).font(.ui(13, isToday ? .bold : .semibold)).foregroundStyle(isToday ? Color.qInk : .white)
             case .frozen:
                 Circle().fill(Color.qIceSoft)
                 Icon(.snowflake, size: DS.Icon.caption, weight: .semibold).foregroundStyle(Color.qIce)
@@ -224,11 +225,11 @@ private struct DayCell: View {
                     Circle().strokeBorder(Color.qGreen, lineWidth: 1.5)
                     Text(number).font(.ui(13, .semibold)).foregroundStyle(Color.qInk)
                 } else {
-                    Circle().strokeBorder(Color.qGray.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2, 3]))
+                    Circle().strokeBorder(Color.qGray4, style: StrokeStyle(lineWidth: 1.5, dash: [2, 3]))
                     Text(number).font(.ui(13)).foregroundStyle(Color.qGray)
                 }
             case .future:
-                Text(number).font(.ui(13)).foregroundStyle(Color.qGray.opacity(0.45))
+                Text(number).font(.ui(13)).foregroundStyle(Color(hex: 0xAEAEB2))
             }
         }
         .frame(width: 36, height: 36)

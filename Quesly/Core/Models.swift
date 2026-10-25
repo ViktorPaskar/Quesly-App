@@ -88,53 +88,38 @@ struct DailyQuestion: Identifiable, Codable, Hashable {
 
 /// Positive-only reactions. One reaction per person per answer (like iMessage tapbacks).
 /// Drawn as 3D stickers (`ReactionSticker`); SAME is the Quesly-only word reaction.
+/// Word stickers (speech bubbles), one per person per answer. Order everywhere:
+/// SAME, AWW, LIKE, DEEP, COOL, HUGS. Art: Assets/Reactions/reaction-<raw>, 50 × 36.
 enum ReactionKind: String, Codable, CaseIterable, Identifiable {
-    case love, green, adore, touched, like, same
+    case same, aww, like, deep, cool, hugs
 
     var id: String { rawValue }
 
-    /// Plain-text fallback for strings (notifications, accessibility).
-    var emoji: String {
+    /// The word on the sticker; also the plain-text fallback.
+    var word: String { rawValue.uppercased() }
+    var assetName: String { "reaction-\(rawValue)" }
+    var label: String { rawValue.capitalized }
+
+    var meaning: String {
         switch self {
-        case .love: return "❤️"
-        case .green: return "💚"
-        case .adore: return "🥰"
-        case .touched: return "🥹"
-        case .like: return "👍"
-        case .same: return "SAME"
+        case .same: return "Me too"
+        case .aww: return "That's sweet"
+        case .like: return "I like it"
+        case .deep: return "Made me think"
+        case .cool: return "Cool idea"
+        case .hugs: return "Sending support"
         }
     }
 
-    /// 3D image in Assets.xcassets/Reactions; nil for the word sticker.
-    var assetName: String? {
-        switch self {
-        case .love: return "reaction-heart"
-        case .green: return "reaction-green-heart"
-        case .adore: return "reaction-hearts"
-        case .touched: return "reaction-tears"
-        case .like: return "reaction-thumbs"
-        case .same: return nil
-        }
-    }
-
-    var label: String {
-        switch self {
-        case .love: return "Love"
-        case .green: return "Green heart"
-        case .adore: return "Adore"
-        case .touched: return "Touched"
-        case .like: return "Like"
-        case .same: return "Same"
-        }
-    }
-
-    /// Saved data from before the new set: 🔥 becomes SAME, 😂 becomes 🥰.
+    /// Saved data from the emoji sets: ❤️/👍 become LIKE, 💚/🔥 SAME, 🥰/😂 AWW, 🥹 HUGS.
     init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
         switch raw {
-        case "fire": self = .same
-        case "haha": self = .adore
-        default: self = ReactionKind(rawValue: raw) ?? .love
+        case "love", "like": self = .like
+        case "green", "fire": self = .same
+        case "adore", "haha": self = .aww
+        case "touched": self = .hugs
+        default: self = ReactionKind(rawValue: raw) ?? .like
         }
     }
 }

@@ -88,7 +88,7 @@ struct EditProfileView: View {
                             Icon(showPassword ? .eyeSlash : .eye, size: DS.Icon.action).foregroundStyle(Color.qGray)
                         }
                     }
-                    .queslyField(fill: .qBlock)
+                    .queslyField(fill: .qField)
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -97,7 +97,7 @@ struct EditProfileView: View {
                         .lineLimit(3...6)
                         .font(.ui(16))
                         .padding(16)
-                        .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qBlock))
+                        .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
                 }
 
                 GreenButton(title: "Save", isEnabled: draft.username.count >= 3) {
@@ -139,7 +139,7 @@ struct EditProfileView: View {
     private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(.ui(13)).foregroundStyle(Color.qGray)
-            content().queslyField(fill: .qBlock)
+            content().queslyField(fill: .qField)
         }
     }
 }

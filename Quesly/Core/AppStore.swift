@@ -252,8 +252,13 @@ final class AppStore {
         String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maxAnswerLength))
     }
 
+    /// Answers hidden with "Not interested" (this session only).
+    private(set) var hiddenAnswerIds: Set<String> = []
+    func hideAnswer(_ id: String) { hiddenAnswerIds.insert(id) }
+
+    /// World: everyone's answers. Friends: your answer pinned on top, then people you follow.
     func feed(_ scope: FeedScope) -> [Answer] {
-        var others = todayAnswers.filter { !blockedIds.contains($0.authorId) }
+        var others = todayAnswers.filter { !blockedIds.contains($0.authorId) && !hiddenAnswerIds.contains($0.id) }
         switch scope {
         case .friends:
             others = others.filter { followingIds.contains($0.authorId) }
@@ -261,8 +266,7 @@ final class AppStore {
             // Posting to World means agreeing to be seen; Friends-only answers never appear there.
             others = others.filter { $0.visibility == .everyone }
         }
-        // Your own answer is always pinned on top of both feeds.
-        if let mine = todaysAnswer { return [mine] + others }
+        if scope == .friends, let mine = todaysAnswer { return [mine] + others }
         return others
     }
 
@@ -353,6 +357,27 @@ final class AppStore {
         let user: AppUser
         let kind: ReactionKind
         var id: String { user.id }
+    }
+
+    /// What a viewer who is not the author sees under an answer: names, never numbers.
+    struct ReactedBy {
+        /// "you" first (if you reacted), then people you follow; at most two.
+        let names: [String]
+        let faces: [AppUser]
+        let hasOthers: Bool
+        /// Top sticker kinds, shown with "People reacted" when nobody you follow reacted.
+        let stickers: [ReactionKind]
+    }
+
+    func reactedBy(_ answer: Answer) -> ReactedBy? {
+        guard answer.totalReactions > 0 else { return nil }
+        let reacted = answer.myReaction != nil
+        let friends = reactors(for: answer).map(\.user).filter { isFollowing($0.id) && $0.id != me.id }
+        var names: [String] = [], faces: [AppUser] = []
+        if reacted { names.append("you"); faces.append(me) }
+        for f in friends.prefix(reacted ? 1 : 2) { names.append(f.username); faces.append(f) }
+        return ReactedBy(names: names, faces: faces, hasOthers: answer.totalReactions > names.count,
+                         stickers: Array(answer.topReactions.prefix(3)))
     }
 
     func reactors(for answer: Answer) -> [Reactor] {

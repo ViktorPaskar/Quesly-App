@@ -9,6 +9,10 @@
 	</dict>
 	<key>UIAppFonts</key>
 	<array>
+		<string>Inter-Regular.ttf</string>
+		<string>Inter-Medium.ttf</string>
+		<string>Inter-SemiBold.ttf</string>
+		<string>Inter-Bold.ttf</string>
 		<string>Outfit-Regular.ttf</string>
 		<string>Outfit-Medium.ttf</string>
 		<string>Outfit-SemiBold.ttf</string>

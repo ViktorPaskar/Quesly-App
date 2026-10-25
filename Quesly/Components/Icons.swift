@@ -24,7 +24,10 @@ enum QIcon: String {
     case prohibit = "hand.raised", prohibitFill = "hand.raised.fill"
     case downloadSimple = "arrow.down.to.line"
     /// Repost to your profile. `ui-repost` is drawn to match UIcons Regular Rounded (2-pt rounded strokes, 24 grid).
-    case repost = "arrow.2.squarepath"
+    case repost = "arrow.2.squarepath", repostActive = "arrow.2.squarepath.circle"
+    /// Share outside Quesly: curved forward arrow (system share sheet with the answer link).
+    case shareForward = "arrowshape.turn.up.right"
+    case link = "link", notInterested = "nosign"
     case gearSix = "gearshape", gearSixFill = "gearshape.fill"
     case dotsThreeBold = "ellipsis"
 

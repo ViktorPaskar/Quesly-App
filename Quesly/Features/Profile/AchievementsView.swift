@@ -41,7 +41,7 @@ struct AchievementsView: View {
                             .staggeredAppear(index)
                     }
                 }
-                .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+                .outlinedBlock()
                 .padding(.horizontal, DS.Space.m)
             }
             .padding(.bottom, 16)

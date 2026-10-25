@@ -51,7 +51,7 @@ struct NotificationsView: View {
                         .staggeredAppear(index)
                 }
             }
-            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+            .outlinedBlock()
         }
     }
 
@@ -97,7 +97,7 @@ struct NotificationsView: View {
             ZStack(alignment: .bottomTrailing) {
                 Avatar(user: actors.first, size: 40)
                 if let r = group.reactions.first {
-                    ReactionSticker(kind: r, size: 22)
+                    ReactionSticker(kind: r, size: 28)
                         .offset(x: 4, y: 4)
                 } else if group.kind == .follow {
                     Icon(.userPlusFill, size: DS.Icon.caption)

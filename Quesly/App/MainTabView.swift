@@ -88,7 +88,7 @@ struct MainTabView: View {
         tour.openTray = true
         await DemoTour.pause(1.8)
         if let other = store.feed(.world).first(where: { $0.authorId != store.me.id }) {
-            withAnimation(.qSpring) { store.react(.adore, on: other.id) }
+            withAnimation(.qSpring) { store.react(.aww, on: other.id) }
         }
         await DemoTour.pause(0.6)
         tour.openTray = false

@@ -73,6 +73,10 @@ struct UnderlineTabs<Item: Hashable & Identifiable>: View {
     let items: [Item]
     @Binding var selection: Item
     let title: KeyPath<Item, String>
+    /// Feed: 1.5 pt indicator, ink3 inactive, 0.5 pt hairline at 12 % black. Profile: 1 pt, #999.
+    var indicator: CGFloat = 1.5
+    var inactive: Color = .qGray
+    var hairline: Color = Color.black.opacity(0.12)
     @Namespace private var ns
 
     var body: some View {
@@ -81,8 +85,8 @@ struct UnderlineTabs<Item: Hashable & Identifiable>: View {
                 let on = item == selection
                 Button { withAnimation(.qSmooth) { selection = item } } label: {
                     Text(item[keyPath: title])
-                        .font(.ui(15, on ? .semibold : .regular))
-                        .foregroundStyle(on ? Color.qInk : Color.qGray)
+                        .font(.ui(15, .semibold))
+                        .foregroundStyle(on ? Color.qInk : inactive)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                         .frame(maxWidth: .infinity)
@@ -90,7 +94,7 @@ struct UnderlineTabs<Item: Hashable & Identifiable>: View {
                         .overlay(alignment: .bottom) {
                             if on {
                                 Rectangle().fill(Color.qInk)
-                                    .frame(height: 2)
+                                    .frame(height: indicator)
                                     .matchedGeometryEffect(id: "line", in: ns)
                             }
                         }
@@ -100,7 +104,7 @@ struct UnderlineTabs<Item: Hashable & Identifiable>: View {
                 .accessibilityAddTraits(on ? .isSelected : [])
             }
         }
-        .background(alignment: .bottom) { Rectangle().fill(Color.qLine).frame(height: 1) }
+        .background(alignment: .bottom) { Rectangle().fill(hairline).frame(height: 0.5) }
         .sensoryFeedback(.selection, trigger: selection)
     }
 }
@@ -138,7 +142,7 @@ struct PillTabs<T: Hashable & Identifiable>: View {
             }
         }
         .padding(3)
-        .background(Capsule().fill(Color.qBlock))
+        .background(Capsule().fill(Color.qField))
         .frame(minHeight: DS.hitTarget)
         .fixedSize()
         .sensoryFeedback(.selection, trigger: selection)

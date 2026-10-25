@@ -28,9 +28,9 @@ struct ProfileView: View {
             ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                     ProfileHeader(user: user, isMe: isMe)
-                        .padding(.horizontal, DS.Space.m)
+                        .padding(.horizontal, DS.Space.screen)
                         .padding(.top, DS.Space.xs)
-                        .padding(.bottom, DS.Space.l)
+                        .padding(.bottom, DS.Space.xl)
                         .onGeometryChange(for: Bool.self) { geo in
                             geo.frame(in: .scrollView).minY < -56
                         } action: { shows in
@@ -47,7 +47,8 @@ struct ProfileView: View {
                             .simultaneousGesture(swipe)
                             .animation(.qSmooth, value: tab)
                     } header: {
-                        UnderlineTabs(items: tabs, selection: $tab, title: \.title)
+                        UnderlineTabs(items: tabs, selection: $tab, title: \.title,
+                                      indicator: 1, inactive: Color(hex: 0x999999), hairline: .qLine)
                             .background(Color.qBackground)
                     }
                 }
@@ -81,14 +82,14 @@ struct ProfileView: View {
                 StreakCard()
                 MemoriesCard(showsHeader: false)
             }
-            .padding(.horizontal, DS.Space.m)
+            .padding(.horizontal, DS.Space.screen)
         } else {
             let items = answers(for: tab)
             // On white, answers are rows split by inset hairlines (Threads), not floating cards.
             VStack(spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
                     if index > 0 {
-                        Rectangle().fill(Color.qLine).frame(height: 1).padding(.horizontal, DS.Space.m)
+                        Rectangle().fill(Color.qLine).frame(height: 1).padding(.horizontal, DS.Space.screen)
                     }
                     AnswerCard(answer: answer, showsQuestion: true, showsAuthor: answer.authorId != userId,
                                isCompact: true)
@@ -146,7 +147,7 @@ struct ProfileView: View {
                 .accessibilityLabel("Back")
             }
             if isMe && store.streak > 0 {
-                StreakChip(days: store.streak, fill: .qField).padding(.leading, DS.Space.xs)
+                StreakChip(days: store.streak).padding(.leading, 10)
             }
             if store.isPrivateAccount && isMe {
                 IconLabel("Private", icon: .lockSimpleFill, size: DS.Icon.caption)
@@ -184,8 +185,8 @@ struct ProfileView: View {
                 .transition(.opacity)
             }
         }
-        .padding(.horizontal, DS.Space.xs)
-        .frame(height: 52)
+        .padding(.horizontal, 10)   // 44-pt zones: glyphs land on the 20-pt margin
+        .frame(height: 44)
         .background(Color.qBackground)
     }
 }
@@ -206,6 +207,7 @@ struct ProfileHeader: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(user?.displayName ?? "")
                         .font(.display(28, .bold))
+                        .tracking(-0.4)
                         .foregroundStyle(Color.qInk)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
@@ -220,13 +222,13 @@ struct ProfileHeader: View {
             if let bio = user?.bio, !bio.isEmpty {
                 Text(bio)
                     .font(.ui(15))
-                    .foregroundStyle(Color.qInk.opacity(0.85))
-                    .lineSpacing(2)
+                    .foregroundStyle(Color.qInk2)
+                    .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, DS.Space.m)
             }
 
-            stats.padding(.top, DS.Space.m)
+            stats.padding(.top, DS.Space.xxs)       // + the rows' own 44-pt height ≈ 12 visually
             actions.padding(.top, DS.Space.l)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -241,8 +243,8 @@ struct ProfileHeader: View {
                 .foregroundStyle(Color.qGray)
                 .lineLimit(1)
             if !isMe, let streak = user?.streak, streak > 0 {
-                Text("·").foregroundStyle(Color.qGray)
-                Icon(.fireFill, size: DS.Icon.caption).foregroundStyle(Color.qFlame)
+                Circle().fill(Color.qGray).frame(width: 3, height: 3).padding(.horizontal, DS.Space.xxs)
+                Icon(.fireFill, size: 14).foregroundStyle(Color.qFlame)
                 Text("\(streak)-day streak")
                     .font(.ui(15, .semibold))
                     .foregroundStyle(Color.qInk)
@@ -330,18 +332,19 @@ struct StreakCard: View {
             freezeProgress
         }
         .padding(DS.Space.m)
-        .outlinedBlock()
+        .outlinedBlock(radius: 24)
     }
 
     private var header: some View {
         HStack(spacing: DS.Space.s) {
-            Icon(.fireFill, size: DS.Icon.action)
+            Icon(.fireFill, size: 26)
                 .foregroundStyle(Color.qFlame)
-                .frame(width: 44, height: 44)
+                .frame(width: 48, height: 48)
                 .background(Circle().fill(Color.qFlameSoft))
             VStack(alignment: .leading, spacing: 0) {
                 Text("\(store.streak)-day streak")
-                    .font(.display(20, .bold))
+                    .font(.display(22, .bold))
+                    .tracking(-0.3)
                     .foregroundStyle(Color.qInk)
                 Text(store.hasAnsweredToday ? "See you tomorrow" : "Answer today to keep it")
                     .font(.ui(13))
@@ -350,13 +353,13 @@ struct StreakCard: View {
             Spacer(minLength: DS.Space.xs)
             Button { showsFreezeInfo = true } label: {
                 HStack(spacing: DS.Space.xxs) {
-                    Icon(.snowflake, size: DS.Icon.caption, weight: .semibold)
+                    Icon(.snowflake, size: 15, weight: .semibold)
                     Text(store.streakFreezes == 1 ? "1 freeze" : "\(store.streakFreezes) freezes")
                         .font(.ui(13, .semibold))
                 }
                 .foregroundStyle(Color.qIce)
                 .padding(.horizontal, DS.Space.s)
-                .frame(height: 28)
+                .frame(height: 32)
                 .background(Capsule().fill(Color.qIceSoft))
                 .frame(minHeight: DS.hitTarget)
                 .contentShape(Rectangle())
@@ -394,7 +397,7 @@ struct StreakCard: View {
             }
             HStack(spacing: DS.Space.xxs) {
                 ForEach(0..<7, id: \.self) { i in
-                    Capsule().fill(i < into ? Color.qIce : Color.qField).frame(height: 6)
+                    Capsule().fill(i < into ? Color.qIce : Color.qLine).frame(height: 6)
                 }
             }
         }

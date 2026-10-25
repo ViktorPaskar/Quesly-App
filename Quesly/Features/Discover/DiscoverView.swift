@@ -21,7 +21,7 @@ struct DiscoverView: View {
                             }
                         }
                         .padding(.horizontal, DS.Space.m)
-                        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+                        .outlinedBlock()
                         if !store.followingUsers.isEmpty {
                             SectionLabel("You follow").padding(.top, 8)
                             ScrollView(.horizontal, showsIndicators: false) {
@@ -43,7 +43,7 @@ struct DiscoverView: View {
                                 .padding(.vertical, DS.Space.s)
                                 .padding(.horizontal, DS.Space.m)
                             }
-                            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+                            .outlinedBlock()
                         }
                     } else if results.isEmpty {
                         EmptyStateView(icon: .magnifyingGlass,
@@ -54,7 +54,7 @@ struct DiscoverView: View {
                             ForEach(results) { user in PersonRow(user: user) }
                         }
                         .padding(.horizontal, DS.Space.m)
-                        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+                        .outlinedBlock()
                     }
                 }
                 .padding(.horizontal, DS.Space.m)

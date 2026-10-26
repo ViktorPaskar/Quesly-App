@@ -150,13 +150,13 @@ struct AnswerCard: View {
     private var compactBody: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: DS.Space.s) {
-                VStack(spacing: DS.Space.xxs) {
+                VStack(spacing: 0) {
                     QueslyMark(color: .qLime, cutout: .qGreen)
                         .frame(width: 24)
                         .frame(width: 40, height: 40)
                         .background(Circle().fill(Color.qGreen))
+                    // Touches both photos: question above, answer below.
                     Rectangle().fill(Color.qLine).frame(width: 2).frame(maxHeight: .infinity)
-                        .padding(.bottom, DS.Space.xxs)
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: DS.Space.xs) {

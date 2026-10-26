@@ -27,9 +27,8 @@ struct FriendStoriesRow: View {
                         }
                     }
                 }
-                .padding(.horizontal, DS.Space.screen)
-                .padding(.top, DS.Space.s)
-                .padding(.bottom, DS.Space.xxs)
+                .padding(.horizontal, DS.Space.m)
+                .padding(.vertical, DS.Space.s)
             }
         }
     }

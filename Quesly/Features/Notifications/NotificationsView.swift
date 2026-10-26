@@ -2,6 +2,8 @@ import SwiftUI
 
 struct NotificationsView: View {
     @Environment(AppStore.self) private var store
+    @State private var reactionAnswer: Answer?
+    @State private var memoryAnswer: Answer?
 
     var body: some View {
         let groups = store.groupedNotifications
@@ -26,6 +28,17 @@ struct NotificationsView: View {
         .navigationTitle("Notifications")
         .navigationBarTitleDisplayMode(.large)
         .onDisappear { store.markNotificationsSeen() }
+        .sheet(item: $reactionAnswer) { answer in
+            ReactionsSheet(answer: answer)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(24)
+        }
+        .sheet(item: $memoryAnswer) { answer in
+            MemoryDetailSheet(answer: answer)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
     }
 
     @ViewBuilder
@@ -82,9 +95,13 @@ struct NotificationsView: View {
         }
 
         if group.kind == .badge {
-            NavigationLink(value: Route.achievements) { content }.buttonStyle(.plain)
-        } else if actors.count == 1, let actor = actors.first {
-            NavigationLink(value: Route.profile(actor.id)) { content }.buttonStyle(.plain)
+            NavigationLink(value: Route.achievements) { content.contentShape(Rectangle()) }.buttonStyle(.plain)
+        } else if group.kind == .reaction, let answerId = group.answerId, let answer = store.answer(answerId) {
+            Button { reactionAnswer = answer } label: { content.contentShape(Rectangle()) }.buttonStyle(.plain)
+        } else if group.kind == .posted, let answer = group.answerId.flatMap({ store.answer($0) }) ?? store.todaysAnswer {
+            Button { memoryAnswer = answer } label: { content.contentShape(Rectangle()) }.buttonStyle(.plain)
+        } else if let actor = actors.first {
+            NavigationLink(value: Route.profile(actor.id)) { content.contentShape(Rectangle()) }.buttonStyle(.plain)
         } else {
             content
         }

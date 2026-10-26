@@ -104,10 +104,10 @@ extension Color {
     static let qBackground = Color(light: 0xFFFFFF, dark: 0x0C0E0D)
     /// Elevated surfaces (sheets, popovers).
     static let qSurface = Color(light: 0xFFFFFF, dark: 0x161917)
-    /// Screen background. Strictly white in the 2026 redesign; blocks are outlined, not tinted.
-    static let qCanvas = Color(light: 0xFFFFFF, dark: 0x0C0E0D)
-    /// Feed background behind the white answer strips: barely gray.
-    static let qFeedCanvas = Color(hex: 0xF4F4F6)
+    /// Screen background: soft warm-gray canvas so white blocks read by fill, not heavy borders.
+    static let qCanvas = Color(light: 0xF4F5F4, dark: 0x0C0E0D)
+    /// Feed background behind the white answer cards.
+    static let qFeedCanvas = Color(light: 0xF4F5F4, dark: 0x0C0E0D)
     /// White rounded block that sits on `qCanvas`.
     static let qBlock = Color(light: 0xFFFFFF, dark: 0x181B19)
 
@@ -232,12 +232,12 @@ extension View {
             .outlinedBlock()
     }
 
-    /// Block on a white screen: white fill, hairline outline (no shadow), same radius as `block`.
+    /// Rounded white block with a whisper-thin border so it stays crisp on both white and gray surfaces.
     func outlinedBlock(radius: CGFloat = DS.Radius.l) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         return self
-            .background(shape.fill(Color.qBackground))
-            .overlay(shape.strokeBorder(Color.qLine, lineWidth: 1))
+            .background(shape.fill(Color.qBlock))
+            .overlay(shape.strokeBorder(Color.qLine.opacity(0.65), lineWidth: 0.5))
     }
 
     /// Fades a list item in, staggered by `index`. Skipped entirely under Reduce Motion.

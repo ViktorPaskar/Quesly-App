@@ -181,7 +181,7 @@ struct AnswerCard: View {
         RelativeTime.short(answer.createdAt) + (answer.isEdited ? " · edited" : "")
     }
 
-    /// 20-pt row: name 15/600 + time 15/400 ink3, "…" on the right edge.
+    /// 20-pt row: name 15/600 + time 15/400 ink3, inline Follow or "Your answer" pill, "…" on the right edge.
     private var nameRow: some View {
         HStack(spacing: DS.Space.xs) {
             NavigationLink(value: Route.profile(answer.authorId)) {
@@ -194,6 +194,27 @@ struct AnswerCard: View {
                 .lineLimit(1)
             }
             .buttonStyle(.plain)
+            if isMine && !isCompact {
+                Text("Your answer")
+                    .font(.ui(12, .semibold))
+                    .foregroundStyle(Color.qBrandText)
+                    .padding(.horizontal, DS.Space.xs)
+                    .frame(height: 20)
+                    .background(Capsule().fill(Color.qMint))
+            } else if !isMine && !isCompact && !store.isFollowing(answer.authorId) {
+                Button {
+                    withAnimation(.qSpring) { store.toggleFollow(answer.authorId) }
+                } label: {
+                    Text("· Follow")
+                        .font(.ui(14, .semibold))
+                        .foregroundStyle(Color.qBrandText)
+                        .frame(minHeight: DS.hitTarget)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.pressable)
+                .sensoryFeedback(.success, trigger: store.isFollowing(answer.authorId)) { _, on in on }
+                .accessibilityLabel("Follow \(author?.username ?? "")")
+            }
             Spacer(minLength: DS.Space.xs)
             if !isCompact { moreMenu }
         }
@@ -268,32 +289,47 @@ struct AnswerCard: View {
         if isMine { ownActions } else { viewerActions }
     }
 
-    /// Your own answer: you can't react to, repost or save it, so only Share remains, plus how
-    /// often it was reposted (only you see that number). Reactions live in the counter pill.
+    /// Your own answer: prominent 1-tap "Share to Stories" pill + link share + repost count.
     private var ownActions: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: DS.Space.xs) {
+            Button { isSharingStory = true } label: {
+                HStack(spacing: DS.Space.xxs) {
+                    Icon(.paperPlaneTiltFill, size: DS.Icon.caption)
+                    Text("Share to Stories")
+                        .font(.ui(13, .semibold))
+                }
+                .foregroundStyle(Color.qBrandText)
+                .padding(.horizontal, DS.Space.s)
+                .frame(height: 32)
+                .background(Capsule().fill(Color.qMint))
+                .frame(minHeight: DS.hitTarget)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.pressable)
+            .accessibilityLabel("Share answer as story")
+
             ShareLink(item: link) {
-                Icon(.shareForward, size: 24)
+                Icon(.shareForward, size: 22)
                     .foregroundStyle(Color.qGray)
                     .frame(width: DS.hitTarget, height: DS.hitTarget)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
             .accessibilityLabel("Share outside Quesly")
+
             if answer.reshares > 0 {
                 HStack(spacing: DS.Space.xxs) {
-                    Icon(.repost, size: 24)
+                    Icon(.repost, size: 22)
                     Text("\(answer.reshares)").font(.ui(15, .semibold)).monospacedDigit()
                 }
                 .foregroundStyle(Color.qGray)
-                .padding(.horizontal, 10)
+                .padding(.horizontal, DS.Space.xs)
                 .frame(height: DS.hitTarget)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Reposted \(answer.reshares) times. Only you can see this")
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, -10)
         .padding(.bottom, -10)
     }
 
@@ -451,6 +487,9 @@ struct ReactedByLine: View {
                         Avatar(user: user, size: 20)
                             .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
                     }
+                }
+                if let top = line.stickers.first {
+                    ReactionSticker(kind: top, size: 26)
                 }
                 sentence
             }

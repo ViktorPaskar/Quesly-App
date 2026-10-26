@@ -5,8 +5,6 @@ struct EditProfileView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var draft: AppUser = MockData.me
-    @State private var password = "••••••••••"
-    @State private var showPassword = false
     @State private var photoItem: PhotosPickerItem?
     @State private var loaded = false
     @State private var isImporting = false
@@ -53,63 +51,42 @@ struct EditProfileView: View {
                     importPhoto(item)
                 }
 
-                field("Name") {
-                    TextField("Your name", text: Binding(get: { draft.name ?? "" }, set: { draft.name = $0 }))
-                        .textContentType(.name)
-                }
-                field("Nickname") {
-                    TextField("Nickname", text: $draft.username)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                }
-                field("Email address") {
-                    TextField("Email", text: $draft.email)
-                        .keyboardType(.emailAddress)
-                        .textInputAutocapitalization(.never)
-                }
-                field("Phone number") {
-                    TextField("Phone", text: $draft.phone).keyboardType(.phonePad)
-                }
-                field("Location") {
-                    TextField("City, Country", text: $draft.location)
-                }
+                VStack(alignment: .leading, spacing: DS.Space.m) {
+                    field("Name") {
+                        TextField("Your name", text: Binding(get: { draft.name ?? "" }, set: { draft.name = $0 }))
+                            .textContentType(.name)
+                    }
+                    field("Nickname") {
+                        TextField("Nickname", text: $draft.username)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    }
+                    field("Location") {
+                        TextField("City, Country", text: $draft.location)
+                    }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Password").font(.ui(13)).foregroundStyle(Color.qGray)
-                        Spacer()
-                        Button("Change your password") {}
-                            .font(.ui(13))
-                            .foregroundStyle(Color.qBrandText)
-                    }
-                    HStack {
-                        if showPassword { TextField("", text: $password) } else { SecureField("", text: $password) }
-                        Button { showPassword.toggle() } label: {
-                            Icon(showPassword ? .eyeSlash : .eye, size: DS.Icon.action).foregroundStyle(Color.qGray)
+                    VStack(alignment: .leading, spacing: DS.Space.xs) {
+                        HStack {
+                            Text("About").font(.ui(13)).foregroundStyle(Color.qGray)
+                            Spacer()
+                            // Characters as people see them: an emoji counts as one.
+                            Text("\(draft.bio.count)/\(AppUser.bioLimit)")
+                                .font(.ui(13))
+                                .foregroundStyle(draft.bio.count >= AppUser.bioLimit ? Color.qFlame : Color.qGray)
+                                .monospacedDigit()
                         }
+                        TextField("Tell people about yourself", text: $draft.bio, axis: .vertical)
+                            .lineLimit(3...6)
+                            .onChange(of: draft.bio) { _, new in
+                                if new.count > AppUser.bioLimit { draft.bio = String(new.prefix(AppUser.bioLimit)) }
+                            }
+                            .font(.ui(16))
+                            .padding(DS.Space.m)
+                            .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
                     }
-                    .queslyField(fill: .qField)
                 }
-
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("About").font(.ui(13)).foregroundStyle(Color.qGray)
-                        Spacer()
-                        // Characters as people see them: an emoji counts as one.
-                        Text("\(draft.bio.count)/\(AppUser.bioLimit)")
-                            .font(.ui(13))
-                            .foregroundStyle(draft.bio.count >= AppUser.bioLimit ? Color.qFlame : Color.qGray)
-                            .monospacedDigit()
-                    }
-                    TextField("Tell people about yourself", text: $draft.bio, axis: .vertical)
-                        .lineLimit(3...6)
-                        .onChange(of: draft.bio) { _, new in
-                            if new.count > AppUser.bioLimit { draft.bio = String(new.prefix(AppUser.bioLimit)) }
-                        }
-                        .font(.ui(16))
-                        .padding(16)
-                        .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
-                }
+                .padding(DS.Space.m)
+                .outlinedBlock()
 
                 GreenButton(title: "Save", isEnabled: draft.username.count >= 3) {
                     store.updateProfile(draft)

@@ -88,7 +88,8 @@ struct UnderlineTabs<Item: Hashable & Identifiable>: View {
                         .font(.ui(15, .semibold))
                         .foregroundStyle(on ? Color.qInk : inactive)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                        .minimumScaleFactor(0.75)
+                        .padding(.horizontal, DS.Space.xxs)
                         .frame(maxWidth: .infinity)
                         .frame(height: DS.hitTarget)
                         .overlay(alignment: .bottom) {
@@ -104,6 +105,7 @@ struct UnderlineTabs<Item: Hashable & Identifiable>: View {
                 .accessibilityAddTraits(on ? .isSelected : [])
             }
         }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .background(alignment: .bottom) { Rectangle().fill(hairline).frame(height: 0.5) }
         .sensoryFeedback(.selection, trigger: selection)
     }

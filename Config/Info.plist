@@ -21,9 +21,9 @@
 		<string>Outfit-Black.ttf</string>
 	</array>
 	<key>UIStatusBarHidden</key>
-	<true/>
-	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Quesly saves your answer story cards to your photo library.</string>
 </dict>

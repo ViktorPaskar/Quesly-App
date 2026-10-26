@@ -73,6 +73,7 @@ struct FollowableAvatar: View {
                     } label: {
                         ZStack {
                             Circle().fill(Color.qLime)
+                                .overlay(Circle().strokeBorder(Color.qGreen.opacity(0.25), lineWidth: 0.75))
                             Capsule().fill(Color.qGreen).frame(width: 2, height: badge * 0.5)
                             Capsule().fill(Color.qGreen).frame(width: badge * 0.5, height: 2)
                         }

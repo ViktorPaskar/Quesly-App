@@ -100,8 +100,10 @@ struct AuthView: View {
 
                     if mode == .signUp {
                         Toggle(isOn: $acceptedTerms) {
-                            Text("I agree to the Terms of Service and Privacy Policy")
-                                .font(.ui(13)).foregroundStyle(Color.qInk)
+                            Text("I agree to the [Terms of Service](https://quesly.app/terms) and [Privacy Policy](https://quesly.app/privacy)")
+                                .font(.ui(13))
+                                .foregroundStyle(Color.qInk)
+                                .tint(Color.qBrandText)
                         }
                         .toggleStyle(CheckboxToggleStyle())
                     } else {
@@ -161,16 +163,29 @@ struct AuthView: View {
 
 struct CheckboxToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
-        Button { configuration.isOn.toggle() } label: {
-            HStack(alignment: .top, spacing: 12) {
-                Icon(configuration.isOn ? .checkCircleFill : .checkBold, size: DS.Icon.action)
-                    .opacity(configuration.isOn ? 1 : 0.35)
-                    .foregroundStyle(configuration.isOn ? Color.qBrandText : Color.qGray)
+        Button {
+            withAnimation(.qSpring) { configuration.isOn.toggle() }
+        } label: {
+            HStack(alignment: .center, spacing: DS.Space.s) {
+                ZStack {
+                    if configuration.isOn {
+                        Icon(.checkCircleFill, size: DS.Icon.action)
+                            .foregroundStyle(Color.qBrandText)
+                    } else {
+                        Circle()
+                            .strokeBorder(Color.qGray4, lineWidth: 1.5)
+                            .frame(width: 22, height: 22)
+                    }
+                }
+                .frame(width: DS.Icon.action, height: DS.Icon.action)
                 configuration.label
                     .multilineTextAlignment(.leading)
             }
+            .frame(minHeight: DS.hitTarget)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: configuration.isOn)
     }
 }
 

@@ -81,6 +81,9 @@ struct ProfileView: View {
             VStack(spacing: DS.Space.s) {
                 StreakCard()
                 MemoriesCard(showsHeader: false)
+                BadgesStrip()
+                    .padding(DS.Space.m)
+                    .outlinedBlock()
             }
             .padding(.horizontal, DS.Space.screen)
         } else {
@@ -259,7 +262,7 @@ struct ProfileHeader: View {
         }
     }
 
-    private func number(_ value: Int, color: Color = .qGreen) -> some View {
+    private func number(_ value: Int, color: Color = .qInk) -> some View {
         Text(value.formatted(.number.notation(.compactName)))
             .font(.ui(20, .bold))
             .foregroundStyle(color)
@@ -271,11 +274,14 @@ struct ProfileHeader: View {
         Text(text).font(.ui(13)).foregroundStyle(Color.qGray)
     }
 
-    /// Last column; the number in flame orange instead of an icon.
+    /// Last column; highlighted with the flame icon + orange number so it reads as the interactive ritual stat.
     @ViewBuilder
     private var streakStat: some View {
         let content = VStack(alignment: .leading, spacing: 2) {
-            number(streak, color: .qFlame)
+            HStack(spacing: DS.Space.xxs) {
+                Icon(.fireFill, size: 16).foregroundStyle(Color.qFlame)
+                number(streak, color: .qFlame)
+            }
             label("Day streak")
         }
         .lineLimit(1)
@@ -338,12 +344,16 @@ struct ProfileHeader: View {
     private func pill(_ title: String, style: PillStyle = .gray) -> some View {
         Text(title)
             .font(.ui(15, .semibold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .padding(.horizontal, DS.Space.s)
             .foregroundStyle(style == .green ? Color.qLime : Color.qInk)
             .frame(maxWidth: .infinity)
             .frame(height: 40)
             .background(Capsule().fill(style == .green ? Color.qGreen : Color.qField))
             .frame(minHeight: DS.hitTarget)
             .contentShape(Rectangle())
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 }
 

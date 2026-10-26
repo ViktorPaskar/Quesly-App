@@ -38,7 +38,7 @@ struct FeedView: View {
                         .accessibilityHint("Opens your streak calendar")
                 }
             }
-            .padding(.horizontal, DS.Space.m)
+            .padding(.horizontal, DS.Space.s)
             .frame(height: 44)
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
@@ -111,22 +111,24 @@ struct FeedView: View {
                 LazyVStack(spacing: 0) {
                     Color.clear.frame(height: 0).id("top")
 
-                    if scope == .world {
-                        TodayQuestionBanner(question: store.todayQuestion) {
-                            if !store.hasAnsweredToday { showQuestion = true }
-                        }
+                    TodayQuestionBanner(question: store.todayQuestion,
+                                        answeredCount: store.answeredTodayCount) {
+                        if !store.hasAnsweredToday { showQuestion = true }
                     }
                     if !store.hasAnsweredToday {
                         AnswerPrompt { showQuestion = true }
                     }
 
+                    if scope == .friends && !store.friendStories.isEmpty {
+                        FriendStoriesRow { index in
+                            storyLaunch = StoryLaunch(stories: store.friendStories, start: index)
+                        }
+                        .outlinedBlock()
+                        .padding(.horizontal, DS.Space.s)
+                        .padding(.bottom, gap)
+                    }
+
                     if let mine {
-                        Text("Your answer")
-                            .font(.ui(13, .semibold))
-                            .foregroundStyle(Color.qGray)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, DS.Space.m)
-                            .padding(.top, DS.Space.s)
                         AnswerCard(answer: mine, isHighlighted: highlightsMine)
                             .outlinedBlock()
                             .padding(.horizontal, DS.Space.s)
@@ -299,33 +301,40 @@ struct StreakChip: View {
     }
 }
 
-/// World's opening card: today's question on brand green.
+/// Opening hero card: today's question full-width on brand green with live participant count.
 struct TodayQuestionBanner: View {
     let question: DailyQuestion
+    var answeredCount: Int = 0
     var onTap: () -> Void = {}
 
     var body: some View {
         Button(action: onTap) {
-            // Laid out like an answer card: Quesly is the author, the question is the post.
-            HStack(alignment: .top, spacing: DS.Space.s) {
-                QueslyMark(color: .qGreen, cutout: .qLime)
-                    .frame(width: 24)
-                    .frame(width: 40, height: 40)
-                    .background(Circle().fill(Color.qLime))
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Quesly")
-                        .font(.ui(15, .semibold))
+            VStack(alignment: .leading, spacing: DS.Space.s) {
+                HStack(spacing: DS.Space.xs) {
+                    QueslyMark(color: .qGreen, cutout: .qLime)
+                        .frame(width: 18)
+                        .frame(width: 28, height: 28)
+                        .background(Circle().fill(Color.qLime))
+                    Text("TODAY'S QUESTION")
+                        .font(.ui(12, .bold))
+                        .tracking(0.5)
                         .foregroundStyle(Color.qLime)
-                        .frame(height: 20)
-                        .padding(.top, -2)
-                    Text(question.text)
-                        .font(.display(20, .medium))
-                        .lineSpacing(2)
-                        .foregroundStyle(.white)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, DS.Space.xxs)
+                    Spacer(minLength: DS.Space.xs)
+                    if answeredCount > 0 {
+                        Text("\(answeredCount.formatted(.number.notation(.compactName))) answered")
+                            .font(.ui(12, .semibold))
+                            .foregroundStyle(.white.opacity(0.9))
+                            .padding(.horizontal, DS.Space.xs)
+                            .frame(height: 24)
+                            .background(Capsule().fill(.white.opacity(0.14)))
+                    }
                 }
+                Text(question.text)
+                    .font(.display(22, .semibold))
+                    .lineSpacing(2)
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(DS.Space.m)
             .frame(maxWidth: .infinity, alignment: .leading)

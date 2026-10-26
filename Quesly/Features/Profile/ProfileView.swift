@@ -373,13 +373,6 @@ struct StreakCard: View {
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(Color.qGreen)
-                .overlay(alignment: .bottomTrailing) {
-                    // Big soft flame as a watermark.
-                    Icon(.fireFill, size: 150)
-                        .foregroundStyle(Color.qLime.opacity(0.07))
-                        .offset(x: 28, y: 30)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         )
         .accessibilityElement(children: .combine)
     }

@@ -18,7 +18,8 @@ enum DS {
         static let xs: CGFloat = 8
         static let s: CGFloat = 12
         static let m: CGFloat = 16
-        static let l: CGFloat = 20
+        /// Containers: cards, blocks, the question card, sheets of content.
+        static let l: CGFloat = 16
         static let xl: CGFloat = 24
         static let xxl: CGFloat = 32
         static let xxxl: CGFloat = 48
@@ -73,6 +74,14 @@ extension Color {
     static let qIce = Color(light: 0x2D6BE4, dark: 0x7DB8FF)
     static let qIceSoft = Color(light: 0xE6EEFD, dark: 0x16263B)
     static let qDanger = Color(hex: 0xFF3B30)
+
+    // Secondary palette: accents only, a few places each.
+    /// #C2FFEA: your just-posted answer glow.
+    static let qAqua = Color(hex: 0xC2FFEA)
+    /// #DAFFA6: small "best" marks.
+    static let qLimeSoft = Color(hex: 0xDAFFA6)
+    /// #FFF1E8: the streak card.
+    static let qPeach = Color(hex: 0xFFF1E8)
 
     // Semantic roles (adapt to light / dark)
     /// Primary text.

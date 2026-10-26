@@ -51,6 +51,48 @@ struct Avatar: View {
 }
 
 /// Up to two overlapping avatars ("Anna and 3 others"). Two keeps initials legible.
+/// A person's photo with the Threads-style lime "+" under it while you don't follow them yet.
+/// One tap follows; the badge then pops away.
+struct FollowableAvatar: View {
+    @Environment(AppStore.self) private var store
+    let user: AppUser?
+    var size: CGFloat = 40
+
+    private var canFollow: Bool {
+        guard let user else { return false }
+        return user.id != store.me.id && !store.isFollowing(user.id)
+    }
+
+    var body: some View {
+        let badge = (size * 0.4).rounded()
+        Avatar(user: user, size: size)
+            .overlay(alignment: .bottom) {
+                if canFollow, let user {
+                    Button {
+                        withAnimation(.qSpring) { store.toggleFollow(user.id) }
+                    } label: {
+                        ZStack {
+                            Circle().fill(Color.qLime)
+                            Capsule().fill(Color.qGreen).frame(width: 2, height: badge * 0.5)
+                            Capsule().fill(Color.qGreen).frame(width: badge * 0.5, height: 2)
+                        }
+                        .frame(width: badge, height: badge)
+                        .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
+                        .padding(10)
+                        .contentShape(Rectangle())
+                        .padding(-10)
+                    }
+                    .buttonStyle(.pressable)
+                    .offset(y: badge * 0.45)
+                    .transition(.scale.combined(with: .opacity))
+                    .accessibilityLabel("Follow \(user.username)")
+                }
+            }
+            .sensoryFeedback(.success, trigger: canFollow) { was, now in was && !now }
+            .animation(.qSpring, value: canFollow)
+    }
+}
+
 struct AvatarStack: View {
     let users: [AppUser]
     var size: CGFloat = 34

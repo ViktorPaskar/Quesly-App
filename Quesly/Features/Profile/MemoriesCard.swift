@@ -28,7 +28,7 @@ struct MemoriesCard: View {
         }
         .padding(.top, DS.Space.xxs)
         .padding([.horizontal, .bottom], DS.Space.m)
-        .outlinedBlock(radius: 24)
+        .outlinedBlock()
         .sheet(item: $opened) { answer in
             MemoryDetailSheet(answer: answer)
                 .presentationDetents([.medium, .large])

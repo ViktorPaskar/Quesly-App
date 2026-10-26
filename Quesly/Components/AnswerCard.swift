@@ -52,7 +52,7 @@ struct AnswerCard: View {
         .padding(.horizontal, inset)
         .padding(.vertical, DS.Space.m)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(isHighlighted ? Color.qMint : Color.clear)
+        .background(isHighlighted ? Color.qAqua : Color.clear)
         // Tap anywhere on the card closes the sticker popover.
         .overlay {
             if isTrayOpen {
@@ -112,36 +112,11 @@ struct AnswerCard: View {
         }
     }
 
-    /// 40-pt photo; a lime "+" badge on people you don't follow yet follows in one tap (Threads).
+    /// 40-pt photo with the quick-follow "+" (see `FollowableAvatar`).
     private var avatar: some View {
-        let canFollow = !isMine && !store.isFollowing(answer.authorId)
-        return NavigationLink(value: Route.profile(answer.authorId)) { Avatar(user: author, size: 40) }
+        NavigationLink(value: Route.profile(answer.authorId)) { FollowableAvatar(user: author, size: 40) }
             .buttonStyle(.plain)
             .accessibilityLabel("\(author?.username ?? "") profile")
-            .overlay(alignment: .bottom) {
-                if canFollow {
-                    Button {
-                        withAnimation(.qSpring) { store.toggleFollow(answer.authorId) }
-                    } label: {
-                        ZStack {
-                            Circle().fill(Color.qLime)
-                            Capsule().fill(Color.qGreen).frame(width: 2, height: 8)
-                            Capsule().fill(Color.qGreen).frame(width: 8, height: 2)
-                        }
-                        .frame(width: 16, height: 16)
-                        .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
-                        .padding(10)
-                        .contentShape(Rectangle())
-                        .padding(-10)
-                    }
-                    .buttonStyle(.pressable)
-                    .offset(y: 7)
-                    .transition(.scale.combined(with: .opacity))
-                    .accessibilityLabel("Follow \(author?.username ?? "")")
-                }
-            }
-            .sensoryFeedback(.success, trigger: store.isFollowing(answer.authorId)) { _, on in on }
-            .animation(.qSpring, value: canFollow)
     }
 
     /// Profile row as a thread: the day's question is the post, the answer is the reply under it.

@@ -97,7 +97,7 @@ struct ReactionsSheet: View {
 
     private func row(_ item: AppStore.Reactor) -> some View {
         HStack(spacing: DS.Space.s) {
-            Avatar(user: item.user, size: 40)
+            FollowableAvatar(user: item.user, size: 40)
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.user.username).font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
                 if let name = item.user.name, !name.isEmpty {

@@ -321,29 +321,151 @@ struct ProfileHeader: View {
     }
 }
 
-/// Calendar tab, top block: the current streak.
+/// Calendar tab, top block: the streak as the hero of the profile. Brand green, the number in
+/// lime, the last seven days as dots and the road to the next milestone.
+///
+/// The feed (and so the profile) only opens after today's answer, so the streak shown here is
+/// always at least 1. Three moods: first day, fresh start after a gap (with your best), and a
+/// running streak (with "Personal best" when you are on it).
 struct StreakCard: View {
     @Environment(AppStore.self) private var store
+    private let calendar = Calendar.current
+    private static let milestones = [3, 7, 14, 30, 50, 100, 200, 365]
+
+    private var streak: Int { store.streak }
+    private var best: Int { max(store.bestStreak, streak) }
+    private var isFirstDay: Bool { store.answeredDays.count <= 1 }
+
+    private var message: String {
+        if !store.hasAnsweredToday { return streak > 0 ? "Answer today to keep it going." : "Answer today's question to light the first flame." }
+        if isFirstDay { return "Your first flame. Come back tomorrow to keep it going." }
+        if streak == 1 { return "Fresh start. Your best is \(best) days." }
+        return "See you tomorrow."
+    }
 
     var body: some View {
-        HStack(spacing: DS.Space.s) {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(alignment: .firstTextBaseline, spacing: DS.Space.xs) {
+                        Text("\(streak)")
+                            .font(.display(56, .bold))
+                            .tracking(-1)
+                            .foregroundStyle(Color.qLime)
+                            .contentTransition(.numericText())
+                        Text("day streak")
+                            .font(.display(20, .semibold))
+                            .foregroundStyle(.white)
+                    }
+                    Text(message)
+                        .font(.ui(15))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: DS.Space.s)
+                badge
+            }
+
+            week.padding(.top, DS.Space.l)
+            milestone.padding(.top, DS.Space.l)
+        }
+        .padding(DS.Space.l)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.qGreen)
+                .overlay(alignment: .bottomTrailing) {
+                    // Big soft flame as a watermark.
+                    Icon(.fireFill, size: 150)
+                        .foregroundStyle(Color.qLime.opacity(0.07))
+                        .offset(x: 28, y: 30)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        )
+        .accessibilityElement(children: .combine)
+    }
+
+    /// "Personal best" while you are on it, otherwise your best so far; a flame on day one.
+    @ViewBuilder
+    private var badge: some View {
+        if streak > 1 && streak >= best {
+            chip("Personal best", fill: Color.qLime, ink: Color.qGreen)
+        } else if best > streak {
+            chip("Best \(best)", fill: Color.white.opacity(0.12), ink: .white)
+        } else {
             Icon(.fireFill, size: 26)
                 .foregroundStyle(Color.qFlame)
                 .frame(width: 48, height: 48)
-                .background(Circle().fill(Color.qFlameSoft))
-            VStack(alignment: .leading, spacing: 0) {
-                Text("\(store.streak)-day streak")
-                    .font(.display(22, .bold))
-                    .tracking(-0.3)
-                    .foregroundStyle(Color.qInk)
-                Text(store.hasAnsweredToday ? "See you tomorrow" : "Answer today to keep it")
-                    .font(.ui(13))
-                    .foregroundStyle(Color.qGray)
-            }
-            Spacer(minLength: 0)
+                .background(Circle().fill(Color.white.opacity(0.12)))
         }
-        .padding(DS.Space.m)
-        .outlinedBlock(radius: 24)
+    }
+
+    private func chip(_ title: String, fill: Color, ink: Color) -> some View {
+        HStack(spacing: DS.Space.xxs) {
+            Icon(.fireFill, size: 14).foregroundStyle(Color.qFlame)
+            Text(title).font(.ui(13, .semibold)).foregroundStyle(ink)
+        }
+        .padding(.horizontal, DS.Space.s)
+        .frame(height: 32)
+        .background(Capsule().fill(fill))
+    }
+
+    // MARK: Last seven days
+
+    private var week: some View {
+        let today = calendar.startOfDay(for: .now)
+        let days = (0..<7).reversed().compactMap { calendar.date(byAdding: .day, value: -$0, to: today) }
+        return HStack(spacing: 0) {
+            ForEach(days, id: \.self) { day in
+                let isToday = day == today
+                let done = store.answeredDays.contains(day)
+                VStack(spacing: DS.Space.xs) {
+                    Text(day.formatted(.dateTime.weekday(.narrow)))
+                        .font(.ui(12, .semibold))
+                        .foregroundStyle(isToday ? Color.white : Color.white.opacity(0.55))
+                    ZStack {
+                        if done {
+                            Circle().fill(Color.qLime)
+                            Icon(.checkBold, size: 14, weight: .bold).foregroundStyle(Color.qGreen)
+                        } else {
+                            Circle().strokeBorder(Color.white.opacity(isToday ? 0.8 : 0.25),
+                                                  style: StrokeStyle(lineWidth: 1.5, dash: isToday ? [] : [2, 3]))
+                        }
+                    }
+                    .frame(width: 32, height: 32)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Last 7 days: \(days.filter { store.answeredDays.contains($0) }.count) answered")
+    }
+
+    // MARK: Next milestone
+
+    private var milestone: some View {
+        let next = Self.milestones.first { $0 > streak } ?? (streak + 100)
+        let prev = Self.milestones.last { $0 <= streak } ?? 0
+        let progress = CGFloat(streak - prev) / CGFloat(max(1, next - prev))
+        let left = next - streak
+        return VStack(alignment: .leading, spacing: DS.Space.xs) {
+            HStack {
+                Text("Next: \(next) days")
+                    .font(.ui(13, .semibold))
+                    .foregroundStyle(.white)
+                Spacer()
+                Text(left == 1 ? "1 day to go" : "\(left) days to go")
+                    .font(.ui(13))
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.white.opacity(0.15))
+                    Capsule().fill(Color.qLime)
+                        .frame(width: max(6, geo.size.width * progress))
+                }
+            }
+            .frame(height: 6)
+        }
         .accessibilityElement(children: .combine)
     }
 }

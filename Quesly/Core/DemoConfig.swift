@@ -7,7 +7,7 @@ enum DemoConfig {
     enum Screen: String {
         case welcome, findFriends, notifyPrime, question, composer
         case feed, feedEnd, feedError, offline, tray, friends, otherProfile, share, reactions, story
-        case discover, notifications, profile, profileList, profileReposts, profileSaved, memory, menu, settings, editProfile, achievements
+        case discover, notifications, profile, profileList, profileReposts, profileSaved, memory, streakFirst, streakRestart, menu, settings, editProfile, achievements
         case widgets
         /// Auto-playing walkthrough recorded to video by CI: question → answer → feed → react → story → tabs → settings.
         case tour
@@ -44,6 +44,10 @@ enum DemoConfig {
             store.signIn(email: MockData.me.email)
         default:
             store.signIn(email: MockData.me.email)
+            #if DEBUG
+            if screen == .streakFirst { store.demoTrimHistory { _ in false } }
+            if screen == .streakRestart { store.demoTrimHistory { $0 > 1 } }
+            #endif
             store.submitAnswer(MockData.sampleAnswers[store.todayQuestion.id] ?? "")
         }
     }
@@ -52,7 +56,7 @@ enum DemoConfig {
         switch screen {
         case .discover: return .discover
         case .notifications: return .notifications
-        case .profile, .profileList, .profileReposts, .profileSaved, .memory, .achievements, .menu, .settings, .editProfile: return .profile
+        case .profile, .profileList, .profileReposts, .profileSaved, .memory, .streakFirst, .streakRestart, .achievements, .menu, .settings, .editProfile: return .profile
         default: return .feed
         }
     }
@@ -80,13 +84,13 @@ enum DemoConfig {
     static var opensReactionsSheet: Bool { screen == .reactions }
     static var opensStory: Bool { screen == .story }
     static var opensMemory: Bool { screen == .memory }
-    static var scrollsProfileToList: Bool { [.profileList, .profileReposts, .profileSaved, .memory].contains(screen) }
+    static var scrollsProfileToList: Bool { [.profileList, .profileReposts, .profileSaved, .memory, .streakFirst, .streakRestart].contains(screen) }
     /// Which profile tab a demo launch opens on.
     static var initialProfileTab: ProfileTab {
         switch screen {
         case .profileReposts: return .reposts
         case .profileSaved: return .saved
-        case .memory: return .calendar
+        case .memory, .streakFirst, .streakRestart: return .calendar
         default: return .answers
         }
     }

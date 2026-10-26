@@ -302,18 +302,28 @@ struct TodayQuestionBanner: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 0) {
-                Text("TODAY'S QUESTION")
-                    .font(.ui(12, .semibold))
-                    .tracking(1)
-                    .foregroundStyle(Color.qLime)
-                Text(question.text)
-                    .font(.display(20, .medium))
-                    .lineSpacing(2)
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, DS.Space.xxs)
+            // Laid out like an answer card: Quesly is the author, the question is the post.
+            HStack(alignment: .top, spacing: DS.Space.s) {
+                QueslyMark(color: .qGreen, cutout: .qLime)
+                    .frame(width: 24)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(Color.qLime))
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: 6) {
+                        Text("Quesly").font(.ui(15, .semibold)).foregroundStyle(.white)
+                        Text("Today's question").font(.ui(15)).foregroundStyle(Color.qLime)
+                    }
+                    .lineLimit(1)
+                    .frame(height: 20)
+                    .padding(.top, -2)
+                    Text(question.text)
+                        .font(.display(20, .medium))
+                        .lineSpacing(2)
+                        .foregroundStyle(.white)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, DS.Space.xxs)
+                }
             }
             .padding(DS.Space.m)
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -497,6 +497,30 @@ final class AppStore {
         return count
     }
 
+    /// Longest run of consecutive answered days ever.
+    var bestStreak: Int {
+        let cal = Calendar.current
+        let days = answeredDays.sorted()
+        var best = 0, run = 0
+        var previous: Date?
+        for day in days {
+            if let previous, cal.date(byAdding: .day, value: 1, to: previous) == day { run += 1 } else { run = 1 }
+            best = max(best, run)
+            previous = day
+        }
+        return best
+    }
+
+    #if DEBUG
+    /// Demo hook: keep only seeded past answers whose "days ago" passes `keep`.
+    func demoTrimHistory(keep: (Int) -> Bool) {
+        myAnswers = myAnswers.filter { a in
+            guard a.id.hasPrefix("h"), let ago = Int(a.id.dropFirst()) else { return true }
+            return keep(ago)
+        }
+    }
+    #endif
+
     var answeredDays: Set<Date> {
         let cal = Calendar.current
         return Set(myAnswers.map { cal.startOfDay(for: $0.createdAt) })

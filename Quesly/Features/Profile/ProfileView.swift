@@ -251,23 +251,23 @@ struct ProfileHeader: View {
     // MARK: Stats
 
     /// Four equal columns on the content width, big number over a small label:
-    /// 🔥 streak · answers · followers · following. Each column starts on the same grid line.
+    /// answers · followers · following · streak. Each column starts on the same grid line.
     /// At accessibility text sizes the four columns become a 2 × 2 grid so labels never truncate.
     private var stats: some View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 0, alignment: .leading),
                             count: typeSize.isAccessibilitySize ? 2 : 4)
         return LazyVGrid(columns: columns, alignment: .leading, spacing: DS.Space.s) {
-            streakStat
             stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil)
             stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)
             stat(followingCount, "Following", route: isMe ? .following : nil)
+            streakStat
         }
     }
 
-    private func number(_ value: Int) -> some View {
+    private func number(_ value: Int, color: Color = .qGreen) -> some View {
         Text(value.formatted(.number.notation(.compactName)))
             .font(.ui(20, .bold))
-            .foregroundStyle(Color.qGreen)
+            .foregroundStyle(color)
             .monospacedDigit()
             .contentTransition(.numericText())
     }
@@ -276,14 +276,11 @@ struct ProfileHeader: View {
         Text(text).font(.ui(13)).foregroundStyle(Color.qGray)
     }
 
-    /// The flame sits before the number, so the figures of all four columns share one baseline.
+    /// Last column; the number in flame orange instead of an icon.
     @ViewBuilder
     private var streakStat: some View {
         let content = VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: DS.Space.xxs) {
-                Icon(.fireFill, size: 18).foregroundStyle(Color.qFlame)
-                number(streak)
-            }
+            number(streak, color: .qFlame)
             label("Day streak")
         }
         .lineLimit(1)

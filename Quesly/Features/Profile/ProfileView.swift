@@ -321,21 +321,11 @@ struct ProfileHeader: View {
     }
 }
 
-/// Calendar tab, top block: the streak, freezes in stock and a 7-step bar to the next freeze.
+/// Calendar tab, top block: the current streak.
 struct StreakCard: View {
     @Environment(AppStore.self) private var store
-    @State private var showsFreezeInfo = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Space.m) {
-            header
-            freezeProgress
-        }
-        .padding(DS.Space.m)
-        .outlinedBlock(radius: 24)
-    }
-
-    private var header: some View {
         HStack(spacing: DS.Space.s) {
             Icon(.fireFill, size: 26)
                 .foregroundStyle(Color.qFlame)
@@ -350,57 +340,10 @@ struct StreakCard: View {
                     .font(.ui(13))
                     .foregroundStyle(Color.qGray)
             }
-            Spacer(minLength: DS.Space.xs)
-            Button { showsFreezeInfo = true } label: {
-                HStack(spacing: DS.Space.xxs) {
-                    Icon(.snowflake, size: 15, weight: .semibold)
-                    Text(store.streakFreezes == 1 ? "1 freeze" : "\(store.streakFreezes) freezes")
-                        .font(.ui(13, .semibold))
-                }
-                .foregroundStyle(Color.qIce)
-                .padding(.horizontal, DS.Space.s)
-                .frame(height: 32)
-                .background(Capsule().fill(Color.qIceSoft))
-                .frame(minHeight: DS.hitTarget)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.pressable)
-            .accessibilityHint("Explains streak freezes")
-            .popover(isPresented: $showsFreezeInfo) {
-                Text("Miss a day and a freeze keeps your streak alive automatically. You earn one for every 7-day streak, up to \(AppStore.maxFreezes).")
-                    .font(.ui(15))
-                    .foregroundStyle(Color.qInk)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(DS.Space.m)
-                    .frame(width: 290)
-                    .presentationCompactAdaptation(.popover)
-            }
+            Spacer(minLength: 0)
         }
-    }
-
-    /// One segment per day of the current 7-day run.
-    private var freezeProgress: some View {
-        let full = store.streakFreezes >= AppStore.maxFreezes
-        let into = full ? 7 : store.streak % 7
-        let left = 7 - into
-        return VStack(alignment: .leading, spacing: DS.Space.xs) {
-            HStack {
-                Text(full ? "Freezes full" : "Next freeze")
-                    .font(.ui(13, .semibold))
-                    .foregroundStyle(Color.qInk)
-                Spacer()
-                if !full {
-                    Text(left == 1 ? "1 day to go" : "\(left) days to go")
-                        .font(.ui(13))
-                        .foregroundStyle(Color.qGray)
-                }
-            }
-            HStack(spacing: DS.Space.xxs) {
-                ForEach(0..<7, id: \.self) { i in
-                    Capsule().fill(i < into ? Color.qIce : Color.qLine).frame(height: 6)
-                }
-            }
-        }
+        .padding(DS.Space.m)
+        .outlinedBlock(radius: 24)
         .accessibilityElement(children: .combine)
     }
 }

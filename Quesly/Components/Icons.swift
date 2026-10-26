@@ -143,7 +143,7 @@ private struct PopEffect<V: Equatable>: ViewModifier {
 }
 
 /// Tinted round icon chip that heads a block or tile (bunq / Revolut style). The tint carries
-/// meaning (brand, streak, freeze…); the glyph is always `DS.Icon.inline` in a 34-pt circle.
+/// meaning (brand, streak, badges…); the glyph is always `DS.Icon.inline` in a 34-pt circle.
 struct IconChip: View {
     let icon: QIcon
     var tint: Color = .qBrandText

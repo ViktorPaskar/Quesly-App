@@ -8,7 +8,7 @@ enum DemoConfig {
         case welcome, findFriends, notifyPrime, question, composer
         case feed, feedEnd, feedError, offline, tray, friends, otherProfile, share, reactions, story
         case discover, notifications, profile, profileList, profileReposts, profileSaved, memory, menu, settings, editProfile, achievements
-        case freezeUsed, widgets
+        case widgets
         /// Auto-playing walkthrough recorded to video by CI: question → answer → feed → react → story → tabs → settings.
         case tour
     }
@@ -45,9 +45,6 @@ enum DemoConfig {
         default:
             store.signIn(email: MockData.me.email)
             store.submitAnswer(MockData.sampleAnswers[store.todayQuestion.id] ?? "")
-            if screen == .freezeUsed {
-                store.freezeJustUsed = Calendar.current.date(byAdding: .day, value: -1, to: .now)
-            }
         }
     }
 

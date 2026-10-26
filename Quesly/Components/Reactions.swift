@@ -69,14 +69,13 @@ struct ReactionsSheet: View {
                 .padding(.horizontal, DS.Space.screen)
                 .padding(.top, DS.Space.l)
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: DS.Space.xs) {
-                        allChip(count: answer.totalReactions)
-                        ForEach(answer.topReactions) { kind in stickerChip(kind) }
-                    }
-                    .padding(.horizontal, DS.Space.screen)
-                    .padding(.vertical, DS.Space.m)
+                WrappingHStack(spacing: DS.Space.xs, lineSpacing: DS.Space.xs, centered: false) {
+                    allChip(count: answer.totalReactions)
+                    ForEach(answer.topReactions) { kind in stickerChip(kind) }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, DS.Space.screen)
+                .padding(.vertical, DS.Space.m)
                 Rectangle().fill(Color.qLine).frame(height: 0.5)
 
                 ScrollView {

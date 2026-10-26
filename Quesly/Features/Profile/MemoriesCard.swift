@@ -1,12 +1,11 @@
 import SwiftUI
 
 /// Profile "Memories": your streak plus the month as a calendar. Answered days are filled —
-/// tap one to reread that day's question and answer. Days saved by a streak freeze show ❄️.
+/// tap one to reread that day's question and answer.
 struct MemoriesCard: View {
     @Environment(AppStore.self) private var store
     @State private var monthOffset = 0
     @State private var opened: Answer?
-    @State private var showsFreezeInfo = false
     /// Off inside the profile Calendar tab, where the streak card above already says it.
     var showsHeader = true
 
@@ -22,7 +21,7 @@ struct MemoriesCard: View {
         VStack(alignment: .leading, spacing: DS.Space.s) {
             if showsHeader { header }
             monthBar
-            MonthGrid(month: month, answered: store.answeredDays, frozen: store.frozenDays) { day in
+            MonthGrid(month: month, answered: store.answeredDays) { day in
                 opened = store.myAnswer(on: day)
             }
             legend
@@ -50,39 +49,8 @@ struct MemoriesCard: View {
                     .font(.ui(13))
                     .foregroundStyle(Color.qGray)
             }
-            Spacer(minLength: DS.Space.xs)
-            Button { showsFreezeInfo = true } label: {
-                HStack(spacing: DS.Space.xxs) {
-                    Icon(.snowflake, size: DS.Icon.caption, weight: .semibold)
-                    Text("\(store.streakFreezes)").font(.ui(15, .semibold))
-                }
-                .foregroundStyle(Color.qIce)
-                .padding(.horizontal, DS.Space.s)
-                .frame(height: 32)
-                .background(Capsule().fill(Color.qIceSoft))
-                .frame(minHeight: DS.hitTarget)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.pressable)
-            .accessibilityLabel("\(store.streakFreezes) streak freezes")
-            .accessibilityHint("Explains streak freezes")
-            .popover(isPresented: $showsFreezeInfo) { freezeInfo }
+            Spacer(minLength: 0)
         }
-    }
-
-    private var freezeInfo: some View {
-        VStack(alignment: .leading, spacing: DS.Space.xs) {
-            IconLabel("Streak freeze", icon: .snowflake, size: DS.Icon.inline)
-                .font(.ui(17, .semibold))
-                .foregroundStyle(Color.qIce)
-            Text("Miss a day and a freeze keeps your streak alive automatically. You earn one for every 7-day streak, up to \(AppStore.maxFreezes).")
-                .font(.ui(15))
-                .foregroundStyle(Color.qInk)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(DS.Space.m)
-        .frame(width: 290)
-        .presentationCompactAdaptation(.popover)
     }
 
     private var monthBar: some View {
@@ -119,7 +87,6 @@ struct MemoriesCard: View {
         HStack(spacing: DS.Space.m) {
             key("Answered") { Circle().fill(Color.qGreen) }
             key("Today") { Circle().fill(Color.qLime) }
-            key("Freeze") { Circle().strokeBorder(Color.qIce, lineWidth: 1.5) }
             key("Missed") { Circle().strokeBorder(Color.qGray.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [2, 2])) }
             Spacer(minLength: 0)
         }
@@ -135,7 +102,6 @@ struct MemoriesCard: View {
 private struct MonthGrid: View {
     let month: Date
     let answered: Set<Date>
-    let frozen: Set<Date>
     let onOpen: (Date) -> Void
 
     private let calendar = Calendar.current
@@ -180,13 +146,12 @@ private struct MonthGrid: View {
 
     private func state(for day: Date, today: Date) -> DayCell.Kind {
         if answered.contains(day) { return .answered }
-        if frozen.contains(day) { return .frozen }
         return day > today ? .future : .missed
     }
 }
 
 private struct DayCell: View {
-    enum Kind { case answered, frozen, missed, future }
+    enum Kind { case answered, missed, future }
 
     let day: Date
     let state: Kind
@@ -217,9 +182,6 @@ private struct DayCell: View {
             case .answered:
                 Circle().fill(isToday ? Color.qLime : Color.qGreen)
                 Text(number).font(.ui(13, isToday ? .bold : .semibold)).foregroundStyle(isToday ? Color.qInk : .white)
-            case .frozen:
-                Circle().fill(Color.qIceSoft)
-                Icon(.snowflake, size: DS.Icon.caption, weight: .semibold).foregroundStyle(Color.qIce)
             case .missed:
                 if isToday {
                     Circle().strokeBorder(Color.qGreen, lineWidth: 1.5)
@@ -239,7 +201,6 @@ private struct DayCell: View {
         let date = day.formatted(.dateTime.weekday(.wide).day().month(.wide))
         switch state {
         case .answered: return "\(date), answered. Open"
-        case .frozen: return "\(date), saved by a streak freeze"
         case .missed: return isToday ? "\(date), today, not answered yet" : "\(date), not answered"
         case .future: return date
         }

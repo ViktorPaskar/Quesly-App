@@ -52,13 +52,6 @@ final class AppStore {
 
     /// When the feed should play its "unlocked" moment (set right after posting). Transient.
     var unlockCelebrationAt: Date?
-    /// Days kept alive by a streak freeze (start of day).
-    private(set) var frozenDays: Set<Date> = []
-    /// Freezes in stock: one is earned every 7-day streak, at most `maxFreezes`.
-    private(set) var streakFreezes = 1
-    nonisolated static let maxFreezes = 2
-    /// Set when a freeze was spent automatically; the feed shows a one-time note.
-    var freezeJustUsed: Date?
 
     /// Friends whose answer was opened in the stories viewer today. Transient.
     private(set) var seenStoryAuthorIds: Set<String> = []
@@ -70,7 +63,6 @@ final class AppStore {
         followingIds = MockData.followingIds
         refreshDay()
         restore()
-        applyStreakFreezeIfNeeded()
         myPhoto = Self.loadPhoto()
         if let error = DemoConfig.forcedFeedError { feedError = error }
     }
@@ -132,7 +124,6 @@ final class AppStore {
         todayQuestion = question
         todayAnswers = MockData.answers(for: question, now: now)
         if notifications.isEmpty { notifications = MockData.notifications(now: now) }
-        applyStreakFreezeIfNeeded(now: now)
         publishWidget()
     }
 
@@ -172,7 +163,6 @@ final class AppStore {
     private func seedHistoryIfNeeded() {
         guard myAnswers.isEmpty else { return }
         myAnswers = MockData.myHistory()
-        frozenDays = MockData.myFrozenDays()
     }
 
     func finishFindFriends() {
@@ -198,8 +188,6 @@ final class AppStore {
         removePhoto()
         me = MockData.me
         myAnswers = []
-        frozenDays = []
-        streakFreezes = 1
         followingIds = MockData.followingIds
         blockedIds = []
         onboarding = .done
@@ -230,8 +218,6 @@ final class AppStore {
         if let visibility { defaultVisibility = visibility }
         draft = ""
         myAnswers.insert(answer, at: 0)
-        // Every full week of answers earns a freeze for a future missed day.
-        if streak > 0, streak % 7 == 0, streakFreezes < Self.maxFreezes { streakFreezes += 1 }
         notifications.insert(.init(id: UUID().uuidString, kind: .posted, actorId: nil,
                                    message: "Your new answer was posted!", date: .now), at: 0)
         persist()
@@ -497,15 +483,15 @@ final class AppStore {
 
     // MARK: Stats & achievements
 
-    /// Consecutive answered days ending today (or yesterday). Frozen days keep the chain but don't count.
+    /// Consecutive answered days ending today (or yesterday).
     var streak: Int {
         let cal = Calendar.current
         let days = answeredDays
         var day = cal.startOfDay(for: .now)
         if !days.contains(day) { day = cal.date(byAdding: .day, value: -1, to: day) ?? day }
         var count = 0
-        while days.contains(day) || frozenDays.contains(day) {
-            if days.contains(day) { count += 1 }
+        while days.contains(day) {
+            count += 1
             day = cal.date(byAdding: .day, value: -1, to: day) ?? day
         }
         return count
@@ -514,21 +500,6 @@ final class AppStore {
     var answeredDays: Set<Date> {
         let cal = Calendar.current
         return Set(myAnswers.map { cal.startOfDay(for: $0.createdAt) })
-    }
-
-    /// If yesterday was missed but the day before kept the streak alive, spend a freeze on yesterday.
-    func applyStreakFreezeIfNeeded(now: Date = .now) {
-        let cal = Calendar.current
-        guard isSignedIn, streakFreezes > 0,
-              let yesterday = cal.date(byAdding: .day, value: -1, to: cal.startOfDay(for: now)),
-              let dayBefore = cal.date(byAdding: .day, value: -1, to: yesterday) else { return }
-        let days = answeredDays
-        guard !days.contains(yesterday), !frozenDays.contains(yesterday),
-              days.contains(dayBefore) || frozenDays.contains(dayBefore) else { return }
-        frozenDays.insert(yesterday)
-        streakFreezes -= 1
-        freezeJustUsed = yesterday
-        persist()
     }
 
     /// Answer for a calendar day, for Memories.
@@ -604,8 +575,6 @@ final class AppStore {
         var isPrivateAccount: Bool
         var defaultVisibility: AnswerVisibility
         var notificationsSeenAt: Date
-        var frozenDays: Set<Date>
-        var streakFreezes: Int
         /// Optional so snapshots from before bookmarks still decode.
         var bookmarkedIds: Set<String>?
     }
@@ -620,7 +589,6 @@ final class AppStore {
             savedIds: Set(todayAnswers.filter(\.isResharedByMe).map(\.id)), reactions: reactions,
             remindersEnabled: remindersEnabled, reminderTime: reminderTime, isPrivateAccount: isPrivateAccount,
             defaultVisibility: defaultVisibility, notificationsSeenAt: notificationsSeenAt,
-            frozenDays: frozenDays, streakFreezes: streakFreezes,
             bookmarkedIds: Set(todayAnswers.filter(\.isBookmarked).map(\.id))
         )
         if let data = try? JSONEncoder().encode(snapshot) {
@@ -645,8 +613,6 @@ final class AppStore {
         isPrivateAccount = s.isPrivateAccount
         defaultVisibility = s.defaultVisibility
         notificationsSeenAt = s.notificationsSeenAt
-        frozenDays = s.frozenDays
-        streakFreezes = s.streakFreezes
         for i in todayAnswers.indices {
             let id = todayAnswers[i].id
             todayAnswers[i].isResharedByMe = s.savedIds.contains(id)

@@ -159,9 +159,8 @@ enum MockData {
 
     /// Past answers of `me` for the previous days' questions, shown in Profile.
     /// Days (ago) the seed user answered — a believable month for the Memories calendar.
-    /// Day 4 is missing but covered by a streak freeze (`frozenDaysAgo`), so the streak runs back to day 8.
-    static let answeredDaysAgo = [1, 2, 3, 5, 6, 7, 8, 11, 12, 13, 14, 16, 17, 18, 19, 20, 22, 23, 26, 27, 29]
-    static let frozenDaysAgo = [4]
+    /// The streak runs back to day 8; a few gaps further back.
+    static let answeredDaysAgo = [1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 16, 17, 18, 19, 20, 22, 23, 26, 27, 29]
 
     static func myHistory(now: Date = .now) -> [Answer] {
         let cal = Calendar.current
@@ -170,19 +169,17 @@ enum MockData {
             [.like: 2, .same: 31, .aww: 12, .hugs: 5],
             [.like: 68, .same: 15, .aww: 1, .deep: 10],
             [.like: 9, .same: 4, .hugs: 2],
+            [.same: 11, .deep: 6, .cool: 3],
+            [.aww: 18, .hugs: 9, .like: 5, .same: 2],
+            [.deep: 7, .same: 3],
         ]
         return answeredDaysAgo.enumerated().map { index, daysAgo in
             let date = cal.date(byAdding: .day, value: -daysAgo, to: now) ?? now
             let q = AppStore.question(for: date)
             return Answer(id: "h\(daysAgo)", questionId: q.id, questionText: q.text, authorId: "me",
-                          text: sampleAnswers[q.id] ?? "", createdAt: date, reactions: reactions[min(index, reactions.count - 1)],
-                          reshareCount: [6, 11, 3, 1][min(index, 3)])
+                          text: sampleAnswers[q.id] ?? "", createdAt: date, reactions: reactions[index % reactions.count],
+                          reshareCount: [6, 11, 3, 1, 0, 4, 2][index % 7])
         }
-    }
-
-    static func myFrozenDays(now: Date = .now) -> Set<Date> {
-        let cal = Calendar.current
-        return Set(frozenDaysAgo.compactMap { cal.date(byAdding: .day, value: -$0, to: cal.startOfDay(for: now)) })
     }
 
     static func notifications(now: Date = .now) -> [AppNotification] {

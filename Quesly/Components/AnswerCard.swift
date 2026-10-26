@@ -60,12 +60,16 @@ struct AnswerCard: View {
             }
         }
         // The popover floats 8 pt above the card, 8 pt from the screen's left edge.
-        .overlay(alignment: .topLeading) {
-            if isTrayOpen {
-                ReactionPopover(selected: answer.myReaction) { pick($0) }
-                    .padding(.horizontal, DS.Space.m)
-                    .offset(y: -(ReactionPopover.height + DS.Space.xs))
-                    .transition(.scale(scale: 0.6, anchor: .bottomLeading).combined(with: .opacity))
+        // The popover rises from this card's own action row and sits just above it.
+        .overlayPreferenceValue(ActionRowAnchor.self) { anchor in
+            GeometryReader { geo in
+                if isTrayOpen, let anchor {
+                    ReactionPopover(selected: answer.myReaction) { pick($0) }
+                        .padding(.horizontal, DS.Space.m)
+                        .frame(width: geo.size.width)
+                        .offset(y: geo[anchor].minY + 10 - ReactionPopover.height - DS.Space.xxs)
+                        .transition(.scale(scale: 0.6, anchor: .bottomLeading).combined(with: .opacity))
+                }
             }
         }
         .zIndex(isTrayOpen ? 10 : 0)
@@ -100,7 +104,9 @@ struct AnswerCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 nameRow.padding(.top, -2)       // cap height on the avatar's top edge
                 answerText(size: 16, lineHeight: 24).padding(.top, DS.Space.xxs)
-                actions.padding(.top, 6)          // 16 to the glyphs, minus the 44-pt zone's 10
+                actions
+                    .anchorPreference(key: ActionRowAnchor.self, value: .bounds) { $0 }
+                    .padding(.top, 6)          // 16 to the glyphs, minus the 44-pt zone's 10
                 reactionsLine.padding(.top, DS.Space.xs)
             }
         }
@@ -112,24 +118,24 @@ struct AnswerCard: View {
         return NavigationLink(value: Route.profile(answer.authorId)) { Avatar(user: author, size: 40) }
             .buttonStyle(.plain)
             .accessibilityLabel("\(author?.username ?? "") profile")
-            .overlay(alignment: .bottomTrailing) {
+            .overlay(alignment: .bottom) {
                 if canFollow {
                     Button {
                         withAnimation(.qSpring) { store.toggleFollow(answer.authorId) }
                     } label: {
                         ZStack {
                             Circle().fill(Color.qLime)
-                            Capsule().fill(Color.qGreen).frame(width: 2, height: 9)
-                            Capsule().fill(Color.qGreen).frame(width: 9, height: 2)
+                            Capsule().fill(Color.qGreen).frame(width: 2, height: 8)
+                            Capsule().fill(Color.qGreen).frame(width: 8, height: 2)
                         }
-                        .frame(width: 18, height: 18)
+                        .frame(width: 16, height: 16)
                         .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
                         .padding(10)
                         .contentShape(Rectangle())
                         .padding(-10)
                     }
                     .buttonStyle(.pressable)
-                    .offset(x: 3, y: 3)
+                    .offset(y: 7)
                     .transition(.scale.combined(with: .opacity))
                     .accessibilityLabel("Follow \(author?.username ?? "")")
                 }
@@ -150,11 +156,17 @@ struct AnswerCard: View {
                         .frame(width: 40, height: 40)
                         .background(Circle().fill(Color.qGreen))
                     Rectangle().fill(Color.qLine).frame(width: 2).frame(maxHeight: .infinity)
+                        .padding(.bottom, DS.Space.xxs)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(questionDayLabel)
-                        .font(.ui(13, .semibold))
-                        .foregroundStyle(Color.qGray)
+                    HStack(spacing: DS.Space.xs) {
+                        Text(questionDayLabel)
+                            .font(.ui(13, .semibold))
+                            .foregroundStyle(Color.qGray)
+                        Spacer(minLength: DS.Space.xs)
+                        moreMenu
+                    }
+                    .frame(height: 20)
                     Text(answer.questionText)
                         .font(.ui(15, .medium))
                         .foregroundStyle(Color.qInk2)
@@ -162,16 +174,17 @@ struct AnswerCard: View {
                 }
                 .padding(.bottom, DS.Space.m)
             }
-            .accessibilityElement(children: .combine)
+            // Height comes from the question text, so the thread line spans exactly to the photo below.
+            .fixedSize(horizontal: false, vertical: true)
             feedBody
         }
     }
 
     private var questionDayLabel: String {
         let cal = Calendar.current
-        if cal.isDateInToday(answer.createdAt) { return "Today's question" }
-        if cal.isDateInYesterday(answer.createdAt) { return "Yesterday's question" }
-        return "Question of " + answer.createdAt.formatted(.dateTime.month(.abbreviated).day())
+        if cal.isDateInToday(answer.createdAt) { return "Today" }
+        if cal.isDateInYesterday(answer.createdAt) { return "Yesterday" }
+        return answer.createdAt.formatted(.dateTime.month(.abbreviated).day())
     }
 
     private func answerText(size: CGFloat, lineHeight: CGFloat) -> some View {
@@ -199,13 +212,15 @@ struct AnswerCard: View {
             NavigationLink(value: Route.profile(answer.authorId)) {
                 HStack(spacing: 6) {
                     Text(author?.username ?? "unknown").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-                    Text(timeText).font(.ui(15)).foregroundStyle(Color.qGray)
+                    if !isCompact || answer.isEdited {
+                        Text(isCompact ? "edited" : timeText).font(.ui(15)).foregroundStyle(Color.qGray)
+                    }
                 }
                 .lineLimit(1)
             }
             .buttonStyle(.plain)
             Spacer(minLength: DS.Space.xs)
-            moreMenu
+            if !isCompact { moreMenu }
         }
         .frame(height: 20)
     }
@@ -331,7 +346,7 @@ struct AnswerCard: View {
                 withAnimation(.qSpring) { store.toggleBookmark(answer.id) }
             } glyph: {
                 Icon(answer.isBookmarked ? .bookmarkSimpleFill : .bookmarkSimple, size: 24)
-                    .foregroundStyle(Color.qGreen)
+                    .foregroundStyle(answer.isBookmarked ? Color.qGreen : Color.qGray)
             }
             .pop(on: answer.isBookmarked)
             .sensoryFeedback(.selection, trigger: answer.isBookmarked)
@@ -435,6 +450,12 @@ struct AnswerCard: View {
         .buttonStyle(.pressable)
         .accessibilityLabel("\(answer.totalReactions) reactions. See who reacted")
     }
+}
+
+/// Bounds of an answer's action row, so the sticker popover can sit right above it.
+private struct ActionRowAnchor: PreferenceKey {
+    static let defaultValue: Anchor<CGRect>? = nil
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) { value = value ?? nextValue() }
 }
 
 /// "Reacted by you, funnnyyy1 and others" with up to two faces, or stickers + "People reacted"

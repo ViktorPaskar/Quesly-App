@@ -69,7 +69,7 @@ extension Color {
     static let qVioletSoft = Color(hex: 0x7C4DEB, opacity: 0.12)
     static let qGold = Color(hex: 0xB97C0C)
     static let qGoldSoft = Color(hex: 0xE2A72E, opacity: 0.16)
-    /// Streak freeze ❄️ (icon/text) and its soft fill.
+    /// Cool blue accent and its soft fill.
     static let qIce = Color(light: 0x2D6BE4, dark: 0x7DB8FF)
     static let qIceSoft = Color(light: 0xE6EEFD, dark: 0x16263B)
     static let qDanger = Color(hex: 0xFF3B30)

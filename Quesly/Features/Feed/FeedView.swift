@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// World / Friends feeds on white: wordmark + streak, Threads-style tabs, then flat answer rows
-/// as white strips 6 pt apart on a light gray canvas. World opens with the question card; Friends with your own answer.
+/// as white rounded cards 8 pt apart on a light gray canvas. World opens with the question card; Friends with your own answer.
 struct FeedView: View {
     @Environment(AppStore.self) private var store
     @State private var scope: FeedScope = DemoConfig.initialFeedScope
@@ -127,7 +127,8 @@ struct FeedView: View {
                             .padding(.horizontal, DS.Space.m)
                             .padding(.top, DS.Space.s)
                         AnswerCard(answer: mine, isHighlighted: highlightsMine)
-                            .background(Color.qBackground)
+                            .outlinedBlock()
+                            .padding(.horizontal, DS.Space.s)
                             .padding(.bottom, gap)
                     }
 
@@ -143,7 +144,8 @@ struct FeedView: View {
                             VStack(spacing: 0) {
                                 AnswerCard(answer: answer,
                                            opensTray: (DemoConfig.opensReactionTray || tour.openTray) && answer.id == trayTarget)
-                                    .background(Color.qBackground)
+                                    .outlinedBlock()
+                                    .padding(.horizontal, DS.Space.s)
                                     .padding(.bottom, gap)
                             }
                             .zIndex(Double(index))
@@ -197,7 +199,7 @@ struct FeedView: View {
     }
 
     /// Space between answer strips; the gray canvas shows through.
-    private let gap: CGFloat = 6
+    private let gap: CGFloat = DS.Space.xs
 
     /// The moment the day's answers unlock: your answer lands first and glows, the others
     /// follow one by one, the streak ticks up with a success haptic.

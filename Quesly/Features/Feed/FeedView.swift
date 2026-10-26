@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// World / Friends feeds on white: wordmark + streak, Threads-style tabs, then flat answer rows
-/// split by 0.5-pt hairlines. World opens with the question card; Friends with your own answer.
+/// as white strips 6 pt apart on a light gray canvas. World opens with the question card; Friends with your own answer.
 struct FeedView: View {
     @Environment(AppStore.self) private var store
     @State private var scope: FeedScope = DemoConfig.initialFeedScope
@@ -56,6 +56,8 @@ struct FeedView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.qSmooth, value: network.isOnline)
+            // Light gray behind the list; each answer is a white strip, 6 pt apart.
+            .background(Color.qFeedCanvas)
         }
         .background(Color.qBackground)
         .toolbar(.hidden, for: .navigationBar)
@@ -125,7 +127,8 @@ struct FeedView: View {
                             .padding(.horizontal, DS.Space.m)
                             .padding(.top, DS.Space.s)
                         AnswerCard(answer: mine, isHighlighted: highlightsMine)
-                        hairline
+                            .background(Color.qBackground)
+                            .padding(.bottom, gap)
                     }
 
                     if let error = store.feedError {
@@ -140,7 +143,8 @@ struct FeedView: View {
                             VStack(spacing: 0) {
                                 AnswerCard(answer: answer,
                                            opensTray: (DemoConfig.opensReactionTray || tour.openTray) && answer.id == trayTarget)
-                                if index < others.count - 1 { hairline }
+                                    .background(Color.qBackground)
+                                    .padding(.bottom, gap)
                             }
                             .zIndex(Double(index))
                             .opacity(isShown ? 1 : 0)
@@ -171,7 +175,6 @@ struct FeedView: View {
                             }
                         }
                     } else if !others.isEmpty {
-                        hairline
                         CaughtUpFooter(count: others.count, scope: scope) {
                             withAnimation(.qSmooth) { proxy.scrollTo("top", anchor: .top) }
                         }
@@ -193,10 +196,8 @@ struct FeedView: View {
         }
     }
 
-    /// 0.5-pt full-width separator between answers.
-    private var hairline: some View {
-        Rectangle().fill(Color.qLine).frame(height: 0.5)
-    }
+    /// Space between answer strips; the gray canvas shows through.
+    private let gap: CGFloat = 6
 
     /// The moment the day's answers unlock: your answer lands first and glows, the others
     /// follow one by one, the streak ticks up with a success haptic.

@@ -106,6 +106,8 @@ extension Color {
     static let qSurface = Color(light: 0xFFFFFF, dark: 0x161917)
     /// Screen background. Strictly white in the 2026 redesign; blocks are outlined, not tinted.
     static let qCanvas = Color(light: 0xFFFFFF, dark: 0x0C0E0D)
+    /// Feed background behind the white answer strips: barely gray.
+    static let qFeedCanvas = Color(hex: 0xF4F4F6)
     /// White rounded block that sits on `qCanvas`.
     static let qBlock = Color(light: 0xFFFFFF, dark: 0x181B19)
 

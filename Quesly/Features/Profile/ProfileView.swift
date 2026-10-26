@@ -27,7 +27,7 @@ struct ProfileView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                    ProfileHeader(user: user, isMe: isMe)
+                    ProfileHeader(user: user, isMe: isMe) { withAnimation(.qSmooth) { tab = .calendar } }
                         .padding(.horizontal, DS.Space.screen)
                         .padding(.top, DS.Space.xs)
                         .padding(.bottom, DS.Space.xl)
@@ -146,9 +146,6 @@ struct ProfileView: View {
                 }
                 .accessibilityLabel("Back")
             }
-            if isMe && store.streak > 0 {
-                StreakChip(days: store.streak).padding(.leading, 10)
-            }
             if store.isPrivateAccount && isMe {
                 IconLabel("Private", icon: .lockSimpleFill, size: DS.Icon.caption)
                     .font(.ui(13, .semibold))
@@ -197,7 +194,11 @@ struct ProfileHeader: View {
     @Environment(AppStore.self) private var store
     let user: AppUser?
     let isMe: Bool
+    /// Tapping your streak opens the Calendar tab.
+    var onStreak: () -> Void = {}
     @State private var appeared = false
+
+    private var streak: Int { isMe ? store.streak : (user?.streak ?? 0) }
 
     private var followingCount: Int { isMe ? store.followingUsers.count : (user?.following ?? 0) }
 
@@ -236,49 +237,73 @@ struct ProfileHeader: View {
         .onAppear { withAnimation(.spring(response: 0.55, dampingFraction: 0.65).delay(0.05)) { appeared = true } }
     }
 
-    /// "@nick", plus "· 🔥 2-day streak" on someone else's profile (yours sits in the top bar).
+    /// "@nick".
     private var nickLine: some View {
         HStack(spacing: DS.Space.xxs) {
             Text("@\(user?.username ?? "")")
                 .foregroundStyle(Color.qGray)
                 .lineLimit(1)
-            if !isMe, let streak = user?.streak, streak > 0 {
-                Circle().fill(Color.qGray).frame(width: 3, height: 3).padding(.horizontal, DS.Space.xxs)
-                Icon(.fireFill, size: 14).foregroundStyle(Color.qFlame)
-                Text("\(streak)-day streak")
-                    .font(.ui(15, .semibold))
-                    .foregroundStyle(Color.qInk)
-                    .lineLimit(1)
-            }
         }
         .font(.ui(15))
     }
 
     // MARK: Stats
 
-    /// Big number over a small label, three left-aligned columns (124 / 1.2K / 318).
+    /// Four equal columns on the content width, big number over a small label:
+    /// 🔥 streak · answers · followers · following. Each column starts on the same grid line.
     private var stats: some View {
-        HStack(alignment: .top, spacing: DS.Space.xxl) {
+        HStack(alignment: .top, spacing: 0) {
+            streakStat
             stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil)
             stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)
             stat(followingCount, "Following", route: isMe ? .following : nil)
-            Spacer(minLength: 0)
+        }
+    }
+
+    private func number(_ value: Int) -> some View {
+        Text(value.formatted(.number.notation(.compactName)))
+            .font(.ui(20, .bold))
+            .foregroundStyle(Color.qGreen)
+            .monospacedDigit()
+            .contentTransition(.numericText())
+    }
+
+    private func label(_ text: String) -> some View {
+        Text(text).font(.ui(13)).foregroundStyle(Color.qGray)
+    }
+
+    /// The flame sits before the number, so the figures of all four columns share one baseline.
+    @ViewBuilder
+    private var streakStat: some View {
+        let content = VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: DS.Space.xxs) {
+                Icon(.fireFill, size: 18).foregroundStyle(Color.qFlame)
+                number(streak)
+            }
+            label("Day streak")
+        }
+        .lineLimit(1)
+        .frame(maxWidth: .infinity, minHeight: DS.hitTarget, alignment: .leading)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(streak) day streak")
+        if isMe {
+            Button(action: onStreak) { content }
+                .buttonStyle(.pressable)
+                .accessibilityHint("Opens your calendar")
+        } else {
+            content
         }
     }
 
     @ViewBuilder
-    private func stat(_ value: Int, _ label: String, route: Route?) -> some View {
+    private func stat(_ value: Int, _ title: String, route: Route?) -> some View {
         let content = VStack(alignment: .leading, spacing: 2) {
-            Text(value.formatted(.number.notation(.compactName)))
-                .font(.ui(20, .bold))
-                .foregroundStyle(Color.qGreen)
-                .monospacedDigit()
-            Text(label)
-                .font(.ui(13))
-                .foregroundStyle(Color.qGray)
+            number(value)
+            label(title)
         }
         .lineLimit(1)
-        .frame(minHeight: DS.hitTarget)
+        .frame(maxWidth: .infinity, minHeight: DS.hitTarget, alignment: .leading)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         if let route {

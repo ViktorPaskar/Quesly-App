@@ -197,7 +197,7 @@ struct ProfileHeader: View {
     /// Tapping your streak opens the Calendar tab.
     var onStreak: () -> Void = {}
     @State private var appeared = false
-    @Environment(.dynamicTypeSize) private var typeSize
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var streak: Int { isMe ? store.streak : (user?.streak ?? 0) }
 

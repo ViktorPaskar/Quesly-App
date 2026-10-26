@@ -17,7 +17,7 @@ enum Route: Hashable {
 /// One answer. Two layouts on the same 4-pt grid:
 /// • feed (default): X-style row: 40-pt avatar, then everything aligned to the name's left edge:
 ///   16 · name row 20 · 4 · text 16/24 · 16 · action glyphs 24 · 8 · "Reacted by" 20 · 16.
-/// • compact (profile): question, answer, date, then the counter pill (yours) or actions.
+/// • compact (profile): the same row as a reply under the day's question (thread).
 struct AnswerCard: View {
     @Environment(AppStore.self) private var store
     let answer: Answer
@@ -63,7 +63,8 @@ struct AnswerCard: View {
         .overlay(alignment: .topLeading) {
             if isTrayOpen {
                 ReactionPopover(selected: answer.myReaction) { pick($0) }
-                    .offset(x: DS.Space.xs, y: -(ReactionPopover.height + DS.Space.xs))
+                    .padding(.horizontal, DS.Space.m)
+                    .offset(y: -(ReactionPopover.height + DS.Space.xs))
                     .transition(.scale(scale: 0.6, anchor: .bottomLeading).combined(with: .opacity))
             }
         }
@@ -95,11 +96,9 @@ struct AnswerCard: View {
 
     private var feedBody: some View {
         HStack(alignment: .top, spacing: DS.Space.s) {
-            NavigationLink(value: Route.profile(answer.authorId)) { Avatar(user: author, size: 40) }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(author?.username ?? "") profile")
+            avatar
             VStack(alignment: .leading, spacing: 0) {
-                nameRow
+                nameRow.padding(.top, -2)       // cap height on the avatar's top edge
                 answerText(size: 16, lineHeight: 24).padding(.top, DS.Space.xxs)
                 actions.padding(.top, 6)          // 16 to the glyphs, minus the 44-pt zone's 10
                 reactionsLine.padding(.top, DS.Space.xs)
@@ -107,28 +106,72 @@ struct AnswerCard: View {
         }
     }
 
-    @ViewBuilder
+    /// 40-pt photo; a lime "+" badge on people you don't follow yet follows in one tap (Threads).
+    private var avatar: some View {
+        let canFollow = !isMine && !store.isFollowing(answer.authorId)
+        return NavigationLink(value: Route.profile(answer.authorId)) { Avatar(user: author, size: 40) }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(author?.username ?? "") profile")
+            .overlay(alignment: .bottomTrailing) {
+                if canFollow {
+                    Button {
+                        withAnimation(.qSpring) { store.toggleFollow(answer.authorId) }
+                    } label: {
+                        ZStack {
+                            Circle().fill(Color.qLime)
+                            Capsule().fill(Color.qGreen).frame(width: 2, height: 9)
+                            Capsule().fill(Color.qGreen).frame(width: 9, height: 2)
+                        }
+                        .frame(width: 18, height: 18)
+                        .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
+                        .padding(10)
+                        .contentShape(Rectangle())
+                        .padding(-10)
+                    }
+                    .buttonStyle(.pressable)
+                    .offset(x: 3, y: 3)
+                    .transition(.scale.combined(with: .opacity))
+                    .accessibilityLabel("Follow \(author?.username ?? "")")
+                }
+            }
+            .sensoryFeedback(.success, trigger: store.isFollowing(answer.authorId)) { _, on in on }
+            .animation(.qSpring, value: canFollow)
+    }
+
+    /// Profile row as a thread: the day's question is the post, the answer is the reply under it.
+    /// The question gets a Quesly avatar and a date line, so a 10-day-old answer still reads in
+    /// context; a hairline thread joins the two avatars.
     private var compactBody: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if showsAuthor {
-                compactAuthor.padding(.bottom, DS.Space.s)
+            HStack(alignment: .top, spacing: DS.Space.s) {
+                VStack(spacing: DS.Space.xxs) {
+                    QueslyMark(color: .qLime, cutout: .qGreen)
+                        .frame(width: 24)
+                        .frame(width: 40, height: 40)
+                        .background(Circle().fill(Color.qGreen))
+                    Rectangle().fill(Color.qLine).frame(width: 2).frame(maxHeight: .infinity)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(questionDayLabel)
+                        .font(.ui(13, .semibold))
+                        .foregroundStyle(Color.qGray)
+                    Text(answer.questionText)
+                        .font(.ui(15, .medium))
+                        .foregroundStyle(Color.qInk2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.bottom, DS.Space.m)
             }
-            if showsQuestion {
-                Text(answer.questionText)
-                    .font(.ui(13, .semibold))
-                    .foregroundStyle(Color.qBrandText)
-                    .lineSpacing(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            answerText(size: 17, lineHeight: 24).padding(.top, showsQuestion ? 6 : 0)
-            if showsAuthor || !isMine {
-                if !showsAuthor { dateLine.padding(.top, DS.Space.xs) }
-                actions.padding(.top, 6)
-            } else {
-                dateLine.padding(.top, DS.Space.xs)
-                if answer.totalReactions > 0 { counterPill.padding(.top, DS.Space.xs) }
-            }
+            .accessibilityElement(children: .combine)
+            feedBody
         }
+    }
+
+    private var questionDayLabel: String {
+        let cal = Calendar.current
+        if cal.isDateInToday(answer.createdAt) { return "Today's question" }
+        if cal.isDateInYesterday(answer.createdAt) { return "Yesterday's question" }
+        return "Question of " + answer.createdAt.formatted(.dateTime.month(.abbreviated).day())
     }
 
     private func answerText(size: CGFloat, lineHeight: CGFloat) -> some View {
@@ -154,37 +197,17 @@ struct AnswerCard: View {
     private var nameRow: some View {
         HStack(spacing: DS.Space.xs) {
             NavigationLink(value: Route.profile(answer.authorId)) {
-                (Text(author?.username ?? "unknown").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-                    + Text(" " + timeText).font(.ui(15)).foregroundStyle(Color.qGray))
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(author?.username ?? "unknown").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
+                    Text(timeText).font(.ui(15)).foregroundStyle(Color.qGray)
+                }
+                .lineLimit(1)
             }
             .buttonStyle(.plain)
             Spacer(minLength: DS.Space.xs)
             moreMenu
         }
         .frame(height: 20)
-    }
-
-    private var compactAuthor: some View {
-        HStack(spacing: DS.Space.xs) {
-            NavigationLink(value: Route.profile(answer.authorId)) {
-                HStack(spacing: DS.Space.xs) {
-                    Avatar(user: author, size: 36)
-                    (Text(author?.username ?? "unknown").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-                        + Text(" · " + timeText).font(.ui(15)).foregroundStyle(Color.qGray))
-                        .lineLimit(1)
-                }
-            }
-            .buttonStyle(.plain)
-            Spacer(minLength: DS.Space.xs)
-            moreMenu
-        }
-    }
-
-    private var dateLine: some View {
-        Text(RelativeTime.dayLabel(answer.createdAt) + (answer.isEdited ? " · edited" : ""))
-            .font(.ui(13))
-            .foregroundStyle(Color.qGray)
     }
 
     /// 20-pt glyph in a 44-pt zone that takes no extra room in the row.
@@ -250,7 +273,41 @@ struct AnswerCard: View {
 
     /// React · Repost · Share, then Save on the right. Each is a 44-pt zone around a 24-pt glyph;
     /// the row is pulled out by the zone's 10 pt so the glyphs sit exactly on the text edges.
+    @ViewBuilder
     private var actions: some View {
+        if isMine { ownActions } else { viewerActions }
+    }
+
+    /// Your own answer: you can't react to, repost or save it, so only Share remains, plus how
+    /// often it was reposted (only you see that number). Reactions live in the counter pill.
+    private var ownActions: some View {
+        HStack(spacing: 0) {
+            ShareLink(item: link) {
+                Icon(.shareForward, size: 24)
+                    .foregroundStyle(Color.qGray)
+                    .frame(width: DS.hitTarget, height: DS.hitTarget)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.pressable)
+            .accessibilityLabel("Share outside Quesly")
+            if answer.reshares > 0 {
+                HStack(spacing: DS.Space.xxs) {
+                    Icon(.repost, size: 24)
+                    Text("\(answer.reshares)").font(.ui(15, .semibold)).monospacedDigit()
+                }
+                .foregroundStyle(Color.qGray)
+                .padding(.horizontal, 10)
+                .frame(height: DS.hitTarget)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Reposted \(answer.reshares) times. Only you can see this")
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, -10)
+        .padding(.bottom, -10)
+    }
+
+    private var viewerActions: some View {
         HStack(spacing: 0) {
             reactButton
             zoneButton(label: answer.isResharedByMe ? "Reposted, tap to undo" : "Repost") {
@@ -274,7 +331,7 @@ struct AnswerCard: View {
                 withAnimation(.qSpring) { store.toggleBookmark(answer.id) }
             } glyph: {
                 Icon(answer.isBookmarked ? .bookmarkSimpleFill : .bookmarkSimple, size: 24)
-                    .foregroundStyle(answer.isBookmarked ? Color.qInk : Color.qGray)
+                    .foregroundStyle(Color.qGreen)
             }
             .pop(on: answer.isBookmarked)
             .sensoryFeedback(.selection, trigger: answer.isBookmarked)

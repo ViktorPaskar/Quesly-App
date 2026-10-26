@@ -13,8 +13,9 @@ struct ReactionPopover: View {
         HStack(spacing: 0) {
             ForEach(Array(ReactionKind.allCases.enumerated()), id: \.element) { index, kind in
                 Button { onPick(kind) } label: {
-                    ReactionSticker(kind: kind, size: 46)
-                        .frame(width: 52, height: 48)
+                    ReactionSticker(kind: kind, size: 42)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
                         .background(Circle().fill(selected == kind ? Color.qField : .clear).frame(width: 48, height: 48))
                         .scaleEffect(shown ? 1 : 0.3)
                         .offset(y: shown ? 0 : 8)
@@ -27,7 +28,8 @@ struct ReactionPopover: View {
             }
         }
         .padding(.vertical, DS.Space.xxs)
-        .padding(.horizontal, 6)
+        .padding(.horizontal, DS.Space.s)
+        .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .fill(Color.qBackground)
@@ -64,16 +66,16 @@ struct ReactionsSheet: View {
                     .font(.ui(13))
                     .foregroundStyle(Color.qGray)
                 }
-                .padding(.horizontal, DS.Space.m)
-                .padding(.top, DS.Space.s)
+                .padding(.horizontal, DS.Space.screen)
+                .padding(.top, DS.Space.l)
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: DS.Space.xs) {
                         allChip(count: answer.totalReactions)
                         ForEach(answer.topReactions) { kind in stickerChip(kind) }
                     }
-                    .padding(.horizontal, DS.Space.m)
-                    .padding(.vertical, DS.Space.s)
+                    .padding(.horizontal, DS.Space.screen)
+                    .padding(.vertical, DS.Space.m)
                 }
                 Rectangle().fill(Color.qLine).frame(height: 0.5)
 
@@ -84,7 +86,7 @@ struct ReactionsSheet: View {
                                 .buttonStyle(.plain)
                         }
                     }
-                    .padding(.top, DS.Space.xxs)
+                    .padding(.vertical, DS.Space.xs)
                     .animation(.qSmooth, value: filter)
                 }
             }
@@ -97,17 +99,18 @@ struct ReactionsSheet: View {
     private func row(_ item: AppStore.Reactor) -> some View {
         HStack(spacing: DS.Space.s) {
             Avatar(user: item.user, size: 40)
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(item.user.username).font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-                if store.isFollowing(item.user.id) {
-                    Text("Friend").font(.ui(13)).foregroundStyle(Color.qGray)
+                if let name = item.user.name, !name.isEmpty {
+                    Text(name).font(.ui(13)).foregroundStyle(Color.qGray)
                 }
             }
-            Spacer()
+            .lineLimit(1)
+            Spacer(minLength: DS.Space.s)
             ReactionSticker(kind: item.kind, size: 40)
         }
-        .padding(.horizontal, DS.Space.m)
-        .frame(height: 56)
+        .padding(.horizontal, DS.Space.screen)
+        .frame(height: 60)
         .contentShape(Rectangle())
     }
 

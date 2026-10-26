@@ -22,7 +22,7 @@ struct FeedView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
+            ZStack {
                 Image("brand-wordmark")
                     .renderingMode(.template)
                     .resizable()
@@ -30,10 +30,12 @@ struct FeedView: View {
                     .frame(height: 20)
                     .foregroundStyle(Color.qInk)
                     .accessibilityLabel("Quesly")
-                Spacer()
-                Button { showStreak = true } label: { StreakChip(days: shownStreak ?? store.streak) }
-                    .buttonStyle(.pressable)
-                    .accessibilityHint("Opens your streak calendar")
+                HStack {
+                    Spacer()
+                    Button { showStreak = true } label: { StreakChip(days: shownStreak ?? store.streak) }
+                        .buttonStyle(.pressable)
+                        .accessibilityHint("Opens your streak calendar")
+                }
             }
             .padding(.horizontal, DS.Space.m)
             .frame(height: 44)
@@ -337,14 +339,12 @@ struct StreakChip: View {
     }
 }
 
-/// World's opening card: today's question on brand green, with friends who answered.
+/// World's opening card: today's question on brand green.
 struct TodayQuestionBanner: View {
-    @Environment(AppStore.self) private var store
     let question: DailyQuestion
     var onTap: () -> Void = {}
 
     var body: some View {
-        let friends = store.friendStories.compactMap { store.user($0.authorId) }
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 0) {
                 Text("TODAY'S QUESTION")
@@ -352,27 +352,12 @@ struct TodayQuestionBanner: View {
                     .tracking(1)
                     .foregroundStyle(Color.qLime)
                 Text(question.text)
-                    .font(.display(20, .semibold))
+                    .font(.display(20, .medium))
                     .lineSpacing(2)
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, DS.Space.xxs)
-                HStack(spacing: DS.Space.xs) {
-                    if !friends.isEmpty {
-                        HStack(spacing: -6) {
-                            ForEach(friends.prefix(2)) { user in
-                                Avatar(user: user, size: 20)
-                                    .overlay(Circle().stroke(Color.qGreen, lineWidth: 2))
-                            }
-                        }
-                    }
-                    Text("\(store.answeredTodayCount.formatted()) answers"
-                         + (friends.isEmpty ? "" : " · \(friends.count) friend\(friends.count == 1 ? "" : "s")"))
-                        .font(.ui(13))
-                        .foregroundStyle(.white.opacity(0.75))
-                }
-                .padding(.top, DS.Space.s)
             }
             .padding(DS.Space.m)
             .frame(maxWidth: .infinity, alignment: .leading)

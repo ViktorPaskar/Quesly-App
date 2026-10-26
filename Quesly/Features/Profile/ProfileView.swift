@@ -197,6 +197,7 @@ struct ProfileHeader: View {
     /// Tapping your streak opens the Calendar tab.
     var onStreak: () -> Void = {}
     @State private var appeared = false
+    @Environment(.dynamicTypeSize) private var typeSize
 
     private var streak: Int { isMe ? store.streak : (user?.streak ?? 0) }
 
@@ -251,8 +252,11 @@ struct ProfileHeader: View {
 
     /// Four equal columns on the content width, big number over a small label:
     /// 🔥 streak · answers · followers · following. Each column starts on the same grid line.
+    /// At accessibility text sizes the four columns become a 2 × 2 grid so labels never truncate.
     private var stats: some View {
-        HStack(alignment: .top, spacing: 0) {
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 0, alignment: .leading),
+                            count: typeSize.isAccessibilitySize ? 2 : 4)
+        return LazyVGrid(columns: columns, alignment: .leading, spacing: DS.Space.s) {
             streakStat
             stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil)
             stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)

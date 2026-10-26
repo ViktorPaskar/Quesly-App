@@ -222,12 +222,7 @@ struct ProfileHeader: View {
             }
 
             if let bio = user?.bio, !bio.isEmpty {
-                Text(bio)
-                    .font(.ui(15))
-                    .foregroundStyle(Color.qInk2)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, DS.Space.m)
+                ExpandableBio(text: bio).padding(.top, DS.Space.m)
             }
 
             stats.padding(.top, DS.Space.m)
@@ -505,6 +500,50 @@ struct StreakCard: View {
         (Text(value).font(.ui(13, .semibold)).foregroundStyle(Color.qInk)
             + Text(" " + label).font(.ui(13)).foregroundStyle(Color.qGray))
             .lineLimit(1)
+    }
+}
+
+/// Bio: three lines, then "more" (only when it really is longer). Tap to open or close.
+private struct ExpandableBio: View {
+    let text: String
+    @State private var expanded = false
+    @State private var fullHeight: CGFloat = 0
+    @State private var clippedHeight: CGFloat = 0
+
+    private func bioText(_ lines: Int?) -> some View {
+        Text(text)
+            .font(.ui(15))
+            .foregroundStyle(Color.qInk2)
+            .lineSpacing(4)
+            .lineLimit(lines)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var isTruncated: Bool { fullHeight > clippedHeight + 1 }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Space.xxs) {
+            bioText(expanded ? nil : 3)
+                .fixedSize(horizontal: false, vertical: true)
+            if isTruncated {
+                Text(expanded ? "less" : "more")
+                    .font(.ui(15, .semibold))
+                    .foregroundStyle(Color.qGray)
+            }
+        }
+        // Measure both versions off-screen to know whether "more" is needed.
+        .background {
+            ZStack {
+                bioText(nil).fixedSize(horizontal: false, vertical: true)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { fullHeight = $0 }
+                bioText(3).fixedSize(horizontal: false, vertical: true)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { clippedHeight = $0 }
+            }
+            .hidden()
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { if isTruncated { withAnimation(.qSmooth) { expanded.toggle() } } }
+        .accessibilityAddTraits(isTruncated ? .isButton : [])
     }
 }
 

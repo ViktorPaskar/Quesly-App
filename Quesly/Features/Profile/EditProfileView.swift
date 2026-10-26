@@ -92,9 +92,20 @@ struct EditProfileView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("About").font(.ui(13)).foregroundStyle(Color.qGray)
+                    HStack {
+                        Text("About").font(.ui(13)).foregroundStyle(Color.qGray)
+                        Spacer()
+                        // Characters as people see them: an emoji counts as one.
+                        Text("\(draft.bio.count)/\(AppUser.bioLimit)")
+                            .font(.ui(13))
+                            .foregroundStyle(draft.bio.count >= AppUser.bioLimit ? Color.qFlame : Color.qGray)
+                            .monospacedDigit()
+                    }
                     TextField("Tell people about yourself", text: $draft.bio, axis: .vertical)
                         .lineLimit(3...6)
+                        .onChange(of: draft.bio) { _, new in
+                            if new.count > AppUser.bioLimit { draft.bio = String(new.prefix(AppUser.bioLimit)) }
+                        }
                         .font(.ui(16))
                         .padding(16)
                         .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))

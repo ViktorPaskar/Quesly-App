@@ -11,6 +11,8 @@ struct AppUser: Identifiable, Codable, Hashable {
     var phone: String = ""
     var location: String = ""
     var bio: String = ""
+    /// Bio length in visible characters (an emoji is one). Profiles show 3 lines, then "more".
+    static let bioLimit = 150
     /// Hue (0...1) used to tint the generated avatar until real photos are wired up.
     var avatarHue: Double
     var badge: BadgeTier? = nil

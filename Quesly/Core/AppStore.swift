@@ -426,7 +426,10 @@ final class AppStore {
     }
 
     func updateProfile(_ updated: AppUser) {
-        me = updated
+        var u = updated
+        // Trim the ends, keep line breaks inside, cap at the limit.
+        u.bio = String(u.bio.trimmingCharacters(in: .whitespacesAndNewlines).prefix(AppUser.bioLimit))
+        me = u
         persist()
     }
 

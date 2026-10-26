@@ -25,7 +25,7 @@ enum MockData {
     static let users: [AppUser] = [
         .init(id: "u1", username: "van.derss2", name: "Vanessa Ders", bio: "Grandma's stories > everything.", avatarHue: 0.55, badge: .red, followers: 120, following: 98, streak: 6),
         .init(id: "u2", username: "alexo91", name: "Alex Moreau", bio: "Plants, coffee and long walks 🌿", avatarHue: 0.32, badge: .purple, followers: 342, following: 210, streak: 12),
-        .init(id: "u3", username: "funnnnyyy1", name: "Hugo Bernard", bio: "Chasing mountains.", avatarHue: 0.12, followers: 88, following: 140, streak: 2),
+        .init(id: "u3", username: "funnnnyyy1", name: "Chloé Bernard", bio: "Chasing mountains.", avatarHue: 0.12, followers: 88, following: 140, streak: 2),
         .init(id: "u4", username: "mr.smith", name: "Mark Smith", bio: "Side projects all day.", avatarHue: 0.62, badge: .blue, followers: 501, following: 77, streak: 21),
         .init(id: "u5", username: "john.john", name: "John Walker", bio: "There's a coin and a coffee. I enjoy the little things in life.", avatarHue: 0.02, badge: .red, followers: 342, following: 89, streak: 4),
         .init(id: "u6", username: "chill_mara", name: "Mara Lenoir", bio: "Gamer, dreamer.", avatarHue: 0.85, followers: 60, following: 61, streak: 1),

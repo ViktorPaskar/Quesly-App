@@ -27,7 +27,8 @@ struct FeedView: View {
                     .renderingMode(.template)
                     .resizable()
                     .aspectRatio(1900.0 / 602.0, contentMode: .fit)
-                    .frame(height: 20)
+                    // Wordmark like Instagram/Threads headers: about 28 pt tall in a 44-pt bar.
+                    .frame(height: 28)
                     .foregroundStyle(Color.qInk)
                     .accessibilityLabel("Quesly")
                 HStack {

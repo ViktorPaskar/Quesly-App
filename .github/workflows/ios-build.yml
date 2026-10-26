@@ -52,7 +52,7 @@ jobs:
           }
           ALL="welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile profileList memory settings editProfile achievements widgets"
           # While we redesign one section at a time, only that section is shot. Set FOCUS="$ALL" for everything.
-          FOCUS="feed reactions memory streakFirst streakRestart"
+          FOCUS="profile otherProfile"
           i=1
           for screen in $FOCUS; do
             shoot $screen "$(printf '%02d' $i)-$screen"; i=$((i+1))

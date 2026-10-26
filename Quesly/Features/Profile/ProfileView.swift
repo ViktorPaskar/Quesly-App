@@ -228,7 +228,7 @@ struct ProfileHeader: View {
                     .padding(.top, DS.Space.m)
             }
 
-            stats.padding(.top, DS.Space.xxs)       // + the rows' own 44-pt height ≈ 12 visually
+            stats.padding(.top, DS.Space.m)
             actions.padding(.top, DS.Space.l)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -256,30 +256,35 @@ struct ProfileHeader: View {
 
     // MARK: Stats
 
+    /// Big number over a small label, three left-aligned columns (124 / 1.2K / 318).
     private var stats: some View {
-        // Spread across the full width: first on the left edge, last on the right, middle centred.
-        HStack(spacing: DS.Space.xs) {
-            let answers = store.answers(of: user?.id ?? "").count
-            stat(answers, answers == 1 ? "answer" : "answers", route: nil)
+        HStack(alignment: .top, spacing: DS.Space.xxl) {
+            stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil)
+            stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)
+            stat(followingCount, "Following", route: isMe ? .following : nil)
             Spacer(minLength: 0)
-            stat(user?.followers ?? 0, (user?.followers ?? 0) == 1 ? "follower" : "followers",
-                 route: isMe ? .followers : nil)
-            Spacer(minLength: 0)
-            stat(followingCount, "following", route: isMe ? .following : nil)
         }
     }
 
     @ViewBuilder
     private func stat(_ value: Int, _ label: String, route: Route?) -> some View {
-        let text = (Text("\(value) ").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-            + Text(label).font(.ui(15)).foregroundStyle(Color.qGray))
-            .lineLimit(1)
+        let content = VStack(alignment: .leading, spacing: 2) {
+            Text(value.formatted(.number.notation(.compactName)))
+                .font(.ui(20, .bold))
+                .foregroundStyle(Color.qGreen)
+                .monospacedDigit()
+            Text(label)
+                .font(.ui(13))
+                .foregroundStyle(Color.qGray)
+        }
+        .lineLimit(1)
+        .frame(minHeight: DS.hitTarget)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
         if let route {
-            NavigationLink(value: route) { text }
-                .buttonStyle(.pressable)
-                .frame(minHeight: DS.hitTarget)
+            NavigationLink(value: route) { content }.buttonStyle(.pressable)
         } else {
-            text.frame(minHeight: DS.hitTarget)
+            content
         }
     }
 

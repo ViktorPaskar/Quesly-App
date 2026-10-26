@@ -329,9 +329,9 @@ struct TodayQuestionBanner: View {
             .padding(DS.Space.m)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qGreen))
-            .padding(.horizontal, DS.Space.m)
-            .padding(.top, DS.Space.m)
-            .padding(.bottom, DS.Space.xxs)
+            .padding(.horizontal, DS.Space.s)
+            .padding(.top, DS.Space.s)
+            .padding(.bottom, DS.Space.xs)
         }
         .buttonStyle(.pressable)
         .accessibilityElement(children: .combine)

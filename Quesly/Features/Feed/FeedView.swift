@@ -113,10 +113,7 @@ struct FeedView: View {
 
                     TodayQuestionBanner(question: store.todayQuestion,
                                         answeredCount: store.answeredTodayCount) {
-                        if !store.hasAnsweredToday { showQuestion = true }
-                    }
-                    if !store.hasAnsweredToday {
-                        AnswerPrompt { showQuestion = true }
+                        showQuestion = true
                     }
 
                     if scope == .friends && !store.friendStories.isEmpty {
@@ -301,7 +298,7 @@ struct StreakChip: View {
     }
 }
 
-/// Opening hero card: today's question with tactile lime keyword sticker, watermark, time-left pill, and friend social proof.
+/// Opening hero card: today's question with tactile lime keyword sticker, watermark, time-left pill, and integrated action dock.
 struct TodayQuestionBanner: View {
     @Environment(AppStore.self) private var store
     let question: DailyQuestion
@@ -314,9 +311,12 @@ struct TodayQuestionBanner: View {
 
     var body: some View {
         let highlighted = question.keyWords
+        let hasAnswered = store.hasAnsweredToday
+        let friends = store.friendsAnsweredToday
 
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 14) {
+                // Top metadata row
                 HStack(spacing: DS.Space.xs) {
                     QueslyMark(color: .qGreen, cutout: .qLime)
                         .frame(width: 17)
@@ -328,19 +328,33 @@ struct TodayQuestionBanner: View {
                         .lineLimit(1)
                         .foregroundStyle(Color.qLime)
                     Spacer(minLength: DS.Space.xs)
-                    HStack(spacing: 4) {
-                        Icon(.clock, size: 12, weight: .semibold)
-                        Text("\(AppStore.timeLeftString()) left")
-                            .font(.ui(12, .semibold))
-                            .lineLimit(1)
+                    if hasAnswered {
+                        HStack(spacing: 5) {
+                            Icon(.checkBold, size: 11)
+                            Text("Answered")
+                                .font(.ui(12, .semibold))
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(Color.qLime)
+                        .padding(.horizontal, 10)
+                        .frame(height: 26)
+                        .background(Capsule().fill(Color.white.opacity(0.14)))
+                    } else {
+                        HStack(spacing: 4) {
+                            Icon(.clock, size: 12, weight: .semibold)
+                            Text("\(AppStore.timeLeftString()) left")
+                                .font(.ui(12, .semibold))
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(.white.opacity(0.92))
+                        .padding(.horizontal, 10)
+                        .frame(height: 26)
+                        .background(Capsule().fill(.white.opacity(0.14)))
                     }
-                    .foregroundStyle(.white.opacity(0.92))
-                    .padding(.horizontal, 10)
-                    .frame(height: 26)
-                    .background(Capsule().fill(.white.opacity(0.14)))
                 }
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
+                // The Question Headline with Tactile Sticker
                 WrappingHStack(spacing: 6, lineSpacing: 4, centered: false) {
                     ForEach(Array(words.enumerated()), id: \.offset) { _, word in
                         let clean = word.uppercased().filter(\.isLetter)
@@ -361,8 +375,62 @@ struct TodayQuestionBanner: View {
                     }
                 }
                 .padding(.top, 2)
+
+                // Integrated Action Dock
+                HStack(spacing: DS.Space.xs) {
+                    if !hasAnswered {
+                        HStack(spacing: 8) {
+                            if !friends.isEmpty {
+                                AvatarStack(users: friends, size: 24, ring: Color.qGreenDeep)
+                            } else {
+                                Icon(.flameFill, size: 14)
+                                    .foregroundStyle(Color.qFlame)
+                            }
+                            Text(answeredCount > 0
+                                 ? "\(answeredCount) answered" + (friends.isEmpty ? "" : " · \(friends.count) friends")
+                                 : "Be the first to answer")
+                                .font(.ui(13, .medium))
+                                .foregroundStyle(Color.white.opacity(0.85))
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: 8)
+                        HStack(spacing: 5) {
+                            Text("Answer")
+                                .font(.ui(13, .bold))
+                            Icon(.arrowRightBold, size: 11)
+                        }
+                        .foregroundStyle(Color.qGreenDeep)
+                        .padding(.horizontal, 14)
+                        .frame(height: 32)
+                        .background(Capsule().fill(Color.qLime))
+                        .shadow(color: Color.black.opacity(0.15), radius: 4, y: 2)
+                    } else {
+                        HStack(spacing: 6) {
+                            Icon(.checkBold, size: 12)
+                                .foregroundStyle(Color.qLime)
+                            Text("Your story is live in the feed below")
+                                .font(.ui(13, .semibold))
+                                .foregroundStyle(Color.white.opacity(0.92))
+                            Spacer()
+                            Text("\(answeredCount) answers")
+                                .font(.ui(12, .medium))
+                                .foregroundStyle(Color.white.opacity(0.65))
+                        }
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.qGreenDeep.opacity(0.65))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.10), lineWidth: 0.75)
+                        )
+                )
+                .padding(.top, 4)
             }
-            .padding(20)
+            .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
@@ -379,36 +447,6 @@ struct TodayQuestionBanner: View {
         }
         .buttonStyle(.pressable)
         .accessibilityElement(children: .combine)
-    }
-}
-
-/// Shown at the top of the feed until the user has answered today's question.
-private struct AnswerPrompt: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("You haven't answered yet")
-                        .font(.ui(16, .semibold))
-                        .foregroundStyle(Color.qGreen)
-                    Text("Share your story to join today's conversation")
-                        .font(.ui(15))
-                        .foregroundStyle(Color.qGreen.opacity(0.8))
-                }
-                Spacer()
-                Icon(.arrowRightBold, size: DS.Icon.inline)
-                    .foregroundStyle(Color.qLime)
-                    .frame(width: 40, height: 40)
-                    .background(Circle().fill(Color.qGreen))
-                    .foregroundStyle(Color.qGreen)
-            }
-            .padding(16)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qLime))
-            .padding(16)
-        }
-        .buttonStyle(.pressable)
     }
 }
 

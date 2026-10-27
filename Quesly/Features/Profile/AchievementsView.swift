@@ -72,8 +72,8 @@ struct AchievementsView: View {
                             .padding(.horizontal, DS.Space.m)
 
                         VStack(spacing: 0) {
-                            ForEach(Array(inProgress.enumerated()), id: \.element.id) { index, item in
-                                if index > 0 { divider }
+                            ForEach(inProgress) { item in
+                                if item.id != inProgress.first?.id { divider }
                                 achievementRow(item)
                                     .padding(.horizontal, DS.Space.m)
                                     .padding(.vertical, 14)
@@ -91,8 +91,8 @@ struct AchievementsView: View {
                             .padding(.horizontal, DS.Space.m)
 
                         VStack(spacing: 0) {
-                            ForEach(Array(unlocked.enumerated()), id: \.element.id) { index, item in
-                                if index > 0 { divider }
+                            ForEach(unlocked) { item in
+                                if item.id != unlocked.first?.id { divider }
                                 achievementRow(item)
                                     .padding(.horizontal, DS.Space.m)
                                     .padding(.vertical, 14)
@@ -110,8 +110,8 @@ struct AchievementsView: View {
                             .padding(.horizontal, DS.Space.m)
 
                         VStack(spacing: 0) {
-                            ForEach(Array(locked.enumerated()), id: \.element.id) { index, item in
-                                if index > 0 { divider }
+                            ForEach(locked) { item in
+                                if item.id != locked.first?.id { divider }
                                 achievementRow(item)
                                     .padding(.horizontal, DS.Space.m)
                                     .padding(.vertical, 14)

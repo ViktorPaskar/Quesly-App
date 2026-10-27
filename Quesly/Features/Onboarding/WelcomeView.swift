@@ -111,13 +111,13 @@ struct WelcomeView: View {
     }
 
     private func handleDragEnd(_ value: DragGesture.Value) {
-        if abs(value.translation.width) > 80 {
-            withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
-                dragOffset = value.translation.width > 0 ? 400 : -400
-            }
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 180_000_000)
-                activeIndex = (activeIndex + 1) % catalog.count
+        if abs(value.translation.width) > 60 {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                if value.translation.width < 0 {
+                    activeIndex = (activeIndex + 1) % catalog.count
+                } else {
+                    activeIndex = (activeIndex - 1 + catalog.count) % catalog.count
+                }
                 dragOffset = 0
             }
         } else {

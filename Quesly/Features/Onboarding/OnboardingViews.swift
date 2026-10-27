@@ -242,26 +242,33 @@ struct InviteCard: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            Icon(.paperPlaneTiltFill, size: DS.Icon.action)
-                .foregroundStyle(Color.qBrandText)
+            Icon(.paperPlaneTiltFill, size: 20)
+                .foregroundStyle(Color.qGreen)
                 .frame(width: 44, height: 44)
-                .background(Circle().fill(Color.qBackground))
+                .background(Circle().fill(Color.qGreen.opacity(0.10)))
             VStack(alignment: .leading, spacing: 2) {
                 Text("Invite your friends").font(.ui(16, .semibold)).foregroundStyle(Color.qInk)
-                Text("Answer together").font(.ui(15)).foregroundStyle(Color.qGray).lineLimit(1)
+                Text("Answer together").font(.ui(14)).foregroundStyle(Color.qGray).lineLimit(1)
             }
             Spacer()
             ShareLink(item: Invite.text(for: username)) {
                 Text("Invite")
                     .font(.ui(14, .semibold))
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 18)
                     .frame(height: 34)
                     .background(Capsule().fill(Color.qGreen))
             }
             .buttonStyle(.pressable)
         }
         .padding(16)
-        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qMint))
+        .background(
+            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                .fill(Color.qBlock)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                .strokeBorder(Color.qLine.opacity(0.65), lineWidth: 0.5)
+        )
     }
 }

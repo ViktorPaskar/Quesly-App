@@ -387,15 +387,15 @@ struct StreakCard: View {
                         Text("\(streak)")
                             .font(.display(38, .bold))
                             .tracking(-0.5)
-                            .foregroundStyle(Color.qInk)
+                            .foregroundStyle(.white)
                             .contentTransition(.numericText())
                         Text("day streak")
                             .font(.display(17, .semibold))
-                            .foregroundStyle(Color.qInk)
+                            .foregroundStyle(.white)
                     }
                     Text(message)
-                        .font(.ui(13))
-                        .foregroundStyle(Color.qInk2)
+                        .font(.ui(13, .medium))
+                        .foregroundStyle(.white.opacity(0.88))
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
@@ -405,7 +405,11 @@ struct StreakCard: View {
                 .padding(14)
                 .background(
                     RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                        .fill(Color.white.opacity(0.82))
+                        .fill(Color.black.opacity(0.14))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
                 )
         }
         .padding(DS.Space.m)
@@ -413,7 +417,7 @@ struct StreakCard: View {
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color(hex: 0xFFF3E6), Color.qPeach],
+                        colors: [Color(hex: 0xFF7A24), Color.qFlame, Color(hex: 0xF45806)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -421,26 +425,27 @@ struct StreakCard: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                .strokeBorder(Color.qFlame.opacity(0.14), lineWidth: 1)
+                .strokeBorder(Color.white.opacity(0.16), lineWidth: 1)
         )
+        .shadow(color: Color.qFlame.opacity(0.24), radius: 14, y: 6)
         .accessibilityElement(children: .combine)
     }
 
-    /// Flame on a white disc with a soft orange ring; a "best" star when you're on your record.
+    /// Flame on a crisp white disc with an energetic glow; a "best" star when you're on your record.
     private var medallion: some View {
-        Icon(.fireFill, size: 30)
+        Image(systemName: "flame.fill")
+            .font(.system(size: 26, weight: .semibold))
             .foregroundStyle(Color.qFlame)
             .frame(width: 58, height: 58)
             .background(Circle().fill(.white))
-            .overlay(Circle().strokeBorder(Color.qFlame.opacity(0.18), lineWidth: 3.5))
-            .shadow(color: Color.qFlame.opacity(0.14), radius: 6, y: 2)
+            .shadow(color: Color.black.opacity(0.12), radius: 6, y: 2)
             .overlay(alignment: .bottomTrailing) {
                 if streak > 1 && streak >= best {
                     Icon(.starFill, size: 11)
                         .foregroundStyle(Color.qGreen)
                         .frame(width: 22, height: 22)
-                        .background(Circle().fill(Color.qLimeSoft))
-                        .overlay(Circle().stroke(Color.qPeach, lineWidth: 2))
+                        .background(Circle().fill(Color.qLime))
+                        .overlay(Circle().stroke(Color.qFlame, lineWidth: 2))
                         .offset(x: 2, y: 2)
                         .accessibilityLabel("Personal best")
                 }
@@ -460,15 +465,13 @@ struct StreakCard: View {
                     VStack(spacing: 6) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(
-                                    done
-                                    ? LinearGradient(colors: [Color(hex: 0xFF9E44), Color.qFlame], startPoint: .top, endPoint: .bottom)
-                                    : LinearGradient(colors: [Color.qFlame.opacity(0.10), Color.qFlame.opacity(0.10)], startPoint: .top, endPoint: .bottom)
-                                )
+                                .fill(done ? Color.white : Color.white.opacity(0.12))
                             if done {
-                                Icon(.fireFill, size: 16).foregroundStyle(.white)
+                                Image(systemName: "flame.fill")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(Color.qFlame)
                             } else if isToday {
-                                Circle().fill(Color.qFlame).frame(width: 6, height: 6)
+                                Circle().fill(.white).frame(width: 6, height: 6)
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -476,18 +479,18 @@ struct StreakCard: View {
 
                         Text(day.formatted(.dateTime.weekday(.narrow)))
                             .font(.ui(11, isToday ? .bold : .semibold))
-                            .foregroundStyle(isToday ? Color.qInk : Color.qGray)
+                            .foregroundStyle(.white.opacity(isToday ? 1.0 : 0.70))
                     }
                 }
             }
 
             Rectangle()
-                .fill(Color.qFlame.opacity(0.10))
+                .fill(Color.white.opacity(0.15))
                 .frame(height: 1)
 
             HStack(spacing: DS.Space.m) {
                 stat("\(best)", best == 1 ? "day best" : "days best")
-                Text("·").foregroundStyle(Color.qGray)
+                Text("·").foregroundStyle(.white.opacity(0.50))
                 stat("\(answersThisMonth)", answersThisMonth == 1 ? "reflection this month" : "reflections this month")
                 Spacer(minLength: 0)
             }
@@ -497,8 +500,8 @@ struct StreakCard: View {
     }
 
     private func stat(_ value: String, _ label: String) -> some View {
-        (Text(value).font(.ui(13, .semibold)).foregroundStyle(Color.qInk)
-            + Text(" " + label).font(.ui(13)).foregroundStyle(Color.qGray))
+        (Text(value).font(.ui(13, .semibold)).foregroundStyle(.white)
+            + Text(" " + label).font(.ui(13)).foregroundStyle(.white.opacity(0.72)))
             .lineLimit(1)
     }
 }

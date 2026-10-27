@@ -242,9 +242,9 @@ struct CaughtUpFooter: View {
     var body: some View {
         VStack(spacing: DS.Space.s) {
             Icon(.checkBold, size: DS.Icon.action)
-                .foregroundStyle(Color.qBrandText)
+                .foregroundStyle(Color.qGreen)
                 .frame(width: 56, height: 56)
-                .background(Circle().fill(Color.qMint))
+                .background(Circle().fill(Color.qGreen.opacity(0.10)))
             Text("You're all caught up")
                 .font(.display(22, .semibold))
                 .foregroundStyle(Color.qInk)
@@ -314,8 +314,6 @@ struct TodayQuestionBanner: View {
 
     var body: some View {
         let highlighted = question.keyWords
-        let friends = store.friendsAnsweredToday
-        let hasAnswered = store.hasAnsweredToday
 
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 14) {
@@ -363,39 +361,8 @@ struct TodayQuestionBanner: View {
                     }
                 }
                 .padding(.top, 2)
-
-                Rectangle()
-                    .fill(.white.opacity(0.12))
-                    .frame(height: 1)
-
-                HStack(spacing: 8) {
-                    if !friends.isEmpty {
-                        AvatarStack(users: friends, size: 24, ring: Color(hex: 0x064A33))
-                    }
-                    socialSummary(friends: friends)
-                        .font(.ui(13, .medium))
-                        .foregroundStyle(.white.opacity(0.88))
-                        .lineLimit(1)
-                    Spacer(minLength: 4)
-                    HStack(spacing: 4) {
-                        if hasAnswered {
-                            Icon(.checkBold, size: 11, weight: .bold)
-                            Text("Answered")
-                        } else {
-                            Text("Answer")
-                            Icon(.arrowRightBold, size: 11, weight: .bold)
-                        }
-                    }
-                    .font(.ui(12, .bold))
-                    .foregroundStyle(hasAnswered ? Color.qLime : Color.qGreen)
-                    .padding(.horizontal, 10)
-                    .frame(height: 26)
-                    .background(
-                        Capsule().fill(hasAnswered ? Color.white.opacity(0.14) : Color.qLime)
-                    )
-                }
             }
-            .padding(18)
+            .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 ZStack(alignment: .topTrailing) {
@@ -409,10 +376,6 @@ struct TodayQuestionBanner: View {
                         .frame(width: 150, height: 150)
                         .blur(radius: 28)
                         .offset(x: 40, y: -50)
-                    QueslyMark(color: .white.opacity(0.055), cutout: .clear)
-                        .frame(width: 110)
-                        .rotationEffect(.degrees(-14))
-                        .offset(x: 22, y: -14)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
             }
@@ -427,14 +390,6 @@ struct TodayQuestionBanner: View {
         }
         .buttonStyle(.pressable)
         .accessibilityElement(children: .combine)
-    }
-
-    private func socialSummary(friends: [AppUser]) -> Text {
-        let countText = answeredCount.formatted(.number.notation(.compactName))
-        if let first = friends.first {
-            return Text("**\(first.username)** & \(countText) answered")
-        }
-        return Text("**\(countText)** people answered")
     }
 }
 

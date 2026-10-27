@@ -146,8 +146,8 @@ private struct PopEffect<V: Equatable>: ViewModifier {
 /// meaning (brand, streak, badges…); the glyph is always `DS.Icon.inline` in a 34-pt circle.
 struct IconChip: View {
     let icon: QIcon
-    var tint: Color = .qBrandText
-    var fill: Color = .qMint
+    var tint: Color = .qGreen
+    var fill: Color = Color.qGreen.opacity(0.10)
 
     var body: some View {
         Icon(icon, size: DS.Icon.inline)

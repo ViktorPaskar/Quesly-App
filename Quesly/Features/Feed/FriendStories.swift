@@ -9,7 +9,7 @@ struct StoryLaunch: Identifiable {
 
 // MARK: - Row
 
-/// "Friends today": header + sticker-ring story bubbles for friends who answered today.
+/// "Friends today": header + clean green-ring story bubbles for friends who answered today.
 struct FriendStoriesRow: View {
     @Environment(AppStore.self) private var store
     var onOpen: (Int) -> Void
@@ -17,24 +17,18 @@ struct FriendStoriesRow: View {
     var body: some View {
         let stories = store.friendStories
         if !stories.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     Text("Friends today")
                         .font(.ui(13, .semibold))
                         .foregroundStyle(Color.qInk2)
-                    Text("\(stories.count) answered")
-                        .font(.ui(11, .bold))
-                        .foregroundStyle(Color.qGreen)
-                        .padding(.horizontal, 8)
-                        .frame(height: 20)
-                        .background(Capsule().fill(Color.qLime))
                     Spacer()
                 }
                 .padding(.horizontal, DS.Space.m)
                 .padding(.top, 12)
 
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .top, spacing: 14) {
+                    HStack(alignment: .center, spacing: 14) {
                         ForEach(Array(stories.enumerated()), id: \.element.id) { index, answer in
                             StoryBubble(user: store.user(answer.authorId),
                                         isSeen: store.seenStoryAuthorIds.contains(answer.authorId)) {
@@ -43,7 +37,7 @@ struct FriendStoriesRow: View {
                         }
                     }
                     .padding(.horizontal, DS.Space.m)
-                    .padding(.bottom, 12)
+                    .padding(.bottom, 10)
                 }
             }
         }
@@ -57,39 +51,15 @@ private struct StoryBubble: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 6) {
-                ZStack(alignment: .bottomTrailing) {
-                    Avatar(user: user, size: 56, isSticker: true)
-                        .padding(4)
-                        .background {
-                            if isSeen {
-                                Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
-                            } else {
-                                Circle()
-                                    .strokeBorder(
-                                        AngularGradient(
-                                            colors: [Color.qGreen, Color(hex: 0x169C6C), Color.qLime, Color.qGreen],
-                                            center: .center
-                                        ),
-                                        lineWidth: 3
-                                    )
-                            }
-                        }
-                    if !isSeen {
-                        QueslyMark(color: .qLime, cutout: .qGreen)
-                            .frame(width: 11)
-                            .frame(width: 20, height: 20)
-                            .background(Circle().fill(Color.qGreen))
-                            .overlay(Circle().stroke(.white, lineWidth: 2))
-                            .offset(x: 1, y: 1)
+            Avatar(user: user, size: 56, isSticker: true)
+                .padding(3.5)
+                .background {
+                    if isSeen {
+                        Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
+                    } else {
+                        Circle().strokeBorder(Color.qGreen, lineWidth: 2.5)
                     }
                 }
-                Text(user?.username ?? "")
-                    .font(.ui(12, isSeen ? .regular : .semibold))
-                    .foregroundStyle(isSeen ? Color.qGray : Color.qInk)
-                    .lineLimit(1)
-                    .frame(width: 68)
-            }
         }
         .buttonStyle(.pressable)
         .accessibilityLabel("\(user?.username ?? "") answered today" + (isSeen ? ", seen" : ""))

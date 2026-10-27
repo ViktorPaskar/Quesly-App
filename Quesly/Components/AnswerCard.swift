@@ -198,24 +198,12 @@ struct AnswerCard: View {
             if isMine && !isCompact {
                 Text("Your answer")
                     .font(.ui(12, .semibold))
-                    .foregroundStyle(Color.qBrandText)
+                    .foregroundStyle(Color.qInk2)
                     .padding(.horizontal, DS.Space.xs)
                     .frame(height: 20)
-                    .background(Capsule().fill(Color.qMint))
+                    .background(Capsule().fill(Color.qField))
+                    .overlay(Capsule().stroke(Color.qLine, lineWidth: 0.8))
                     .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-            } else if !isMine && !isCompact && !typeSize.isAccessibilitySize && !store.isFollowing(answer.authorId) {
-                Button {
-                    withAnimation(.qSpring) { store.toggleFollow(answer.authorId) }
-                } label: {
-                    Text("· Follow")
-                        .font(.ui(14, .semibold))
-                        .foregroundStyle(Color.qBrandText)
-                        .frame(minHeight: DS.hitTarget)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.pressable)
-                .sensoryFeedback(.success, trigger: store.isFollowing(answer.authorId)) { _, on in on }
-                .accessibilityLabel("Follow \(author?.username ?? "")")
             }
             Spacer(minLength: DS.Space.xs)
             if !isCompact { moreMenu }
@@ -295,15 +283,16 @@ struct AnswerCard: View {
     private var ownActions: some View {
         HStack(spacing: DS.Space.xs) {
             Button { isSharingStory = true } label: {
-                HStack(spacing: DS.Space.xxs) {
-                    Icon(.paperPlaneTiltFill, size: DS.Icon.caption)
+                HStack(spacing: 6) {
+                    Icon(.paperPlaneTiltFill, size: 12)
                     Text("Share to Stories")
                         .font(.ui(13, .semibold))
                 }
-                .foregroundStyle(Color.qBrandText)
-                .padding(.horizontal, DS.Space.s)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 14)
                 .frame(height: 32)
-                .background(Capsule().fill(Color.qMint))
+                .background(Capsule().fill(Color.qGreen))
+                .shadow(color: Color.qGreen.opacity(0.18), radius: 4, y: 1.5)
                 .frame(minHeight: DS.hitTarget)
                 .contentShape(Rectangle())
             }

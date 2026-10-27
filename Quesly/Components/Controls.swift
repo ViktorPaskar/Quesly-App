@@ -52,10 +52,10 @@ struct FollowPill: View {
         Button(action: action) {
             Text(isFollowing ? "Following" : "Follow")
             .font(.ui(compact ? 13 : 15, .semibold))
-            .foregroundStyle(isFollowing ? Color.qInk : Color.qBrandText)
+            .foregroundStyle(isFollowing ? Color.qInk : .white)
             .padding(.horizontal, compact ? DS.Space.s : DS.Space.m)
             .frame(height: compact ? 28 : 32)
-            .background(Capsule().fill(isFollowing ? Color.qBackground : Color.qMint))
+            .background(Capsule().fill(isFollowing ? Color.qField : Color.qGreen))
             .overlay(Capsule().stroke(isFollowing ? Color.qLine : .clear, lineWidth: 1))
             // Visual height stays compact; the tappable area meets the 44-pt minimum.
             .padding(.vertical, (DS.hitTarget - (compact ? 28 : 32)) / 2)
@@ -240,9 +240,9 @@ struct EmptyStateView<Actions: View>: View {
     var body: some View {
         VStack(spacing: 16) {
             Icon(icon, size: 30)
-                .foregroundStyle(Color.qBrandText)
+                .foregroundStyle(Color.qGreen)
                 .frame(width: 72, height: 72)
-                .background(Circle().fill(Color.qMint))
+                .background(Circle().fill(Color.qGreen.opacity(0.10)))
             Text(title).font(.ui(20, .semibold)).foregroundStyle(Color.qInk)
             Text(message)
                 .font(.ui(15))

@@ -62,10 +62,11 @@ struct BlockedUsersView: View {
                                 Spacer()
                                 Button("Unblock") { withAnimation(.qSmooth) { store.unblock(user.id) } }
                                     .font(.ui(14, .semibold))
-                                    .foregroundStyle(Color.qBrandText)
+                                    .foregroundStyle(Color.qInk)
                                     .padding(.horizontal, 16)
                                     .frame(height: 34)
-                                    .background(Capsule().fill(Color.qMint))
+                                    .background(Capsule().fill(Color.qField))
+                                    .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
                             }
                             .padding(.vertical, 8)
                         }

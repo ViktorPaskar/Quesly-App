@@ -252,12 +252,15 @@ struct MemoryDetailSheet: View {
                     }
                 }
                 Button { isSharing = true } label: {
-                    Text("Share as story")
-                        .font(.ui(16, .semibold))
-                        .foregroundStyle(Color.qBrandText)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(Capsule().fill(Color.qMint))
+                    HStack(spacing: 8) {
+                        Icon(.paperPlaneTiltFill, size: 14)
+                        Text("Share as story")
+                            .font(.ui(16, .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Capsule().fill(Color.qGreen))
                 }
                 .buttonStyle(.pressable)
                 .padding(.top, DS.Space.xs)

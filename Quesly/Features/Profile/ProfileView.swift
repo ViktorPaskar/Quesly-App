@@ -655,7 +655,7 @@ struct QueslyStatsCard: View {
             // Metric pills (3 equal columns)
             HStack(spacing: 10) {
                 metricBox(value: "\(store.totalQuestionsAnswered)", label: "Answered", icon: .chatCircleTextFill)
-                metricBox(value: "\(store.uniqueActiveDays)", label: "Active days", icon: .calendarBlankFill)
+                metricBox(value: "\(store.uniqueActiveDays)", label: "Active days", icon: .calendar)
                 metricBox(value: "\(store.totalSavedCount)", label: "Saved", icon: .bookmarkSimpleFill)
             }
 

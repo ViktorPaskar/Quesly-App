@@ -51,7 +51,7 @@ enum QIcon: String {
     case medalFill = "medal.fill", crownSimpleFill = "crown.fill"
     case leafFill = "leaf.fill"
     case chatCircleTextFill = "text.bubble.fill", cameraFill = "camera.fill"
-    case chartBarFill = "chart.bar.fill", calendarBlankFill = "calendar"
+    case chartBarFill = "chart.bar.fill"
 
     /// Asset name of the UIcons glyph for this concept.
     var assetName: String { "ui-" + String(describing: self) }

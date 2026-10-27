@@ -62,7 +62,7 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Account") {
+            Section {
                 Button("Sign out") { confirmSignOut = true }
                     .foregroundStyle(Color.qInk)
                 Button(role: .destructive) { confirmDelete = true } label: {
@@ -77,6 +77,8 @@ struct SettingsView: View {
                             .foregroundStyle(Color.qFlame.opacity(0.8))
                     }
                 }
+            } header: {
+                Text("Account")
             } footer: {
                 VStack(spacing: 6) {
                     Text("Deleting your account permanently wipes your profile, answers, and streak.")

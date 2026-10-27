@@ -21,7 +21,7 @@ struct DailyQuestionView: View {
 
     var body: some View {
         ZStack {
-            Color.qCanvas.ignoresSafeArea()
+            Color.qBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 header

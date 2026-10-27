@@ -56,7 +56,7 @@ enum DS {
 // MARK: - Colors
 
 extension Color {
-    // Brand (official palette: 053424, 08563B, D4FF00, FF8FC0, F0F2F0, 9BD9B5, FF4F3D)
+    // Brand (official palette: 053424, 08563B, D4FF00, FF8FC0, 9BD9B5, FF4F3D)
     /// #053424 — Brand dark obsidian pine green: deepest contrast, dark mode base, dark accents.
     static let qGreenDeep = Color(hex: 0x053424)
     /// #08563B — Brand emerald green: primary buttons, active states, key brand markers.
@@ -73,8 +73,6 @@ extension Color {
     /// #9BD9B5 — Brand pastel sage: calm accents, soft chips, completed day markers, gentle highlights.
     static let qSage = Color(hex: 0x9BD9B5)
     static let qSageSoft = Color(hex: 0x9BD9B5, opacity: 0.18)
-    /// #F0F2F0 — Brand porcelain neutral: soft, fresh canvas that lets white blocks breathe.
-    static let qPorcelain = Color(hex: 0xF0F2F0)
 
     static let qViolet = Color(hex: 0x7C4DEB)
     static let qVioletSoft = Color(hex: 0x7C4DEB, opacity: 0.12)
@@ -103,9 +101,9 @@ extension Color {
     /// Disabled controls, missed-day rings.
     static let qGray4 = Color(hex: 0xC7C7CC)
     /// Hairline separators and outlines.
-    static let qLine = Color(light: 0xE6E8E6, dark: 0x2A2E2C)
-    /// Neutral fill for fields, chips and secondary buttons (#F0F2F0).
-    static let qField = Color(light: 0xF0F2F0, dark: 0x12241C)
+    static let qLine = Color(light: 0xECECEE, dark: 0x2A2E2C)
+    /// Clean neutral fill for fields, chips and secondary buttons.
+    static let qField = Color(light: 0xF5F6F8, dark: 0x12241C)
     /// Brand pastel sage (#9BD9B5): soft fill for selected states, chips and highlights on neutral backgrounds.
     static let qMint = Color(light: 0x9BD9B5, dark: 0x1A4032)
     /// Brand green used as *text or icon* color on neutral backgrounds (lighter in dark mode).
@@ -114,10 +112,10 @@ extension Color {
     static let qBackground = Color(light: 0xFFFFFF, dark: 0x053424)
     /// Elevated surfaces (sheets, popovers).
     static let qSurface = Color(light: 0xFFFFFF, dark: 0x12241C)
-    /// Screen background: #F0F2F0 soft porcelain canvas so white blocks read by fill, not heavy borders.
-    static let qCanvas = Color(light: 0xF0F2F0, dark: 0x053424)
+    /// Screen background: clean pure white canvas.
+    static let qCanvas = Color(light: 0xFFFFFF, dark: 0x053424)
     /// Feed background behind the white answer cards.
-    static let qFeedCanvas = Color(light: 0xF0F2F0, dark: 0x053424)
+    static let qFeedCanvas = Color(light: 0xFFFFFF, dark: 0x053424)
     /// White rounded block that sits on `qCanvas`.
     static let qBlock = Color(light: 0xFFFFFF, dark: 0x0E261D)
 

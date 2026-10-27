@@ -116,7 +116,7 @@ struct StoryCard: View {
             switch self {
             case .green: return .qGreen
             case .lime: return .qLime
-            case .light: return .qPorcelain
+            case .light: return Color.white
             case .pink: return .qPink
             case .sage: return .qSage
             }

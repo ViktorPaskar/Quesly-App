@@ -197,7 +197,7 @@ struct DailyQuestionView: View {
                     Spacer()
                     if !text.isEmpty {
                         HStack(spacing: 4) {
-                            Icon(.check, size: 12)
+                            Icon(.checkBold, size: 12)
                             Text("Draft saved")
                                 .font(.ui(12))
                         }

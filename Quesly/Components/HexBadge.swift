@@ -35,11 +35,28 @@ struct HexBadge: View {
         self.isLocked = isLocked
     }
 
-    init(color: Color, icon: QIcon, isLocked: Bool = false, asset: String = "badge-first") {
-        self.asset = asset
+    init(color: Color, icon: QIcon, isLocked: Bool = false, asset: String? = nil) {
         self.color = color
         self.icon = icon
         self.isLocked = isLocked
+        if let asset {
+            self.asset = asset
+        } else {
+            switch icon {
+            case .crownSimpleFill:
+                self.asset = "badge-crown"
+            case .fireFill:
+                self.asset = "badge-streak3"
+            case .heartFill:
+                self.asset = "badge-support"
+            case .leafFill:
+                self.asset = "badge-first"
+            case .sparkleFill:
+                self.asset = (color == BadgeTier.purple.color) ? "badge-early" : "badge-story"
+            default:
+                self.asset = "badge-first"
+            }
+        }
     }
 
     private var resolvedAssetName: String {

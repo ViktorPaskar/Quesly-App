@@ -357,74 +357,7 @@ struct ProfileHeader: View {
     }
 }
 
-/// Stylized double-outline flame silhouette bleeding from the corner (Ref 1).
-struct StylizedFlameArtShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let sx = rect.width / 160.0
-        let sy = rect.height / 160.0
-
-        path.move(to: CGPoint(x: 92 * sx, y: 10 * sy))
-        path.addCurve(to: CGPoint(x: 106 * sx, y: 60 * sy),
-                      control1: CGPoint(x: 92 * sx, y: 10 * sy),
-                      control2: CGPoint(x: 110 * sx, y: 38 * sy))
-        path.addCurve(to: CGPoint(x: 124 * sx, y: 38 * sy),
-                      control1: CGPoint(x: 106 * sx, y: 60 * sy),
-                      control2: CGPoint(x: 118 * sx, y: 48 * sy))
-        path.addCurve(to: CGPoint(x: 144 * sx, y: 104 * sy),
-                      control1: CGPoint(x: 132 * sx, y: 54 * sy),
-                      control2: CGPoint(x: 144 * sx, y: 80 * sy))
-        path.addCurve(to: CGPoint(x: 88 * sx, y: 156 * sy),
-                      control1: CGPoint(x: 144 * sx, y: 135 * sy),
-                      control2: CGPoint(x: 120 * sx, y: 156 * sy))
-        path.addCurve(to: CGPoint(x: 32 * sx, y: 104 * sy),
-                      control1: CGPoint(x: 56 * sx, y: 156 * sy),
-                      control2: CGPoint(x: 32 * sx, y: 135 * sy))
-        path.addCurve(to: CGPoint(x: 62 * sx, y: 42 * sy),
-                      control1: CGPoint(x: 32 * sx, y: 78 * sy),
-                      control2: CGPoint(x: 46 * sx, y: 56 * sy))
-        path.addCurve(to: CGPoint(x: 72 * sx, y: 70 * sy),
-                      control1: CGPoint(x: 62 * sx, y: 58 * sy),
-                      control2: CGPoint(x: 72 * sx, y: 70 * sy))
-        path.addCurve(to: CGPoint(x: 92 * sx, y: 10 * sy),
-                      control1: CGPoint(x: 72 * sx, y: 70 * sy),
-                      control2: CGPoint(x: 82 * sx, y: 46 * sy))
-        path.closeSubpath()
-        return path
-    }
-}
-
-struct InnerFlameArtShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let sx = rect.width / 160.0
-        let sy = rect.height / 160.0
-
-        path.move(to: CGPoint(x: 88 * sx, y: 92 * sy))
-        path.addCurve(to: CGPoint(x: 96 * sx, y: 116 * sy),
-                      control1: CGPoint(x: 88 * sx, y: 92 * sy),
-                      control2: CGPoint(x: 98 * sx, y: 106 * sy))
-        path.addCurve(to: CGPoint(x: 78 * sx, y: 134 * sy),
-                      control1: CGPoint(x: 96 * sx, y: 126 * sy),
-                      control2: CGPoint(x: 88 * sx, y: 134 * sy))
-        path.addCurve(to: CGPoint(x: 60 * sx, y: 116 * sy),
-                      control1: CGPoint(x: 68 * sx, y: 134 * sy),
-                      control2: CGPoint(x: 60 * sx, y: 126 * sy))
-        path.addCurve(to: CGPoint(x: 74 * sx, y: 92 * sy),
-                      control1: CGPoint(x: 60 * sx, y: 106 * sy),
-                      control2: CGPoint(x: 68 * sx, y: 98 * sy))
-        path.addCurve(to: CGPoint(x: 80 * sx, y: 104 * sy),
-                      control1: CGPoint(x: 74 * sx, y: 100 * sy),
-                      control2: CGPoint(x: 80 * sx, y: 104 * sy))
-        path.addCurve(to: CGPoint(x: 88 * sx, y: 92 * sy),
-                      control1: CGPoint(x: 80 * sx, y: 104 * sy),
-                      control2: CGPoint(x: 84 * sx, y: 98 * sy))
-        path.closeSubpath()
-        return path
-    }
-}
-
-/// Calendar tab, top block: redesigned bold streak block (Variant 1: Bold Flame #FF4F3D).
+/// Calendar tab, top block: redesigned clean white streak block (Variant 2: White, without background flame).
 struct StreakCard: View {
     @Environment(AppStore.self) private var store
 
@@ -451,17 +384,17 @@ struct StreakCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Header: big count, label & compact status chip
+            // Header: big count in flame color, label & compact status chip
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text("\(streak)")
                         .font(.display(44, .bold))
                         .tracking(-1.5)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.qFlame)
                         .contentTransition(.numericText())
                     Text(streak == 1 ? "day streak" : "days streak")
                         .font(.display(17, .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.qInk)
                 }
 
                 statusChip
@@ -472,29 +405,14 @@ struct StreakCard: View {
         }
         .padding(18)
         .background(
-            ZStack(alignment: .bottomTrailing) {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color.qFlame)
-
-                // Large decorative flame artwork bleeding off corner (Reference 1)
-                ZStack {
-                    StylizedFlameArtShape()
-                        .stroke(Color.white.opacity(0.30), style: StrokeStyle(lineWidth: 7, lineCap: .round, lineJoin: .round))
-                        .background(StylizedFlameArtShape().fill(Color.white.opacity(0.15)))
-                    InnerFlameArtShape()
-                        .fill(Color.qFlame)
-                        .overlay(InnerFlameArtShape().stroke(Color.white.opacity(0.80), lineWidth: 3.5))
-                }
-                .frame(width: 145, height: 145)
-                .offset(x: 20, y: 22)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.white)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+                .strokeBorder(Color.qLine, lineWidth: 1.5)
         )
-        .shadow(color: Color.qFlame.opacity(0.26), radius: 14, y: 6)
+        .shadow(color: Color.qGreenDeep.opacity(0.04), radius: 12, y: 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(streak) day streak. \(store.hasAnsweredToday ? "Answered today." : "Needs answer today.") Best: \(best) days.")
     }
@@ -510,10 +428,10 @@ struct StreakCard: View {
                 Text("Active today · Flame secured")
                     .font(.ui(11.5, .semibold))
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.qFlame)
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
-            .background(Capsule().fill(Color.white.opacity(0.22)))
+            .background(Capsule().fill(Color.qFlameSoft))
         } else {
             HStack(spacing: 5) {
                 Image(systemName: "flame.fill")
@@ -546,25 +464,25 @@ struct StreakCard: View {
                         ZStack {
                             if isDone {
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.white)
+                                    .fill(Color.qFlame)
                                 Image(systemName: "flame.fill")
                                     .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(Color.qFlame)
+                                    .foregroundStyle(.white)
                             } else if isToday {
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.white.opacity(0.12))
+                                    .fill(Color.white)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                            .strokeBorder(Color.white, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                                            .strokeBorder(Color.qFlame, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
                                     )
-                                Circle().fill(Color.qLime).frame(width: 6, height: 6)
+                                Circle().fill(Color.qFlame).frame(width: 6, height: 6)
                             } else if isPast {
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.white.opacity(0.08))
-                                Circle().fill(Color.white.opacity(0.3)).frame(width: 4, height: 4)
+                                    .fill(Color.qGray4.opacity(0.35))
+                                Circle().fill(Color.qGray.opacity(0.5)).frame(width: 4, height: 4)
                             } else {
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.white.opacity(0.10))
+                                    .fill(Color.qGray4.opacity(0.3))
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -572,30 +490,30 @@ struct StreakCard: View {
 
                         Text(weekdayAbbreviation(for: day))
                             .font(.ui(11, isToday ? .bold : .semibold))
-                            .foregroundStyle(isToday ? Color.qLime : Color.white.opacity(0.75))
+                            .foregroundStyle(isToday ? Color.qBrandText : Color.qGray)
                     }
                 }
             }
 
             Rectangle()
-                .fill(Color.white.opacity(0.15))
+                .fill(Color.qLine)
                 .frame(height: 1)
 
             HStack(spacing: DS.Space.s) {
-                stat("\(best)", best == 1 ? "day best" : "days best")
-                Text("·").foregroundStyle(Color.white.opacity(0.40))
-                stat("\(answersThisMonth)", answersThisMonth == 1 ? "reflection this month" : "reflections this month")
+                stat("Best", "\(best) \(best == 1 ? "day" : "days")")
+                Text("·").foregroundStyle(Color.qGray4)
+                stat("This month", "\(answersThisMonth) \(answersThisMonth == 1 ? "reflection" : "reflections")")
                 Spacer(minLength: 0)
             }
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.black.opacity(0.16))
+                .fill(Color.qField)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+                .strokeBorder(Color.qLine, lineWidth: 1)
         )
     }
 
@@ -613,9 +531,9 @@ struct StreakCard: View {
         }
     }
 
-    private func stat(_ value: String, _ label: String) -> some View {
-        (Text(value).font(.ui(12.5, .bold)).foregroundStyle(.white)
-            + Text(" " + label).font(.ui(12)).foregroundStyle(.white.opacity(0.80)))
+    private func stat(_ title: String, _ value: String) -> some View {
+        (Text(title + ": ").font(.ui(12)).foregroundStyle(Color.qGray)
+            + Text(value).font(.ui(12.5, .bold)).foregroundStyle(Color.qInk))
             .lineLimit(1)
     }
 }

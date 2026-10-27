@@ -357,123 +357,222 @@ struct ProfileHeader: View {
     }
 }
 
-/// Calendar tab, top block: the daily reflection rhythm card.
+/// Stylized double-outline flame silhouette bleeding from the corner (Ref 1).
+struct StylizedFlameArtShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let sx = rect.width / 160.0
+        let sy = rect.height / 160.0
+
+        path.move(to: CGPoint(x: 92 * sx, y: 10 * sy))
+        path.addCurve(to: CGPoint(x: 106 * sx, y: 60 * sy),
+                      control1: CGPoint(x: 92 * sx, y: 10 * sy),
+                      control2: CGPoint(x: 110 * sx, y: 38 * sy))
+        path.addCurve(to: CGPoint(x: 124 * sx, y: 38 * sy),
+                      control1: CGPoint(x: 106 * sx, y: 60 * sy),
+                      control2: CGPoint(x: 118 * sx, y: 48 * sy))
+        path.addCurve(to: CGPoint(x: 144 * sx, y: 104 * sy),
+                      control1: CGPoint(x: 132 * sx, y: 54 * sy),
+                      control2: CGPoint(x: 144 * sx, y: 80 * sy))
+        path.addCurve(to: CGPoint(x: 88 * sx, y: 156 * sy),
+                      control1: CGPoint(x: 144 * sx, y: 135 * sy),
+                      control2: CGPoint(x: 120 * sx, y: 156 * sy))
+        path.addCurve(to: CGPoint(x: 32 * sx, y: 104 * sy),
+                      control1: CGPoint(x: 56 * sx, y: 156 * sy),
+                      control2: CGPoint(x: 32 * sx, y: 135 * sy))
+        path.addCurve(to: CGPoint(x: 62 * sx, y: 42 * sy),
+                      control1: CGPoint(x: 32 * sx, y: 78 * sy),
+                      control2: CGPoint(x: 46 * sx, y: 56 * sy))
+        path.addCurve(to: CGPoint(x: 72 * sx, y: 70 * sy),
+                      control1: CGPoint(x: 62 * sx, y: 58 * sy),
+                      control2: CGPoint(x: 72 * sx, y: 70 * sy))
+        path.addCurve(to: CGPoint(x: 92 * sx, y: 10 * sy),
+                      control1: CGPoint(x: 72 * sx, y: 70 * sy),
+                      control2: CGPoint(x: 82 * sx, y: 46 * sy))
+        path.closeSubpath()
+        return path
+    }
+}
+
+struct InnerFlameArtShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let sx = rect.width / 160.0
+        let sy = rect.height / 160.0
+
+        path.move(to: CGPoint(x: 88 * sx, y: 92 * sy))
+        path.addCurve(to: CGPoint(x: 96 * sx, y: 116 * sy),
+                      control1: CGPoint(x: 88 * sx, y: 92 * sy),
+                      control2: CGPoint(x: 98 * sx, y: 106 * sy))
+        path.addCurve(to: CGPoint(x: 78 * sx, y: 134 * sy),
+                      control1: CGPoint(x: 96 * sx, y: 126 * sy),
+                      control2: CGPoint(x: 88 * sx, y: 134 * sy))
+        path.addCurve(to: CGPoint(x: 60 * sx, y: 116 * sy),
+                      control1: CGPoint(x: 68 * sx, y: 134 * sy),
+                      control2: CGPoint(x: 60 * sx, y: 126 * sy))
+        path.addCurve(to: CGPoint(x: 74 * sx, y: 92 * sy),
+                      control1: CGPoint(x: 60 * sx, y: 106 * sy),
+                      control2: CGPoint(x: 68 * sx, y: 98 * sy))
+        path.addCurve(to: CGPoint(x: 80 * sx, y: 104 * sy),
+                      control1: CGPoint(x: 74 * sx, y: 100 * sy),
+                      control2: CGPoint(x: 80 * sx, y: 104 * sy))
+        path.addCurve(to: CGPoint(x: 88 * sx, y: 92 * sy),
+                      control1: CGPoint(x: 80 * sx, y: 104 * sy),
+                      control2: CGPoint(x: 84 * sx, y: 98 * sy))
+        path.closeSubpath()
+        return path
+    }
+}
+
+/// Calendar tab, top block: redesigned bold streak block (Variant 1: Bold Flame #FF4F3D).
 struct StreakCard: View {
     @Environment(AppStore.self) private var store
-    private let calendar = Calendar.current
 
     private var streak: Int { store.streak }
     private var best: Int { max(store.bestStreak, streak) }
-    private var isFirstDay: Bool { store.answeredDays.count <= 1 }
-
-    private var message: String {
-        if !store.hasAnsweredToday { return streak > 0 ? "Answer today to keep your rhythm." : "Answer today's question to light the first flame." }
-        if isFirstDay { return "Your first reflection. Come back tomorrow." }
-        if streak == 1 { return "Fresh start. Take it one honest answer a day." }
-        if streak > 1 && streak >= best { return "Your longest rhythm yet. See you tomorrow." }
-        return "One honest answer a day. See you tomorrow."
-    }
 
     private var answersThisMonth: Int {
-        store.answeredDays.filter { calendar.isDate($0, equalTo: .now, toGranularity: .month) }.count
+        let cal = Calendar.current
+        return store.answeredDays.filter { cal.isDate($0, equalTo: .now, toGranularity: .month) }.count
+    }
+
+    /// Mon–Sun calendar days of the current week.
+    private var currentWeekDays: [Date] {
+        var cal = Calendar.current
+        cal.firstWeekday = 2 // Monday start
+        let today = cal.startOfDay(for: .now)
+        let weekday = cal.component(.weekday, from: today)
+        let daysFromMonday = (weekday - 2 + 7) % 7
+        guard let monday = cal.date(byAdding: .day, value: -daysFromMonday, to: today) else {
+            return (0..<7).compactMap { cal.date(byAdding: .day, value: -$0, to: today) }.reversed()
+        }
+        return (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: monday) }
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .center, spacing: DS.Space.m) {
-                medallion
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text("\(streak)")
-                            .font(.display(38, .bold))
-                            .tracking(-0.5)
-                            .foregroundStyle(.white)
-                            .contentTransition(.numericText())
-                        Text("day streak")
-                            .font(.display(17, .semibold))
-                            .foregroundStyle(.white)
-                    }
-                    Text(message)
-                        .font(.ui(13, .medium))
-                        .foregroundStyle(.white.opacity(0.88))
-                        .fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: 16) {
+            // Header: big count, label & compact status chip
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("\(streak)")
+                        .font(.display(44, .bold))
+                        .tracking(-1.5)
+                        .foregroundStyle(.white)
+                        .contentTransition(.numericText())
+                    Text(streak == 1 ? "day streak" : "days streak")
+                        .font(.display(17, .semibold))
+                        .foregroundStyle(.white)
                 }
-                Spacer(minLength: 0)
+
+                statusChip
             }
 
-            weekRhythm
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                        .fill(Color.black.opacity(0.14))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
-                )
+            // 7-day Mon–Sun tracker (Reference 2)
+            weekTracker
         }
-        .padding(DS.Space.m)
+        .padding(18)
         .background(
-            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                .fill(Color.qFlame)
+            ZStack(alignment: .bottomTrailing) {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color.qFlame)
+
+                // Large decorative flame artwork bleeding off corner (Reference 1)
+                ZStack {
+                    StylizedFlameArtShape()
+                        .stroke(Color.white.opacity(0.30), style: StrokeStyle(lineWidth: 7, lineCap: .round, lineJoin: .round))
+                        .background(StylizedFlameArtShape().fill(Color.white.opacity(0.15)))
+                    InnerFlameArtShape()
+                        .fill(Color.qFlame)
+                        .overlay(InnerFlameArtShape().stroke(Color.white.opacity(0.80), lineWidth: 3.5))
+                }
+                .frame(width: 145, height: 145)
+                .offset(x: 20, y: 22)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.16), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
         )
-        .shadow(color: Color.qFlame.opacity(0.24), radius: 14, y: 6)
+        .shadow(color: Color.qFlame.opacity(0.26), radius: 14, y: 6)
         .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(streak) day streak. \(store.hasAnsweredToday ? "Answered today." : "Needs answer today.") Best: \(best) days.")
     }
 
-    /// Flame on a crisp white disc with an energetic glow; a "best" star when you're on your record.
-    private var medallion: some View {
-        Image(systemName: "flame.fill")
-            .font(.system(size: 26, weight: .semibold))
-            .foregroundStyle(Color.qFlame)
-            .frame(width: 58, height: 58)
-            .background(Circle().fill(.white))
-            .shadow(color: Color.black.opacity(0.12), radius: 6, y: 2)
-            .overlay(alignment: .bottomTrailing) {
-                if streak > 1 && streak >= best {
-                    Icon(.starFill, size: 11)
-                        .foregroundStyle(Color.qGreen)
-                        .frame(width: 22, height: 22)
-                        .background(Circle().fill(Color.qLime))
-                        .overlay(Circle().stroke(Color.qFlame, lineWidth: 2))
-                        .offset(x: 2, y: 2)
-                        .accessibilityLabel("Personal best")
-                }
+    // MARK: - Status Chip
+
+    @ViewBuilder
+    private var statusChip: some View {
+        if store.hasAnsweredToday {
+            HStack(spacing: 5) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 10, weight: .bold))
+                Text("Active today · Flame secured")
+                    .font(.ui(11.5, .semibold))
             }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(Capsule().fill(Color.white.opacity(0.22)))
+        } else {
+            HStack(spacing: 5) {
+                Image(systemName: "flame.fill")
+                    .font(.system(size: 11, weight: .semibold))
+                Text("Answer today to keep streak")
+                    .font(.ui(11.5, .bold))
+            }
+            .foregroundStyle(Color.qGreenDeep)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(Capsule().fill(Color.qLime))
+        }
     }
 
-    // MARK: 7-day capsule rhythm
+    // MARK: - 7-Day Week Rhythm (Mon–Sun)
 
-    private var weekRhythm: some View {
-        let today = calendar.startOfDay(for: .now)
-        let days = (0..<7).reversed().compactMap { calendar.date(byAdding: .day, value: -$0, to: today) }
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
+    private var weekTracker: some View {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: .now)
+        let days = currentWeekDays
+
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
                 ForEach(days, id: \.self) { day in
-                    let isToday = day == today
-                    let done = store.answeredDays.contains(day)
-                    VStack(spacing: 6) {
+                    let isToday = cal.isDate(day, inSameDayAs: today)
+                    let isDone = store.answeredDays.contains { cal.isDate($0, inSameDayAs: day) }
+                    let isPast = day < today && !isToday
+
+                    VStack(spacing: 5) {
                         ZStack {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(done ? Color.white : Color.white.opacity(0.12))
-                            if done {
+                            if isDone {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(Color.white)
                                 Image(systemName: "flame.fill")
-                                    .font(.system(size: 15, weight: .semibold))
+                                    .font(.system(size: 14, weight: .semibold))
                                     .foregroundStyle(Color.qFlame)
                             } else if isToday {
-                                Circle().fill(.white).frame(width: 6, height: 6)
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(Color.white.opacity(0.12))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                            .strokeBorder(Color.white, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                                    )
+                                Circle().fill(Color.qLime).frame(width: 6, height: 6)
+                            } else if isPast {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(Color.white.opacity(0.08))
+                                Circle().fill(Color.white.opacity(0.3)).frame(width: 4, height: 4)
+                            } else {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(Color.white.opacity(0.10))
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .frame(height: 40)
+                        .frame(height: 36)
 
-                        Text(day.formatted(.dateTime.weekday(.narrow)))
+                        Text(weekdayAbbreviation(for: day))
                             .font(.ui(11, isToday ? .bold : .semibold))
-                            .foregroundStyle(.white.opacity(isToday ? 1.0 : 0.70))
+                            .foregroundStyle(isToday ? Color.qLime : Color.white.opacity(0.75))
                     }
                 }
             }
@@ -482,20 +581,41 @@ struct StreakCard: View {
                 .fill(Color.white.opacity(0.15))
                 .frame(height: 1)
 
-            HStack(spacing: DS.Space.m) {
+            HStack(spacing: DS.Space.s) {
                 stat("\(best)", best == 1 ? "day best" : "days best")
-                Text("·").foregroundStyle(.white.opacity(0.50))
+                Text("·").foregroundStyle(Color.white.opacity(0.40))
                 stat("\(answersThisMonth)", answersThisMonth == 1 ? "reflection this month" : "reflections this month")
                 Spacer(minLength: 0)
             }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Last 7 days: \(days.filter { store.answeredDays.contains($0) }.count) answered")
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.black.opacity(0.16))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+        )
+    }
+
+    private func weekdayAbbreviation(for date: Date) -> String {
+        let cal = Calendar.current
+        let weekday = cal.component(.weekday, from: date)
+        switch weekday {
+        case 2: return "Mon"
+        case 3: return "Tue"
+        case 4: return "Wed"
+        case 5: return "Thu"
+        case 6: return "Fri"
+        case 7: return "Sat"
+        default: return "Sun"
+        }
     }
 
     private func stat(_ value: String, _ label: String) -> some View {
-        (Text(value).font(.ui(13, .semibold)).foregroundStyle(.white)
-            + Text(" " + label).font(.ui(13)).foregroundStyle(.white.opacity(0.72)))
+        (Text(value).font(.ui(12.5, .bold)).foregroundStyle(.white)
+            + Text(" " + label).font(.ui(12)).foregroundStyle(.white.opacity(0.80)))
             .lineLimit(1)
     }
 }

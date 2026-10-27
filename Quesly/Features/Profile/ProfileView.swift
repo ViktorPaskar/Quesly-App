@@ -357,7 +357,7 @@ struct ProfileHeader: View {
     }
 }
 
-/// Calendar tab, top block: redesigned clean white streak block (Variant 2: White, without background flame).
+/// Calendar tab, top block: clean white streak block with circular checkmark/empty days (no text clutter).
 struct StreakCard: View {
     @Environment(AppStore.self) private var store
 
@@ -383,27 +383,37 @@ struct StreakCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header: big count in flame color, label & compact status chip
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("\(streak)")
-                        .font(.display(44, .bold))
-                        .tracking(-1.5)
-                        .foregroundStyle(Color.qFlame)
-                        .contentTransition(.numericText())
-                    Text(streak == 1 ? "day streak" : "days streak")
-                        .font(.display(17, .semibold))
-                        .foregroundStyle(Color.qInk)
-                }
-
-                statusChip
+        VStack(alignment: .leading, spacing: 20) {
+            // Header: big count in flame color + label (no verbose clutter)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("\(streak)")
+                    .font(.display(46, .bold))
+                    .tracking(-1.5)
+                    .foregroundStyle(Color.qFlame)
+                    .contentTransition(.numericText())
+                Text(streak == 1 ? "day streak" : "days streak")
+                    .font(.display(19, .bold))
+                    .foregroundStyle(Color.qInk)
+                Spacer(minLength: 0)
             }
 
-            // 7-day Mon–Sun tracker (Reference 2)
-            weekTracker
+            // 7-day Mon–Sun tracker: circles with checkmarks for streak days, empty circles with orange border
+            weekCirclesRow
+
+            // Clean bottom divider & minimal metric
+            Rectangle()
+                .fill(Color.qLine)
+                .frame(height: 1)
+
+            HStack {
+                (Text("Personal best: ").font(.ui(12)).foregroundStyle(Color.qGray)
+                    + Text("\(best) \(best == 1 ? "day" : "days")").font(.ui(12.5, .bold)).foregroundStyle(Color.qInk))
+                Spacer(minLength: 0)
+                (Text("This month: ").font(.ui(12)).foregroundStyle(Color.qGray)
+                    + Text("\(answersThisMonth) \(answersThisMonth == 1 ? "day" : "days")").font(.ui(12.5, .bold)).foregroundStyle(Color.qInk))
+            }
         }
-        .padding(18)
+        .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(Color.white)
@@ -414,107 +424,43 @@ struct StreakCard: View {
         )
         .shadow(color: Color.qGreenDeep.opacity(0.04), radius: 12, y: 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(streak) day streak. \(store.hasAnsweredToday ? "Answered today." : "Needs answer today.") Best: \(best) days.")
+        .accessibilityLabel("\(streak) day streak. Best: \(best) days.")
     }
 
-    // MARK: - Status Chip
+    // MARK: - 7-Day Week Circles Row (Mon–Sun)
 
-    @ViewBuilder
-    private var statusChip: some View {
-        if store.hasAnsweredToday {
-            HStack(spacing: 5) {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 10, weight: .bold))
-                Text("Active today · Flame secured")
-                    .font(.ui(11.5, .semibold))
-            }
-            .foregroundStyle(Color.qFlame)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(Capsule().fill(Color.qFlameSoft))
-        } else {
-            HStack(spacing: 5) {
-                Image(systemName: "flame.fill")
-                    .font(.system(size: 11, weight: .semibold))
-                Text("Answer today to keep streak")
-                    .font(.ui(11.5, .bold))
-            }
-            .foregroundStyle(Color.qGreenDeep)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(Capsule().fill(Color.qLime))
-        }
-    }
-
-    // MARK: - 7-Day Week Rhythm (Mon–Sun)
-
-    private var weekTracker: some View {
+    private var weekCirclesRow: some View {
         let cal = Calendar.current
         let today = cal.startOfDay(for: .now)
         let days = currentWeekDays
 
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 6) {
-                ForEach(days, id: \.self) { day in
-                    let isToday = cal.isDate(day, inSameDayAs: today)
-                    let isDone = store.answeredDays.contains { cal.isDate($0, inSameDayAs: day) }
-                    let isPast = day < today && !isToday
+        return HStack(spacing: 0) {
+            ForEach(days, id: \.self) { day in
+                let isToday = cal.isDate(day, inSameDayAs: today)
+                let isDone = store.answeredDays.contains { cal.isDate($0, inSameDayAs: day) }
 
-                    VStack(spacing: 5) {
-                        ZStack {
-                            if isDone {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.qFlame)
-                                Image(systemName: "flame.fill")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(.white)
-                            } else if isToday {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.white)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                            .strokeBorder(Color.qFlame, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
-                                    )
-                                Circle().fill(Color.qFlame).frame(width: 6, height: 6)
-                            } else if isPast {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.qGray4.opacity(0.35))
-                                Circle().fill(Color.qGray.opacity(0.5)).frame(width: 4, height: 4)
-                            } else {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.qGray4.opacity(0.3))
-                            }
+                VStack(spacing: 8) {
+                    ZStack {
+                        if isDone {
+                            Circle()
+                                .fill(Color.qFlame)
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(.white)
+                        } else {
+                            Circle()
+                                .strokeBorder(Color.qFlame, lineWidth: 2)
                         }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 36)
-
-                        Text(weekdayAbbreviation(for: day))
-                            .font(.ui(11, isToday ? .bold : .semibold))
-                            .foregroundStyle(isToday ? Color.qBrandText : Color.qGray)
                     }
+                    .frame(width: 36, height: 36)
+
+                    Text(weekdayAbbreviation(for: day))
+                        .font(.ui(12, isToday ? .bold : .semibold))
+                        .foregroundStyle(isToday ? Color.qFlame : Color.qGray)
                 }
-            }
-
-            Rectangle()
-                .fill(Color.qLine)
-                .frame(height: 1)
-
-            HStack(spacing: DS.Space.s) {
-                stat("Best", "\(best) \(best == 1 ? "day" : "days")")
-                Text("·").foregroundStyle(Color.qGray4)
-                stat("This month", "\(answersThisMonth) \(answersThisMonth == 1 ? "reflection" : "reflections")")
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity)
             }
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.qField)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color.qLine, lineWidth: 1)
-        )
     }
 
     private func weekdayAbbreviation(for date: Date) -> String {
@@ -529,12 +475,6 @@ struct StreakCard: View {
         case 7: return "Sat"
         default: return "Sun"
         }
-    }
-
-    private func stat(_ title: String, _ value: String) -> some View {
-        (Text(title + ": ").font(.ui(12)).foregroundStyle(Color.qGray)
-            + Text(value).font(.ui(12.5, .bold)).foregroundStyle(Color.qInk))
-            .lineLimit(1)
     }
 }
 

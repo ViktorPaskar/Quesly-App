@@ -449,13 +449,16 @@ struct StreakCard: View {
                                 .foregroundStyle(.white)
                         } else {
                             Circle()
-                                .strokeBorder(Color.qFlame, lineWidth: 2)
+                                .strokeBorder(
+                                    Color.qFlame,
+                                    style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])
+                                )
                         }
                     }
                     .frame(width: 36, height: 36)
 
                     Text(weekdayAbbreviation(for: day))
-                        .font(.ui(12, isToday ? .bold : .semibold))
+                        .font(.ui(11.5, isToday ? .medium : .regular))
                         .foregroundStyle(isToday ? Color.qFlame : Color.qGray)
                 }
                 .frame(maxWidth: .infinity)

@@ -30,13 +30,7 @@ struct AchievementsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: 0x0A6B4A), Color.qGreen],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .fill(Color.qGreen)
                 )
                 .padding(.horizontal, DS.Space.m)
                 .padding(.top, 8)

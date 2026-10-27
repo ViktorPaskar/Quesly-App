@@ -415,13 +415,7 @@ struct StreakCard: View {
         .padding(DS.Space.m)
         .background(
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: 0xFF7A24), Color.qFlame, Color(hex: 0xF45806)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(Color.qFlame)
         )
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)

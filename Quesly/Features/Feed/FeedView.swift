@@ -364,24 +364,13 @@ struct TodayQuestionBanner: View {
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background {
-                ZStack(alignment: .topTrailing) {
-                    LinearGradient(
-                        colors: [Color(hex: 0x0B6E4B), Color.qGreen, Color(hex: 0x05422C)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    Circle()
-                        .fill(Color.qLime.opacity(0.10))
-                        .frame(width: 150, height: 150)
-                        .blur(radius: 28)
-                        .offset(x: 40, y: -50)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
-            }
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                    .fill(Color.qGreen)
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                    .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
             )
             .shadow(color: Color.qGreen.opacity(0.18), radius: 14, y: 6)
             .padding(.horizontal, DS.Space.s)

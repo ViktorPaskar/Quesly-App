@@ -109,17 +109,19 @@ struct ShareStorySheet: View {
 /// The exported 9:16 story card: flat brand colour, logo, question and the answer card.
 struct StoryCard: View {
     enum Theme: String, CaseIterable, Identifiable {
-        case green = "Green", lime = "Lime", light = "Light"
+        case green = "Green", lime = "Lime", light = "Light", pink = "Pink", sage = "Sage"
         var id: String { rawValue }
 
         var background: Color {
             switch self {
             case .green: return .qGreen
             case .lime: return .qLime
-            case .light: return Color(hex: 0xF4F7F5)
+            case .light: return .qPorcelain
+            case .pink: return .qPink
+            case .sage: return .qSage
             }
         }
-        var ink: Color { self == .green ? .white : .qGreen }
+        var ink: Color { self == .green ? .white : Color.qGreenDeep }
         var swatch: Color { background }
     }
 
@@ -132,7 +134,7 @@ struct StoryCard: View {
             theme.background
 
             VStack(alignment: .leading, spacing: 0) {
-                QueslyLogo(height: 18, markColor: theme == .lime ? .qGreen : .qLime, textColor: theme.ink,
+                QueslyLogo(height: 20, markColor: theme == .green ? .qLime : .qGreen, textColor: theme.ink,
                            background: .clear)
                     .padding(.top, 52)
 
@@ -140,7 +142,7 @@ struct StoryCard: View {
 
                 Text("TODAY'S QUESTION")
                     .font(.custom("Outfit-Bold", fixedSize: 12))
-                    .foregroundStyle(theme == .green ? Color.qLime : Color.qGreen.opacity(0.75))
+                    .foregroundStyle(theme == .green ? Color.qLime : Color.qGreenDeep.opacity(0.75))
                     .padding(.bottom, 12)
                 Text(answer.questionText.uppercased())
                     .font(.custom("Outfit-ExtraBold", fixedSize: 26))
@@ -176,7 +178,7 @@ struct StoryCard: View {
                         .font(.custom("Outfit-SemiBold", fixedSize: 15))
                     Icon(.arrowRightBold, size: DS.Icon.inline)
                 }
-                .foregroundStyle(theme == .green ? Color.qGreen : Color.qLime)
+                .foregroundStyle(theme == .green ? Color.qGreenDeep : .white)
                 .padding(.horizontal, 20)
                 .frame(height: 42)
                 .background(Capsule().fill(theme == .green ? Color.qLime : Color.qGreen))

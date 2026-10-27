@@ -56,16 +56,26 @@ enum DS {
 // MARK: - Colors
 
 extension Color {
-    // Brand (fixed in both appearances)
-    /// Brand dark green — primary buttons, active states, hero surfaces.
-    static let qGreen = Color(hex: 0x08563B)   // brand file colour (spec draft said #0B4F36)
-    static let qGreenDeep = Color(hex: 0x044330)
+    // Brand (official palette: 053424, 08563B, D4FF00, FF8FC0, F0F2F0, 9BD9B5, FF4F3D)
+    /// #053424 — Brand dark obsidian pine green: deepest contrast, dark mode base, dark accents.
+    static let qGreenDeep = Color(hex: 0x053424)
+    /// #08563B — Brand emerald green: primary buttons, active states, key brand markers.
+    static let qGreen = Color(hex: 0x08563B)
     static let qGreenLight = Color(hex: 0x5BA21E)
-    /// Brand acid lime — accent on green surfaces only (fails contrast as text on white).
+    /// #D4FF00 — Brand electric lime: high-energy accent, mascot face cutout, dot pulses.
     static let qLime = Color(hex: 0xD4FF00)
-    static let qFlame = Color(hex: 0xFF6A1F)
-    /// Soft fills for icon chips; each tint carries one meaning (streak, following, badges).
-    static let qFlameSoft = Color(hex: 0xFFEDE3)
+    /// #FF4F3D — Brand coral flame: streak container, fire icons, active streaks, alerts.
+    static let qFlame = Color(hex: 0xFF4F3D)
+    static let qFlameSoft = Color(hex: 0xFF4F3D, opacity: 0.12)
+    /// #FF8FC0 — Brand bubblegum pink / rose: playful accent, likes, hearts, social highlights.
+    static let qPink = Color(hex: 0xFF8FC0)
+    static let qPinkSoft = Color(hex: 0xFF8FC0, opacity: 0.14)
+    /// #9BD9B5 — Brand pastel sage: calm accents, soft chips, completed day markers, gentle highlights.
+    static let qSage = Color(hex: 0x9BD9B5)
+    static let qSageSoft = Color(hex: 0x9BD9B5, opacity: 0.18)
+    /// #F0F2F0 — Brand porcelain neutral: soft, fresh canvas that lets white blocks breathe.
+    static let qPorcelain = Color(hex: 0xF0F2F0)
+
     static let qViolet = Color(hex: 0x7C4DEB)
     static let qVioletSoft = Color(hex: 0x7C4DEB, opacity: 0.12)
     static let qGold = Color(hex: 0xB97C0C)
@@ -73,15 +83,15 @@ extension Color {
     /// Cool blue accent and its soft fill.
     static let qIce = Color(light: 0x2D6BE4, dark: 0x7DB8FF)
     static let qIceSoft = Color(light: 0xE6EEFD, dark: 0x16263B)
-    static let qDanger = Color(hex: 0xFF3B30)
+    static let qDanger = Color(hex: 0xFF4F3D)
 
-    // Secondary palette: accents only, a few places each.
-    /// #C2FFEA: your just-posted answer glow.
-    static let qAqua = Color(hex: 0xC2FFEA)
+    // Secondary palette: accents only.
+    /// #9BD9B5: your just-posted answer glow.
+    static let qAqua = Color(hex: 0x9BD9B5)
     /// #DAFFA6: small "best" marks.
     static let qLimeSoft = Color(hex: 0xDAFFA6)
-    /// #FFF1E8: the streak card.
-    static let qPeach = Color(hex: 0xFFF1E8)
+    /// Soft warm fill.
+    static let qPeach = Color(hex: 0xFFEDE3)
 
     // Semantic roles (adapt to light / dark)
     /// Primary text.
@@ -93,23 +103,23 @@ extension Color {
     /// Disabled controls, missed-day rings.
     static let qGray4 = Color(hex: 0xC7C7CC)
     /// Hairline separators and outlines.
-    static let qLine = Color(light: 0xECECEE, dark: 0x2A2E2C)
-    /// Neutral fill for fields, chips and secondary buttons.
-    static let qField = Color(light: 0xF2F2F4, dark: 0x1E2220)
-    /// Brand mint #CFFDE5: soft fill for selected states, chips and highlights on neutral backgrounds.
-    static let qMint = Color(light: 0xCFFDE5, dark: 0x16302A)
+    static let qLine = Color(light: 0xE6E8E6, dark: 0x2A2E2C)
+    /// Neutral fill for fields, chips and secondary buttons (#F0F2F0).
+    static let qField = Color(light: 0xF0F2F0, dark: 0x12241C)
+    /// Brand pastel sage (#9BD9B5): soft fill for selected states, chips and highlights on neutral backgrounds.
+    static let qMint = Color(light: 0x9BD9B5, dark: 0x1A4032)
     /// Brand green used as *text or icon* color on neutral backgrounds (lighter in dark mode).
     static let qBrandText = Color(light: 0x08563B, dark: 0x7FD49B)
     /// App background.
-    static let qBackground = Color(light: 0xFFFFFF, dark: 0x0C0E0D)
+    static let qBackground = Color(light: 0xFFFFFF, dark: 0x053424)
     /// Elevated surfaces (sheets, popovers).
-    static let qSurface = Color(light: 0xFFFFFF, dark: 0x161917)
-    /// Screen background: soft warm-gray canvas so white blocks read by fill, not heavy borders.
-    static let qCanvas = Color(light: 0xF4F5F4, dark: 0x0C0E0D)
+    static let qSurface = Color(light: 0xFFFFFF, dark: 0x12241C)
+    /// Screen background: #F0F2F0 soft porcelain canvas so white blocks read by fill, not heavy borders.
+    static let qCanvas = Color(light: 0xF0F2F0, dark: 0x053424)
     /// Feed background behind the white answer cards.
-    static let qFeedCanvas = Color(light: 0xF4F5F4, dark: 0x0C0E0D)
+    static let qFeedCanvas = Color(light: 0xF0F2F0, dark: 0x053424)
     /// White rounded block that sits on `qCanvas`.
-    static let qBlock = Color(light: 0xFFFFFF, dark: 0x181B19)
+    static let qBlock = Color(light: 0xFFFFFF, dark: 0x0E261D)
 
     init(hex: UInt32, opacity: Double = 1) {
         self.init(

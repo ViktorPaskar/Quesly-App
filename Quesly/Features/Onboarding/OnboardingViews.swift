@@ -67,45 +67,51 @@ struct NotificationPrimingView: View {
 
     var body: some View {
         ZStack {
-            Color.qGreen.ignoresSafeArea()
+            Color.qBackground.ignoresSafeArea()
             VStack(spacing: 0) {
-                StepDots(current: 1, total: 2, onDark: true)
+                StepDots(current: 1, total: 2, onDark: false)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, DS.Space.screen)
                     .padding(.top, 20)
                 Spacer()
 
-                Icon(.bellRingingFill, size: 70)
-                    .foregroundStyle(Color.qLime)
-                    .frame(width: 140, height: 140)
-                    .background(Circle().fill(Color.qLime.opacity(0.18)))
+                ZStack {
+                    Circle()
+                        .fill(Color.qGreen.opacity(0.06))
+                        .frame(width: 124, height: 124)
+                    Circle()
+                        .fill(Color.qGreen.opacity(0.12))
+                        .frame(width: 90, height: 90)
+                    Icon(.bellRingingFill, size: 40)
+                        .foregroundStyle(Color.qGreen)
+                }
 
                 Text("Never miss\ntoday's question")
-                    .font(.display(32, .bold))
+                    .font(.display(30, .bold))
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(.white)
-                    .padding(.top, 36)
+                    .foregroundStyle(Color.qInk)
+                    .padding(.top, 28)
                 Text("We'll send one gentle reminder a day, when the new question drops. No spam, promise.")
                     .font(.ui(16))
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(.white.opacity(0.8))
+                    .foregroundStyle(Color.qGray)
                     .padding(.horizontal, 36)
                     .padding(.top, 12)
 
                 NotificationPreview()
                     .padding(.horizontal, DS.Space.screen)
-                    .padding(.top, 28)
+                    .padding(.top, 32)
 
                 Spacer()
                 VStack(spacing: 8) {
-                    LimeButton(title: "Turn on notifications") {
+                    GreenButton(title: "Turn on notifications") {
                         withAnimation(.qSmooth) { store.finishNotificationPriming(enable: true) }
                     }
                     Button("Not now") {
                         withAnimation(.qSmooth) { store.finishNotificationPriming(enable: false) }
                     }
-                    .font(.ui(16))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .font(.ui(16, .semibold))
+                    .foregroundStyle(Color.qGray)
                     .frame(height: 48)
                 }
                 .padding(.horizontal, DS.Space.screen)
@@ -132,13 +138,21 @@ private struct NotificationPreview: View {
                     Text("now").font(.ui(12)).foregroundStyle(Color.qGray)
                 }
                 Text("Today's question is here ✨").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-                Text("What tiny moment made your week better?").font(.ui(15)).foregroundStyle(Color.qInk.opacity(0.8))
+                Text("What tiny moment made your week better?").font(.ui(14)).foregroundStyle(Color.qInk2)
                     .lineLimit(1)
             }
         }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(.white.opacity(0.95)))
-        .offset(y: shown ? 0 : -30)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                .fill(Color.qBlock)
+                .shadow(color: Color.black.opacity(0.08), radius: 18, y: 8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                        .stroke(Color.qLine, lineWidth: 1)
+                )
+        )
+        .offset(y: shown ? 0 : -20)
         .opacity(shown ? 1 : 0)
         .onAppear { withAnimation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.4)) { shown = true } }
         .accessibilityHidden(true)

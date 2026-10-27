@@ -1,30 +1,29 @@
 import SwiftUI
 
-/// First screen. One idea, shown rather than described: today's question, big, with the people who
-/// already answered it, and one clear way in. Logo on top, the question as the hero, actions below.
+/// First screen. One idea, shown rather than described: today's question on a tactile
+/// editorial card, with real social proof and clear entry points.
 struct WelcomeView: View {
     @Environment(AppStore.self) private var store
     @State private var authMode: AuthView.Mode?
     @State private var appeared = false
 
     private var question: DailyQuestion { store.todayQuestion }
-    private var words: [String] { question.text.uppercased().split(separator: " ").map(String.init) }
 
     var body: some View {
         ZStack {
-            Color.qGreen.ignoresSafeArea()
+            Color.qBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                QueslyLogo(height: 30, background: .clear)
+                QueslyLogo(height: 32, markColor: .qGreen, textColor: .qInk, background: .qLime)
                     .frame(height: 48)
                     .padding(.top, DS.Space.m)
                     .reveal(appeared, delay: 0)
 
-                Spacer(minLength: DS.Space.xl)
+                Spacer(minLength: DS.Space.m)
 
-                hero
+                heroCard
 
-                Spacer(minLength: DS.Space.xl)
+                Spacer(minLength: DS.Space.m)
 
                 actions
             }
@@ -37,63 +36,70 @@ struct WelcomeView: View {
         }
     }
 
-    private var hero: some View {
-        VStack(alignment: .leading, spacing: DS.Space.l) {
-            Text("Today's question")
-                .font(.ui(15, .semibold))
-                .foregroundStyle(Color.qLime)
-                .reveal(appeared, delay: 0.1)
-
-            let keyWords = question.keyWords
-            WrappingHStack(spacing: 10, lineSpacing: 4, centered: false) {
-                ForEach(Array(words.enumerated()), id: \.offset) { index, word in
-                    let isHot = keyWords.contains(word.filter(\.isLetter))
-                    Text(word)
-                        .font(.display(40, .heavy))
-                        .foregroundStyle(isHot ? Color.qGreen : .white)
-                        .padding(.horizontal, isHot ? 8 : 0)
-                        .background {
-                            if isHot {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.qLime)
-                            }
-                        }
-                        .rotationEffect(.degrees(isHot ? -3 : 0))
-                        .reveal(appeared, delay: 0.2 + Double(index) * 0.05)
-                }
+    private var heroCard: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 8) {
+                Circle().fill(Color.qGreen).frame(width: 8, height: 8)
+                Text("TODAY'S QUESTION")
+                    .font(.ui(12, .bold))
+                    .tracking(1.0)
+                    .foregroundStyle(Color.qBrandText)
+                Spacer()
+                Text("Daily at 9 AM")
+                    .font(.ui(12, .medium))
+                    .foregroundStyle(Color.qGray)
             }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(question.text)
+
+            Text(question.text)
+                .font(.display(30, .bold))
+                .foregroundStyle(Color.qInk)
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Rectangle().fill(Color.qLine).frame(height: 1)
 
             HStack(spacing: DS.Space.s) {
-                AvatarStack(users: Array(store.users.values.sorted { $0.id < $1.id }.prefix(2)), size: 32, ring: .qGreen)
-                Text("**\(store.answeredTodayCount.formatted())** people answered today")
-                    .font(.ui(15))
-                    .foregroundStyle(.white.opacity(0.85))
+                AvatarStack(users: Array(store.users.values.sorted { $0.id < $1.id }.prefix(3)), size: 30, ring: .white)
+                Text("**\(store.answeredTodayCount.formatted())** answered today")
+                    .font(.ui(14))
+                    .foregroundStyle(Color.qInk2)
             }
             .accessibilityElement(children: .combine)
-            .reveal(appeared, delay: 0.3 + Double(words.count) * 0.05)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, DS.Space.xl)
+        .padding(24)
+        .background(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(Color.qBlock)
+                .shadow(color: Color.black.opacity(0.06), radius: 24, x: 0, y: 10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(Color.qLine, lineWidth: 1)
+                )
+        )
+        .padding(.horizontal, DS.Space.screen)
+        .reveal(appeared, delay: 0.15)
     }
 
     private var actions: some View {
-        VStack(spacing: DS.Space.xs) {
+        VStack(spacing: 12) {
             Text("Answer first. Then see what your friends and the world said.")
-                .font(.ui(15))
+                .font(.ui(14))
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(Color.qGray)
                 .padding(.horizontal, DS.Space.xl)
-                .padding(.bottom, DS.Space.s)
-            LimeButton(title: "Get started") { authMode = .signUp }
+                .padding(.bottom, 2)
+
+            GreenButton(title: "Get started") { authMode = .signUp }
+
             Button("I already have an account") { authMode = .signIn }
-                .font(.ui(17, .semibold))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity, minHeight: 50)
+                .font(.ui(16, .semibold))
+                .foregroundStyle(Color.qInk)
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
         }
         .padding(.horizontal, DS.Space.screen)
         .padding(.bottom, DS.Space.xs)
-        .reveal(appeared, delay: 0.6)
+        .reveal(appeared, delay: 0.3)
     }
 }
 

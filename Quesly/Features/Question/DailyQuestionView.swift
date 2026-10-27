@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Full-screen "Today's Question" → "Answer" flow from the prototype.
+/// Full-screen "Today's Question" → "Answer" flow.
+/// Clean, tactile editorial canvas: generous whitespace, elegant typography, and a focused writing card.
 struct DailyQuestionView: View {
     @Environment(AppStore.self) private var store
     /// Called after a successful submit.
@@ -17,24 +18,27 @@ struct DailyQuestionView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var question: DailyQuestion { store.todayQuestion }
-    private var words: [String] { question.text.uppercased().split(separator: " ").map(String.init) }
 
     var body: some View {
         ZStack {
-            Color.qGreen.ignoresSafeArea()
+            Color.qCanvas.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 header
+
                 Spacer(minLength: 16)
+
                 if isComposing { composer } else { questionText }
+
                 Spacer(minLength: 16)
+
                 if isComposing {
                     VisibilityPicker(selection: $visibility)
-                        .padding(.bottom, 16)
+                        .padding(.bottom, 14)
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
                     DayProgress()
                         .padding(.horizontal, DS.Space.xl)
-                        .padding(.bottom, 16)
+                        .padding(.bottom, 14)
                 } else {
                     VStack(alignment: .leading, spacing: DS.Space.m) {
                         LockedFriendsPreview(answers: Array(store.friendStories.prefix(3)),
@@ -46,8 +50,9 @@ struct DailyQuestionView: View {
                     .padding(.bottom, DS.Space.l)
                     .transition(.opacity)
                 }
-                LimeButton(title: isComposing ? "Submit" : "Answer",
-                           isEnabled: !isComposing || canSubmit) {
+
+                GreenButton(title: isComposing ? "Submit answer" : "Answer",
+                            isEnabled: !isComposing || canSubmit) {
                     if isComposing {
                         submit()
                     } else {
@@ -93,19 +98,20 @@ struct DailyQuestionView: View {
 
     private var header: some View {
         ZStack {
-            QueslyLogo(height: 30, background: .clear)
+            QueslyLogo(height: 32, markColor: .qGreen, textColor: .qInk, background: .qLime)
             HStack {
                 Spacer()
                 if let onClose {
-                Button(action: onClose) {
-                    Icon(.xBold, size: DS.Icon.inline, weight: .semibold)
-                        .foregroundStyle(.white)
-                        .frame(width: 36, height: 36)
-                        .background(Circle().fill(.white.opacity(0.12)))
-                        .frame(width: 44, height: 44)
-                }
-                .accessibilityLabel("Close")
-                .padding(.trailing, -4)
+                    Button(action: onClose) {
+                        Icon(.xBold, size: DS.Icon.inline, weight: .semibold)
+                            .foregroundStyle(Color.qInk)
+                            .frame(width: 36, height: 36)
+                            .background(Circle().fill(Color.qField))
+                            .overlay(Circle().stroke(Color.qLine, lineWidth: 1))
+                            .frame(width: 44, height: 44)
+                    }
+                    .accessibilityLabel("Close")
+                    .padding(.trailing, -4)
                 }
             }
         }
@@ -114,106 +120,112 @@ struct DailyQuestionView: View {
         .padding(.top, 16)
     }
 
-    /// Editorial, left-aligned question: the day's progress line, then the words arrive one by one.
-    /// The key word becomes a tilted lime "sticker" with green ink.
+    /// Editorial, left-aligned question: the day's progress line, then the question in bold sentence case.
     private var questionText: some View {
-        let highlighted = question.keyWords
-        return VStack(alignment: .leading, spacing: DS.Space.l) {
+        VStack(alignment: .leading, spacing: DS.Space.m) {
             DayProgress()
-            WrappingHStack(spacing: 10, lineSpacing: 4, centered: false) {
-                ForEach(Array(words.enumerated()), id: \.offset) { index, word in
-                    let isHot = highlighted.contains(word.filter(\.isLetter))
-                    Text(word)
-                        .font(.display(42, .heavy))
-                        .foregroundStyle(isHot ? Color.qGreen : .white)
-                        .padding(.horizontal, isHot ? 8 : 0)
-                        .background {
-                            if isHot {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.qLime)
-                            }
-                        }
-                        .rotationEffect(.degrees(isHot ? -3 : 0))
-                        .opacity(index < revealed || reduceMotion ? 1 : 0)
-                        .offset(y: index < revealed || reduceMotion ? 0 : 14)
-                        .blur(radius: index < revealed || reduceMotion ? 0 : 6)
-                        .animation(.qSmooth.delay(0.15 + Double(index) * 0.07), value: revealed)
-                        // The key word lands last, like a sticker being slapped on.
-                        .scaleEffect(isHot && revealed == 0 && !reduceMotion ? 1.6 : 1)
-                        .animation(.spring(response: 0.38, dampingFraction: 0.5)
-                            .delay(0.25 + Double(words.count) * 0.07), value: revealed)
-                }
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(question.text)
+
+            Text(question.text)
+                .font(.display(34, .heavy))
+                .foregroundStyle(Color.qInk)
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+                .opacity(revealed > 0 || reduceMotion ? 1 : 0)
+                .offset(y: revealed > 0 || reduceMotion ? 0 : 12)
+                .animation(.qSmooth, value: revealed)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, DS.Space.xl)
-        .transition(.asymmetric(insertion: .opacity, removal: .scale(scale: 0.85).combined(with: .opacity)))
+        .transition(.asymmetric(insertion: .opacity, removal: .scale(scale: 0.95).combined(with: .opacity)))
     }
 
-    /// Writing happens on the green itself: the question stays on top, the answer is typed in
-    /// large white type, with a quiet counter line underneath. No card, no second surface.
+    /// Writing happens inside a focused, tactile journal card.
     private var composer: some View {
-        VStack(alignment: .leading, spacing: DS.Space.m) {
-            Text(question.text.uppercased())
-                .font(.display(20, .bold))
-                .foregroundStyle(Color.qLime)
-                .fixedSize(horizontal: false, vertical: true)
-
-            ZStack(alignment: .topLeading) {
-                if text.isEmpty {
-                    Text("Be honest, keep it short…")
-                        .font(.display(26, .medium))
-                        .foregroundStyle(.white.opacity(0.4))
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 8)
-                        .allowsHitTesting(false)
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 6) {
+                    Circle().fill(Color.qGreen).frame(width: 7, height: 7)
+                    Text("TODAY'S QUESTION")
+                        .font(.ui(11, .bold))
+                        .tracking(0.8)
+                        .foregroundStyle(Color.qBrandText)
                 }
-                TextEditor(text: $text)
-                    .font(.display(26, .medium))
+
+                Text(question.text)
+                    .font(.display(19, .bold))
+                    .foregroundStyle(Color.qInk)
                     .lineSpacing(2)
-                    .foregroundStyle(.white)
-                    .tint(Color.qLime)
-                    .scrollContentBackground(.hidden)
-                    .focused($editorFocused)
-                    .onChange(of: text) { _, newValue in
-                        if newValue.count > AppStore.maxAnswerLength {
-                            text = String(newValue.prefix(AppStore.maxAnswerLength))
-                            shake += 1
-                        }
-                        if !DemoConfig.isActive { store.draft = text }
-                    }
-            }
-            .padding(.horizontal, -5)
-            .frame(height: 200)
+                    .fixedSize(horizontal: false, vertical: true)
 
-            Rectangle().fill(.white.opacity(0.14)).frame(height: 1)
-            HStack(spacing: 8) {
-                CharacterRing(progress: Double(text.count) / Double(AppStore.maxAnswerLength))
-                    .frame(width: 16, height: 16)
-                Text("\(text.count)/\(AppStore.maxAnswerLength)")
-                    .font(.ui(13))
-                    .foregroundStyle(text.count >= AppStore.maxAnswerLength ? Color.qFlame : .white.opacity(0.7))
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
-                Spacer()
-                if !text.isEmpty {
-                    Text("Draft saved")
-                        .font(.ui(13))
-                        .foregroundStyle(.white.opacity(0.7))
-                        .transition(.opacity)
+                Rectangle().fill(Color.qLine).frame(height: 1)
+
+                ZStack(alignment: .topLeading) {
+                    if text.isEmpty {
+                        Text("Write your honest answer…")
+                            .font(.ui(18, .regular))
+                            .foregroundStyle(Color.qGray.opacity(0.7))
+                            .padding(.top, 8)
+                            .allowsHitTesting(false)
+                    }
+                    TextEditor(text: $text)
+                        .font(.ui(18, .medium))
+                        .lineSpacing(4)
+                        .foregroundStyle(Color.qInk)
+                        .tint(Color.qGreen)
+                        .scrollContentBackground(.hidden)
+                        .focused($editorFocused)
+                        .onChange(of: text) { _, newValue in
+                            if newValue.count > AppStore.maxAnswerLength {
+                                text = String(newValue.prefix(AppStore.maxAnswerLength))
+                                shake += 1
+                            }
+                            if !DemoConfig.isActive { store.draft = text }
+                        }
                 }
+                .frame(minHeight: 140, maxHeight: 180)
+
+                Rectangle().fill(Color.qLine).frame(height: 1)
+
+                HStack(spacing: 8) {
+                    CharacterRing(progress: Double(text.count) / Double(AppStore.maxAnswerLength))
+                        .frame(width: 16, height: 16)
+                    Text("\(text.count)/\(AppStore.maxAnswerLength)")
+                        .font(.ui(13))
+                        .foregroundStyle(text.count >= AppStore.maxAnswerLength ? Color.qFlame : Color.qGray)
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                    Spacer()
+                    if !text.isEmpty {
+                        HStack(spacing: 4) {
+                            Icon(.check, size: 12)
+                            Text("Draft saved")
+                                .font(.ui(12))
+                        }
+                        .foregroundStyle(Color.qBrandText)
+                        .transition(.opacity)
+                    }
+                }
+                .animation(.qSmooth, value: text.isEmpty)
             }
-            .animation(.qSmooth, value: text.isEmpty)
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color.qBlock)
+                    .shadow(color: Color.black.opacity(0.06), radius: 18, y: 8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(Color.qLine, lineWidth: 1)
+                    )
+            )
         }
         .padding(.horizontal, DS.Space.xl)
-        .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity).combined(with: .scale(scale: 0.9)),
+        .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity).combined(with: .scale(scale: 0.96)),
                                 removal: .opacity))
     }
 
     private func revealWords() {
         guard revealed == 0 else { return }
-        revealed = words.count
+        revealed = 1
     }
 
     private func submit() {
@@ -224,7 +236,7 @@ struct DailyQuestionView: View {
     }
 }
 
-/// Today's date and how much of the question's day is left, as a thin lime line that fills
+/// Today's date and how much of the question's day is left, as a calm line that fills
 /// toward midnight. Calm and informative, never a ticking countdown.
 private struct DayProgress: View {
     var body: some View {
@@ -236,16 +248,16 @@ private struct DayProgress: View {
                 HStack {
                     Text(ctx.date.formatted(.dateTime.weekday(.wide).month(.wide).day()))
                         .font(.ui(14, .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.qInk)
                     Spacer()
                     Text("New question in \(AppStore.timeLeftString(now: ctx.date))")
-                        .font(.ui(15))
-                        .foregroundStyle(.white.opacity(0.7))
+                        .font(.ui(14, .medium))
+                        .foregroundStyle(Color.qGray)
                 }
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(.white.opacity(0.14))
-                        Capsule().fill(Color.qLime)
+                        Capsule().fill(Color.qLine)
+                        Capsule().fill(Color.qGreen)
                             .frame(width: max(4, geo.size.width * min(1, elapsed)))
                     }
                 }
@@ -258,7 +270,7 @@ private struct DayProgress: View {
 }
 
 /// Friends' answers waiting behind the gate: a fanned stack of cards whose text is drawn as
-/// placeholder bars (never the real words), with a lock pill — answer first, then read.
+/// placeholder bars, with a lock pill — answer first, then read.
 private struct LockedFriendsPreview: View {
     let answers: [Answer]
     let users: [AppUser]
@@ -270,14 +282,14 @@ private struct LockedFriendsPreview: View {
             ZStack(alignment: .top) {
                 ForEach(Array(answers.enumerated().reversed()), id: \.element.id) { index, answer in
                     card(answer, user: users.first { $0.id == answer.authorId })
-                        .scaleEffect(1 - CGFloat(index) * 0.05, anchor: .top)
-                        .offset(y: CGFloat(index) * 12)
-                        .opacity(1 - Double(index) * 0.25)
+                        .scaleEffect(1 - CGFloat(index) * 0.04, anchor: .top)
+                        .offset(y: CGFloat(index) * 10)
+                        .opacity(1 - Double(index) * 0.22)
                 }
                 lockPill
-                    .offset(y: 62)
+                    .offset(y: 58)
             }
-            .padding(.bottom, CGFloat(answers.count - 1) * 12)
+            .padding(.bottom, CGFloat(answers.count - 1) * 10)
             .offset(y: shown || reduceMotion ? 0 : 24)
             .opacity(shown || reduceMotion ? 1 : 0)
             .onAppear { withAnimation(.qSpring.delay(0.6)) { shown = true } }
@@ -290,28 +302,34 @@ private struct LockedFriendsPreview: View {
         HStack(alignment: .top, spacing: DS.Space.s) {
             Avatar(user: user, size: 36)
             VStack(alignment: .leading, spacing: 8) {
-                // The card is always white (it sits on green), so its ink is fixed too.
                 Text(user?.username ?? "")
                     .font(.ui(14, .semibold))
-                    .foregroundStyle(Color(hex: 0x16181A))
-                Capsule().fill(Color.black.opacity(0.08)).frame(height: 10)
-                Capsule().fill(Color.black.opacity(0.08)).frame(width: 150, height: 10)
+                    .foregroundStyle(Color.qInk)
+                Capsule().fill(Color.qLine).frame(height: 10)
+                Capsule().fill(Color.qLine).frame(width: 140, height: 10)
             }
         }
         .padding(DS.Space.m)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.white))
-        .shadow(color: .black.opacity(0.18), radius: 14, y: 8)
+        .background(
+            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                .fill(Color.qBlock)
+                .shadow(color: Color.black.opacity(0.06), radius: 14, y: 6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                        .stroke(Color.qLine, lineWidth: 1)
+                )
+        )
     }
 
     private var lockPill: some View {
         IconLabel("Answer to unlock", icon: .lockSimpleFill, size: DS.Icon.caption)
             .font(.ui(13, .semibold))
-            .foregroundStyle(Color.qLime)
-            .padding(.horizontal, 12)
-            .frame(height: 30)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 14)
+            .frame(height: 32)
             .background(Capsule().fill(Color.qGreen))
-            .overlay(Capsule().strokeBorder(.white, lineWidth: 2))
+            .shadow(color: Color.qGreen.opacity(0.3), radius: 8, y: 3)
     }
 }
 
@@ -323,7 +341,7 @@ private struct AnsweredTodayProof: View {
     var body: some View {
         HStack(spacing: DS.Space.xs) {
             if !friends.isEmpty {
-                AvatarStack(users: friends, size: 28, ring: .qGreen)
+                AvatarStack(users: friends, size: 28, ring: .white)
             }
             Group {
                 if let first = friends.first {
@@ -332,8 +350,8 @@ private struct AnsweredTodayProof: View {
                     Text("**\(count.formatted())** people answered today")
                 }
             }
-            .font(.ui(15))
-            .foregroundStyle(.white.opacity(0.85))
+            .font(.ui(14))
+            .foregroundStyle(Color.qInk2)
             .lineLimit(2)
             .multilineTextAlignment(.leading)
         }
@@ -355,12 +373,12 @@ struct VisibilityPicker: View {
                 } label: {
                     Text(option.title)
                         .font(.ui(14, .semibold))
-                        .foregroundStyle(on ? Color.qGreen : .white.opacity(0.85))
-                        .padding(.horizontal, 16)
-                        .frame(height: 38)
+                        .foregroundStyle(on ? .white : Color.qGray)
+                        .padding(.horizontal, 18)
+                        .frame(height: 36)
                         .background {
                             if on {
-                                Capsule().fill(Color.qLime).matchedGeometryEffect(id: "vis", in: ns)
+                                Capsule().fill(Color.qGreen).matchedGeometryEffect(id: "vis", in: ns)
                             }
                         }
                         .contentShape(Capsule())
@@ -370,7 +388,8 @@ struct VisibilityPicker: View {
             }
         }
         .padding(4)
-        .background(Capsule().fill(.white.opacity(0.14)))
+        .background(Capsule().fill(Color.qField))
+        .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
         .sensoryFeedback(.selection, trigger: selection)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Who can see your answer")
@@ -382,10 +401,10 @@ struct CharacterRing: View {
 
     var body: some View {
         ZStack {
-            Circle().stroke(.white.opacity(0.2), lineWidth: 3)
+            Circle().stroke(Color.qLine, lineWidth: 3)
             Circle()
                 .trim(from: 0, to: min(1, progress))
-                .stroke(progress >= 1 ? Color.qFlame : Color.qLime,
+                .stroke(progress >= 1 ? Color.qFlame : Color.qGreen,
                         style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
         }
@@ -402,55 +421,7 @@ struct ShakeEffect: GeometryEffect {
     }
 
     func effectValue(size: CGSize) -> ProjectionTransform {
-        ProjectionTransform(CGAffineTransform(translationX: 8 * sin(shakes * .pi * 3), y: 0))
-    }
-}
-
-/// Simple flow layout that wraps words onto new lines, centered or left-aligned.
-struct WrappingHStack: Layout {
-    var spacing: CGFloat = 8
-    var lineSpacing: CGFloat = 4
-    var centered = true
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let rows = arrange(width: proposal.width ?? .infinity, subviews: subviews)
-        let height = rows.reduce(0) { $0 + $1.height } + CGFloat(max(0, rows.count - 1)) * lineSpacing
-        let width = rows.map(\.width).max() ?? 0
-        return CGSize(width: proposal.width ?? width, height: height)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let rows = arrange(width: bounds.width, subviews: subviews)
-        var y = bounds.minY
-        for row in rows {
-            var x = bounds.minX + (centered ? (bounds.width - row.width) / 2 : 0)
-            for index in row.indices {
-                let size = subviews[index].sizeThatFits(.unspecified)
-                subviews[index].place(at: CGPoint(x: x, y: y + (row.height - size.height) / 2),
-                                      proposal: ProposedViewSize(size))
-                x += size.width + spacing
-            }
-            y += row.height + lineSpacing
-        }
-    }
-
-    private struct Row { var indices: [Int] = []; var width: CGFloat = 0; var height: CGFloat = 0 }
-
-    private func arrange(width: CGFloat, subviews: Subviews) -> [Row] {
-        var rows: [Row] = [Row()]
-        for (i, subview) in subviews.enumerated() {
-            let size = subview.sizeThatFits(.unspecified)
-            let needed = rows[rows.count - 1].indices.isEmpty ? size.width : rows[rows.count - 1].width + spacing + size.width
-            if needed > width, !rows[rows.count - 1].indices.isEmpty {
-                rows.append(Row())
-            }
-            var row = rows[rows.count - 1]
-            row.width = row.indices.isEmpty ? size.width : row.width + spacing + size.width
-            row.height = max(row.height, size.height)
-            row.indices.append(i)
-            rows[rows.count - 1] = row
-        }
-        return rows
+        ProjectionTransform(CGAffineTransform(translationX: -6 * sin(shakes * 2 * .pi), y: 0))
     }
 }
 

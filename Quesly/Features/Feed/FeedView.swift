@@ -383,7 +383,7 @@ struct TodayQuestionBanner: View {
                             if !friends.isEmpty {
                                 AvatarStack(users: friends, size: 24, ring: Color.qGreenDeep)
                             } else {
-                                Icon(.flameFill, size: 14)
+                                Icon(.fireFill, size: 14)
                                     .foregroundStyle(Color.qFlame)
                             }
                             Text(answeredCount > 0

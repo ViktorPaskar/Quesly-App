@@ -315,67 +315,70 @@ struct TodayQuestionBanner: View {
         let friends = store.friendsAnsweredToday
 
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 14) {
-                // Top metadata row
-                HStack(spacing: DS.Space.xs) {
-                    MascotCoin(hasAnswered: hasAnswered)
-                    Text("TODAY'S QUESTION")
-                        .font(.ui(12, .bold))
-                        .tracking(0.6)
-                        .lineLimit(1)
-                        .foregroundStyle(Color.qLime)
-                    Spacer(minLength: DS.Space.xs)
-                    if hasAnswered {
-                        HStack(spacing: 5) {
-                            Icon(.checkBold, size: 11)
-                            Text("Answered")
-                                .font(.ui(12, .semibold))
-                                .lineLimit(1)
-                        }
-                        .foregroundStyle(Color.qLime)
-                        .padding(.horizontal, 10)
-                        .frame(height: 26)
-                        .background(Capsule().fill(Color.white.opacity(0.14)))
-                    } else {
-                        HStack(spacing: 4) {
-                            Icon(.clock, size: 12, weight: .semibold)
-                            Text("\(AppStore.timeLeftString()) left")
-                                .font(.ui(12, .semibold))
-                                .lineLimit(1)
-                        }
-                        .foregroundStyle(.white.opacity(0.92))
-                        .padding(.horizontal, 10)
-                        .frame(height: 26)
-                        .background(Capsule().fill(.white.opacity(0.14)))
-                    }
-                }
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-
-                // The Question Headline with Tactile Sticker
-                WrappingHStack(spacing: 6, lineSpacing: 4, centered: false) {
-                    ForEach(Array(words.enumerated()), id: \.offset) { _, word in
-                        let clean = word.uppercased().filter(\.isLetter)
-                        let isHot = highlighted.contains(clean)
-                        Text(word)
-                            .font(.display(24, .bold))
-                            .foregroundStyle(isHot ? Color.qGreen : .white)
-                            .padding(.horizontal, isHot ? 8 : 0)
-                            .padding(.vertical, isHot ? 1 : 0)
-                            .background {
-                                if isHot {
-                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                        .fill(Color.qLime)
-                                        .shadow(color: .black.opacity(0.14), radius: 4, y: 2)
-                                }
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 14) {
+                    // Top metadata row
+                    HStack(spacing: DS.Space.xs) {
+                        MascotCoin(hasAnswered: hasAnswered)
+                        Text("TODAY'S QUESTION")
+                            .font(.ui(12, .bold))
+                            .tracking(0.6)
+                            .lineLimit(1)
+                            .foregroundStyle(Color.qLime)
+                        Spacer(minLength: DS.Space.xs)
+                        if hasAnswered {
+                            HStack(spacing: 5) {
+                                Icon(.checkBold, size: 11)
+                                Text("Answered")
+                                    .font(.ui(12, .semibold))
+                                    .lineLimit(1)
                             }
-                            .rotationEffect(.degrees(isHot ? -2 : 0))
+                            .foregroundStyle(Color.qLime)
+                            .padding(.horizontal, 10)
+                            .frame(height: 26)
+                            .background(Capsule().fill(Color.white.opacity(0.14)))
+                        } else {
+                            HStack(spacing: 4) {
+                                Icon(.clock, size: 12, weight: .semibold)
+                                Text("\(AppStore.timeLeftString()) left")
+                                    .font(.ui(12, .semibold))
+                                    .lineLimit(1)
+                            }
+                            .foregroundStyle(.white.opacity(0.92))
+                            .padding(.horizontal, 10)
+                            .frame(height: 26)
+                            .background(Capsule().fill(.white.opacity(0.14)))
+                        }
                     }
-                }
-                .padding(.top, 2)
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
-                // Integrated Action Dock
-                HStack(spacing: DS.Space.xs) {
-                    if !hasAnswered {
+                    // The Question Headline with Tactile Sticker
+                    WrappingHStack(spacing: 6, lineSpacing: 4, centered: false) {
+                        ForEach(Array(words.enumerated()), id: \.offset) { _, word in
+                            let clean = word.uppercased().filter(\.isLetter)
+                            let isHot = highlighted.contains(clean)
+                            Text(word)
+                                .font(.display(24, .bold))
+                                .foregroundStyle(isHot ? Color.qGreen : .white)
+                                .padding(.horizontal, isHot ? 8 : 0)
+                                .padding(.vertical, isHot ? 1 : 0)
+                                .background {
+                                    if isHot {
+                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                            .fill(Color.qLime)
+                                            .shadow(color: .black.opacity(0.14), radius: 4, y: 2)
+                                    }
+                                }
+                                .rotationEffect(.degrees(isHot ? -2 : 0))
+                        }
+                    }
+                    .padding(.top, 2)
+                }
+                .padding(18)
+
+                if !hasAnswered {
+                    // Integrated Action Dock flush with edges and bottom
+                    HStack(spacing: DS.Space.xs) {
                         HStack(spacing: 8) {
                             if !friends.isEmpty {
                                 AvatarStack(users: friends, size: 24, ring: Color.qGreenDeep)
@@ -401,38 +404,15 @@ struct TodayQuestionBanner: View {
                         .frame(height: 32)
                         .background(Capsule().fill(Color.qLime))
                         .shadow(color: Color.black.opacity(0.15), radius: 4, y: 2)
-                    } else {
-                        HStack(spacing: 6) {
-                            Icon(.checkBold, size: 12)
-                                .foregroundStyle(Color.qLime)
-                            Text("Your story is live in the feed below")
-                                .font(.ui(13, .semibold))
-                                .foregroundStyle(Color.white.opacity(0.92))
-                            Spacer()
-                            Text("\(answeredCount) answers")
-                                .font(.ui(12, .medium))
-                                .foregroundStyle(Color.white.opacity(0.65))
-                        }
                     }
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 12)
+                    .background(Color.qGreenDeep.opacity(0.60))
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.qGreenDeep.opacity(0.65))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .strokeBorder(Color.white.opacity(0.10), lineWidth: 0.75)
-                        )
-                )
-                .padding(.top, 4)
             }
-            .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                    .fill(Color.qGreen)
-            )
+            .background(Color.qGreen)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                     .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)

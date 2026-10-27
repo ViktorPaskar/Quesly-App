@@ -48,7 +48,7 @@ struct FindFriendsView: View {
             }
 
             let count = store.followingIds.count
-            GreenButton(title: count > 0 ? "Continue · \(count) following" : "Continue") {
+            LimeButton(title: count > 0 ? "Continue · \(count) following" : "Continue") {
                 withAnimation(.qSmooth) { store.finishFindFriends() }
             }
             .padding(.horizontal, DS.Space.screen)
@@ -104,7 +104,7 @@ struct NotificationPrimingView: View {
 
                 Spacer()
                 VStack(spacing: 8) {
-                    GreenButton(title: "Turn on notifications") {
+                    LimeButton(title: "Turn on notifications") {
                         withAnimation(.qSmooth) { store.finishNotificationPriming(enable: true) }
                     }
                     Button("Not now") {
@@ -214,12 +214,9 @@ struct PersonRow: View {
                 HStack(spacing: 12) {
                     Avatar(user: user, size: 46)
                     VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: 4) {
-                            Text(user.username).font(.ui(16, .semibold)).foregroundStyle(Color.qInk)
-                            if let badge = user.badge {
-                                HexBadge(color: badge.color, icon: badge.icon).frame(width: 15, height: 15)
-                            }
-                        }
+                        Text(user.username)
+                            .font(.ui(16, .semibold))
+                            .foregroundStyle(Color.qInk)
                         Text(user.bio.isEmpty ? "\(user.followers) followers" : user.bio)
                             .font(.ui(15))
                             .foregroundStyle(Color.qGray)

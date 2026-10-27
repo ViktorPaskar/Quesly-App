@@ -31,18 +31,28 @@ struct DailyQuestionView: View {
 
                 Spacer(minLength: 16)
 
-                if isComposing { composer } else { questionText }
-
-                Spacer(minLength: 16)
-
                 if isComposing {
-                    VisibilityPicker(selection: $visibility)
-                        .padding(.bottom, 14)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    DayProgress()
+                    VStack(spacing: 12) {
+                        composer
+
+                        HStack {
+                            VisibilityPicker(selection: $visibility)
+                            Spacer()
+                            HStack(spacing: 5) {
+                                Icon(.clock, size: 13, weight: .semibold)
+                                Text("\(AppStore.timeLeftString()) left")
+                                    .font(.ui(13, .semibold))
+                            }
+                            .foregroundStyle(Color.qGray)
+                        }
                         .padding(.horizontal, DS.Space.xl)
-                        .padding(.bottom, 14)
+                    }
+                    .transition(.opacity)
                 } else {
+                    questionText
+
+                    Spacer(minLength: 16)
+
                     VStack(alignment: .leading, spacing: DS.Space.m) {
                         LockedFriendsPreview(answers: Array(store.friendStories.prefix(3)),
                                              users: store.friendsAnsweredToday)
@@ -54,8 +64,10 @@ struct DailyQuestionView: View {
                     .transition(.opacity)
                 }
 
-                GreenButton(title: isComposing ? "Submit answer" : "Answer",
-                            isEnabled: !isComposing || canSubmit) {
+                Spacer(minLength: 16)
+
+                LimeButton(title: isComposing ? "Submit answer" : "Answer",
+                           isEnabled: !isComposing || canSubmit) {
                     if isComposing {
                         submit()
                     } else {
@@ -128,8 +140,6 @@ struct DailyQuestionView: View {
         let highlighted = question.keyWords
 
         return VStack(alignment: .leading, spacing: DS.Space.m) {
-            DayProgress()
-
             WrappingHStack(spacing: 8, lineSpacing: 6, centered: false) {
                 ForEach(Array(words.enumerated()), id: \.offset) { _, word in
                     let clean = word.uppercased().filter(\.isLetter)

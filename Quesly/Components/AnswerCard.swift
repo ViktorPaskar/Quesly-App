@@ -279,13 +279,13 @@ struct AnswerCard: View {
         if isMine { ownActions } else { viewerActions }
     }
 
-    /// Your own answer: prominent 1-tap "Share to Stories" pill + link share + repost count.
+    /// Your own answer: prominent 1-tap "Share to Peeks" pill + repost count + link share.
     private var ownActions: some View {
         HStack(spacing: DS.Space.xs) {
             Button { isSharingStory = true } label: {
                 HStack(spacing: 6) {
                     Icon(.paperPlaneTiltFill, size: 12)
-                    Text("Share to Stories")
+                    Text("Share to Peeks")
                         .font(.ui(13, .semibold))
                 }
                 .foregroundStyle(.white)
@@ -297,16 +297,7 @@ struct AnswerCard: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
-            .accessibilityLabel("Share answer as story")
-
-            ShareLink(item: link) {
-                Icon(.shareForward, size: 22)
-                    .foregroundStyle(Color.qGray)
-                    .frame(width: DS.hitTarget, height: DS.hitTarget)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.pressable)
-            .accessibilityLabel("Share outside Quesly")
+            .accessibilityLabel("Share answer as peek")
 
             if answer.reshares > 0 {
                 HStack(spacing: DS.Space.xxs) {
@@ -319,9 +310,19 @@ struct AnswerCard: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Reposted \(answer.reshares) times. Only you can see this")
             }
+
+            ShareLink(item: link) {
+                Icon(.shareForward, size: 22)
+                    .foregroundStyle(Color.qGray)
+                    .frame(width: DS.hitTarget, height: DS.hitTarget)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.pressable)
+            .accessibilityLabel("Share outside Quesly")
+
             Spacer(minLength: 0)
         }
-        .padding(.bottom, -10)
+        .padding(.bottom, 6)
     }
 
     private var viewerActions: some View {
@@ -435,8 +436,12 @@ struct AnswerCard: View {
     private var counterPill: some View {
         Button { showReactions = true } label: {
             HStack(spacing: DS.Space.xs) {
-                HStack(spacing: 2) {
-                    ForEach(answer.topReactions.prefix(3)) { ReactionSticker(kind: $0, size: 32) }
+                let top = Array(answer.topReactions.prefix(3))
+                HStack(spacing: -8) {
+                    ForEach(Array(top.enumerated()), id: \.element) { index, kind in
+                        ReactionSticker(kind: kind, size: 30)
+                            .zIndex(Double(top.count - index))
+                    }
                 }
                 Text("\(answer.totalReactions)")
                     .font(.ui(15, .semibold))
@@ -444,7 +449,7 @@ struct AnswerCard: View {
                     .monospacedDigit()
                 Icon(.caretRightBold, size: 16).foregroundStyle(Color.qGray)
             }
-            .padding(.leading, DS.Space.xs)
+            .padding(.leading, 6)
             .padding(.trailing, 10)
             .frame(height: 36)
             .background(Capsule().fill(Color.qField))
@@ -468,8 +473,11 @@ struct ReactedByLine: View {
     var body: some View {
         HStack(spacing: DS.Space.xs) {
             if line.names.isEmpty {
-                HStack(spacing: 2) {
-                    ForEach(line.stickers) { ReactionSticker(kind: $0, size: 30) }
+                HStack(spacing: -8) {
+                    ForEach(Array(line.stickers.enumerated()), id: \.element) { index, kind in
+                        ReactionSticker(kind: kind, size: 28)
+                            .zIndex(Double(line.stickers.count - index))
+                    }
                 }
                 Text("People reacted")
             } else {

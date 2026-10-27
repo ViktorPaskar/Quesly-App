@@ -140,7 +140,7 @@ enum AnswerVisibility: String, Codable, CaseIterable, Identifiable {
     case everyone, friends
     var id: String { rawValue }
 
-    var title: String { self == .everyone ? "Everyone" : "Friends" }
+    var title: String { self == .everyone ? "World" : "Friends" }
     var icon: QIcon { self == .everyone ? .globeHemisphereWestFill : .userFill }
 }
 

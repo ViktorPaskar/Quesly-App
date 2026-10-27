@@ -112,7 +112,7 @@ struct WelcomeView: View {
                 .padding(.horizontal, DS.Space.xl)
                 .padding(.bottom, 2)
 
-            GreenButton(title: "Get started") { authMode = .signUp }
+            LimeButton(title: "Get started") { authMode = .signUp }
 
             Button("I already have an account") { authMode = .signIn }
                 .font(.ui(16, .semibold))

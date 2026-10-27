@@ -417,23 +417,28 @@ struct VisibilityPicker: View {
                 Button {
                     withAnimation(.qSpring) { selection = option }
                 } label: {
-                    Text(option.title)
-                        .font(.ui(14, .semibold))
-                        .foregroundStyle(on ? .white : Color.qGray)
-                        .padding(.horizontal, 18)
-                        .frame(height: 36)
-                        .background {
-                            if on {
-                                Capsule().fill(Color.qGreen).matchedGeometryEffect(id: "vis", in: ns)
-                            }
+                    HStack(spacing: 4) {
+                        if option == .onlyMe {
+                            Icon(.lockSimpleFill, size: 12)
                         }
-                        .contentShape(Capsule())
+                        Text(option.title)
+                            .font(.ui(13, .semibold))
+                    }
+                    .foregroundStyle(on ? .white : Color.qGray)
+                    .padding(.horizontal, 14)
+                    .frame(height: 34)
+                    .background {
+                        if on {
+                            Capsule().fill(Color.qGreen).matchedGeometryEffect(id: "vis", in: ns)
+                        }
+                    }
+                    .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(on ? .isSelected : [])
             }
         }
-        .padding(4)
+        .padding(3)
         .background(Capsule().fill(Color.qField))
         .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
         .sensoryFeedback(.selection, trigger: selection)

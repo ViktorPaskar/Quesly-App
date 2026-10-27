@@ -20,30 +20,16 @@ struct FeedView: View {
     @State private var highlightsMine = false
     @State private var unlockHaptic = 0
 
+    // Twitter/X style collapsing header on scroll
+    @State private var isHeaderHidden = false
+    @State private var lastScrollY: CGFloat = 0
+
     var body: some View {
         VStack(spacing: 0) {
-            ZStack {
-                Image("brand-wordmark")
-                    .renderingMode(.template)
-                    .resizable()
-                    .aspectRatio(1900.0 / 602.0, contentMode: .fit)
-                    // Wordmark like Instagram/Threads headers: about 28 pt tall in a 44-pt bar.
-                    .frame(height: 28)
-                    .foregroundStyle(Color.qInk)
-                    .accessibilityLabel("Quesly")
-                HStack {
-                    Spacer()
-                    Button { showStreak = true } label: { StreakChip(days: shownStreak ?? store.streak) }
-                        .buttonStyle(.pressable)
-                        .accessibilityHint("Opens your streak calendar")
-                }
+            if !isHeaderHidden {
+                headerView
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
-            .padding(.horizontal, DS.Space.s)
-            .frame(height: 44)
-            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-
-            FloatingScopePill(scope: $scope)
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
             if !network.isOnline {
                 OfflineBanner().transition(.move(edge: .top).combined(with: .opacity))
@@ -60,6 +46,7 @@ struct FeedView: View {
             // Light gray behind the list; each answer is a white strip, 6 pt apart.
             .background(Color.qFeedCanvas)
         }
+        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: isHeaderHidden)
         .background(Color.qBackground)
         .toolbar(.hidden, for: .navigationBar)
         .fullScreenCover(isPresented: $showQuestion) {
@@ -101,6 +88,58 @@ struct FeedView: View {
         }
     }
 
+    private var headerView: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                Image("brand-wordmark")
+                    .renderingMode(.template)
+                    .resizable()
+                    .aspectRatio(1900.0 / 602.0, contentMode: .fit)
+                    .frame(height: 28)
+                    .foregroundStyle(Color.qInk)
+                    .accessibilityLabel("Quesly")
+                HStack {
+                    Spacer()
+                    Button { showStreak = true } label: { StreakChip(days: shownStreak ?? store.streak) }
+                        .buttonStyle(.pressable)
+                        .accessibilityHint("Opens your streak calendar")
+                }
+            }
+            .padding(.horizontal, DS.Space.s)
+            .frame(height: 44)
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+
+            FullWidthFeedScopeBar(scope: $scope)
+        }
+        .background(Color.qBackground)
+    }
+
+    private func handleScroll(currentY: CGFloat) {
+        guard currentY != 0 else { return }
+        let diff = currentY - lastScrollY
+        lastScrollY = currentY
+
+        if currentY >= -15 {
+            if isHeaderHidden {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                    isHeaderHidden = false
+                }
+            }
+        } else if diff < -12 {
+            if !isHeaderHidden {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                    isHeaderHidden = true
+                }
+            }
+        } else if diff > 12 {
+            if isHeaderHidden {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                    isHeaderHidden = false
+                }
+            }
+        }
+    }
+
     private func feedPage(_ scope: FeedScope) -> some View {
         let answers = store.feed(scope)
         let mine = answers.first { $0.authorId == store.me.id }
@@ -109,6 +148,14 @@ struct FeedView: View {
         return ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
+                    GeometryReader { geo in
+                        Color.clear.preference(
+                            key: FeedScrollOffsetKey.self,
+                            value: geo.frame(in: .named("feedScrollSpace")).minY
+                        )
+                    }
+                    .frame(height: 0)
+
                     Color.clear.frame(height: 0).id("top")
 
                     TodayQuestionBanner(question: store.todayQuestion,
@@ -185,6 +232,10 @@ struct FeedView: View {
                 }
                 .padding(.bottom, DS.Space.s)
                 .animation(.qSmooth, value: scope)
+            }
+            .coordinateSpace(name: "feedScrollSpace")
+            .onPreferenceChange(FeedScrollOffsetKey.self) { currentY in
+                handleScroll(currentY: currentY)
             }
             .refreshable { await store.reloadFeed() }
             .onChange(of: scrollToTopSignal) { _, _ in
@@ -427,50 +478,60 @@ struct TodayQuestionBanner: View {
     }
 }
 
-/// Floating segmented Liquid Glass scope pill ("World / Friends")
-struct FloatingScopePill: View {
+/// Full-width Twitter (X) style tabs ("World" and "Friends") with sliding active indicator and edge-to-edge layout
+struct FullWidthFeedScopeBar: View {
     @Binding var scope: FeedScope
     @Namespace private var ns
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(FeedScope.allCases) { item in
-                let isSelected = item == scope
-                Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.78)) {
-                        scope = item
-                    }
-                } label: {
-                    Text(item.rawValue)
-                        .font(.ui(14, isSelected ? .bold : .medium))
-                        .foregroundStyle(isSelected ? Color.qInk : Color.qGray)
-                        .padding(.horizontal, 20)
-                        .frame(height: 32)
-                        .background {
-                            if isSelected {
-                                Capsule()
-                                    .fill(Color.white)
-                                    .shadow(color: Color.black.opacity(0.08), radius: 6, y: 2)
-                                    .matchedGeometryEffect(id: "scopePill", in: ns)
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                ForEach(FeedScope.allCases) { item in
+                    let isSelected = item == scope
+                    Button {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            scope = item
+                        }
+                    } label: {
+                        VStack(spacing: 8) {
+                            Text(item.rawValue)
+                                .font(.ui(15, isSelected ? .bold : .medium))
+                                .foregroundStyle(isSelected ? Color.qInk : Color.qGray)
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 8)
+
+                            // Twitter/X style active underline indicator
+                            ZStack {
+                                Rectangle()
+                                    .fill(Color.clear)
+                                    .frame(height: 3.5)
+                                if isSelected {
+                                    Capsule()
+                                        .fill(Color.qGreen)
+                                        .frame(width: 54, height: 3.5)
+                                        .matchedGeometryEffect(id: "scopeIndicator", in: ns)
+                                }
                             }
                         }
-                        .contentShape(Capsule())
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
+            Rectangle()
+                .fill(Color.qLine)
+                .frame(height: 1)
         }
-        .padding(4)
-        .background(
-            Capsule()
-                .fill(Color.qField.opacity(0.92))
-                .overlay(
-                    Capsule()
-                        .strokeBorder(Color.qLine, lineWidth: 0.75)
-                )
-        )
-        .padding(.vertical, 6)
+        .background(Color.qBackground)
         .sensoryFeedback(.selection, trigger: scope)
+    }
+}
+
+struct FeedScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 

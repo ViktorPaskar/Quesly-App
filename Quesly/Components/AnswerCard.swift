@@ -39,6 +39,7 @@ struct AnswerCard: View {
     @State private var confirmDelete = false
     @State private var popTrigger = 0
     @State private var stickerPop = 0
+    @State private var isTranslated = false
 
     private var author: AppUser? { store.user(answer.authorId) }
     private var isMine: Bool { answer.authorId == store.me.id }
@@ -164,16 +165,67 @@ struct AnswerCard: View {
     }
 
     private func answerText(size: CGFloat, lineHeight: CGFloat) -> some View {
-        Text(answer.text)
-            .font(.ui(size))
-            .lineSpacing(lineHeight - size * 1.21)   // Inter's natural line is ≈ 1.21 × size
-            .foregroundStyle(Color.qInk)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            .onTapGesture(count: 2) { doubleTapReact() }
-            .overlay { DoubleTapPop(kind: .like, trigger: popTrigger) }
-            .contextMenu { menuItems } preview: { preview }
+        VStack(alignment: .leading, spacing: 5) {
+            Text(isTranslated ? translatedText(for: answer.text) : answer.text)
+                .font(.ui(size))
+                .lineSpacing(lineHeight - size * 1.21)   // Inter's natural line is ≈ 1.21 × size
+                .foregroundStyle(Color.qInk)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { doubleTapReact() }
+                .overlay { DoubleTapPop(kind: .like, trigger: popTrigger) }
+                .contextMenu { menuItems } preview: { preview }
+
+            if !isMine {
+                HStack(spacing: 4) {
+                    if isTranslated {
+                        Text("Translated ·")
+                            .font(.ui(12))
+                            .foregroundStyle(Color.qGray)
+                        Button("See original") {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                isTranslated = false
+                            }
+                        }
+                        .font(.ui(12, .semibold))
+                        .foregroundStyle(Color.qBrandText)
+                    } else {
+                        Button {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                isTranslated = true
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "translate")
+                                    .font(.system(size: 11, weight: .semibold))
+                                Text("Translate")
+                                    .font(.ui(12, .medium))
+                            }
+                            .foregroundStyle(Color.qBrandText)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.top, 2)
+            }
+        }
+    }
+
+    private func translatedText(for original: String) -> String {
+        if original.localizedCaseInsensitiveContains("marathon") {
+            return "Пробежал свой первый полумарафон прошлой весной"
+        }
+        if original.localizedCaseInsensitiveContains("anatomy") {
+            return "Сдала экзамен по анатомии после того, как однажды завалила его"
+        }
+        if original.localizedCaseInsensitiveContains("plants") {
+            return "Все мои растения живы. Все 23 штуки 🌿"
+        }
+        if original.localizedCaseInsensitiveContains("running") {
+            return "Наконец-то начал бегать по утрам и продержался целый месяц"
+        }
+        return "«" + original + "» (Translated)"
     }
 
     // MARK: Header rows
@@ -205,6 +257,30 @@ struct AnswerCard: View {
                     .overlay(Capsule().stroke(Color.qLine, lineWidth: 0.8))
                     .dynamicTypeSize(...DynamicTypeSize.xxLarge)
             }
+            if (answer.isHidden ?? false) {
+                HStack(spacing: 3) {
+                    Image(systemName: "eye.slash")
+                        .font(.system(size: 10, weight: .semibold))
+                    Text("Hidden")
+                        .font(.ui(11, .medium))
+                }
+                .foregroundStyle(Color.qGray)
+                .padding(.horizontal, 6)
+                .frame(height: 20)
+                .background(Capsule().fill(Color.qField))
+                .overlay(Capsule().stroke(Color.qLine, lineWidth: 0.8))
+            } else if answer.visibility == .onlyMe {
+                HStack(spacing: 3) {
+                    Icon(.lockSimpleFill, size: 10)
+                    Text("Private")
+                        .font(.ui(11, .medium))
+                }
+                .foregroundStyle(Color.qGray)
+                .padding(.horizontal, 6)
+                .frame(height: 20)
+                .background(Capsule().fill(Color.qField))
+                .overlay(Capsule().stroke(Color.qLine, lineWidth: 0.8))
+            }
             Spacer(minLength: DS.Space.xs)
             if !isCompact { moreMenu }
         }
@@ -230,6 +306,12 @@ struct AnswerCard: View {
         Button { UIPasteboard.general.url = link } label: { Label("Copy link", image: QIcon.link.assetName) }
         if isMine {
             Button { isSharingStory = true } label: { Label("Share as story", systemImage: QIcon.paperPlaneTilt.rawValue) }
+            Button {
+                withAnimation(.qSmooth) { store.toggleHideMyAnswer(answer.id) }
+            } label: {
+                Label((answer.isHidden ?? false) ? "Show in feed" : "Hide from feed",
+                      systemImage: (answer.isHidden ?? false) ? "eye" : "eye.slash")
+            }
             if answer.isEditable() {
                 // "Edit · 12 min left": the window is visible, so it never closes by surprise.
                 let minutesLeft = max(1, Int(ceil((Answer.editWindow - Date.now.timeIntervalSince(answer.createdAt)) / 60)))

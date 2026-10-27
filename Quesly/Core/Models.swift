@@ -137,11 +137,23 @@ enum ReactionKind: String, Codable, CaseIterable, Identifiable {
 }
 
 enum AnswerVisibility: String, Codable, CaseIterable, Identifiable {
-    case everyone, friends
+    case everyone, friends, onlyMe
     var id: String { rawValue }
 
-    var title: String { self == .everyone ? "World" : "Friends" }
-    var icon: QIcon { self == .everyone ? .globeHemisphereWestFill : .userFill }
+    var title: String {
+        switch self {
+        case .everyone: return "World"
+        case .friends: return "Friends"
+        case .onlyMe: return "Private"
+        }
+    }
+    var icon: QIcon {
+        switch self {
+        case .everyone: return .globeHemisphereWestFill
+        case .friends: return .userFill
+        case .onlyMe: return .lockSimpleFill
+        }
+    }
 }
 
 struct Answer: Identifiable, Codable, Hashable {
@@ -167,6 +179,8 @@ struct Answer: Identifiable, Codable, Hashable {
     var reshareCount: Int? = nil
     /// Privately saved by the viewer (the bookmark). Only the viewer sees their saved list.
     var bookmarked: Bool? = nil
+    /// Hidden from the public feed by author (remains in private profile history).
+    var isHidden: Bool? = false
 
     var reshares: Int { reshareCount ?? 0 }
     var isBookmarked: Bool {
@@ -177,7 +191,7 @@ struct Answer: Identifiable, Codable, Hashable {
     private enum CodingKeys: String, CodingKey {
         case id, questionId, questionText, authorId, text, createdAt, reactions, myReaction
         case isResharedByMe = "isSaved"   // stored under its old name
-        case isPinned, visibility, isEdited, reshareCount, bookmarked
+        case isPinned, visibility, isEdited, reshareCount, bookmarked, isHidden
     }
 
     func count(_ kind: ReactionKind) -> Int { reactions[kind, default: 0] }

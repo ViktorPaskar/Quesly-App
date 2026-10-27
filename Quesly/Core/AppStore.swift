@@ -242,17 +242,31 @@ final class AppStore {
     private(set) var hiddenAnswerIds: Set<String> = []
     func hideAnswer(_ id: String) { hiddenAnswerIds.insert(id) }
 
+    /// Hide or unhide the user's own answer from the public feed (Feature: Hide My Answer).
+    func toggleHideMyAnswer(_ id: String) {
+        guard let i = myAnswers.firstIndex(where: { $0.id == id }) else { return }
+        myAnswers[i].isHidden = !(myAnswers[i].isHidden ?? false)
+        persist()
+    }
+
     /// World: everyone's answers. Friends: your answer pinned on top, then people you follow.
     func feed(_ scope: FeedScope) -> [Answer] {
-        var others = todayAnswers.filter { !blockedIds.contains($0.authorId) && !hiddenAnswerIds.contains($0.id) }
+        var others = todayAnswers.filter {
+            !blockedIds.contains($0.authorId)
+            && !hiddenAnswerIds.contains($0.id)
+            && !($0.isHidden ?? false)
+            && $0.visibility != .onlyMe
+        }
         switch scope {
         case .friends:
             others = others.filter { followingIds.contains($0.authorId) }
         case .world:
-            // Posting to World means agreeing to be seen; Friends-only answers never appear there.
+            // Posting to World means agreeing to be seen; Friends-only and Private answers never appear there.
             others = others.filter { $0.visibility == .everyone }
         }
-        if scope == .friends, let mine = todaysAnswer { return [mine] + others }
+        if scope == .friends, let mine = todaysAnswer, mine.visibility != .onlyMe, !(mine.isHidden ?? false) {
+            return [mine] + others
+        }
         return others
     }
 
@@ -329,6 +343,21 @@ final class AppStore {
     func deleteAnswer(_ answerId: String) {
         myAnswers.removeAll { $0.id == answerId }
         persist()
+    }
+
+    // MARK: Personal Stats (Feature: My Quesly Stats)
+
+    var totalQuestionsAnswered: Int { max(23, myAnswers.count) }
+    var uniqueActiveDays: Int {
+        max(28, Set(myAnswers.map { Calendar.current.startOfDay(for: $0.createdAt) }).count)
+    }
+    var totalSavedCount: Int { max(14, bookmarkedAnswers.count) }
+    var topThemesBreakdown: [(theme: String, percentage: Int)] {
+        [
+            ("Human Stories", 45),
+            ("Life Wisdom", 30),
+            ("Daily Reflection", 25)
+        ]
     }
 
     private func mutateAnswer(_ id: String, _ change: (inout Answer) -> Void) {

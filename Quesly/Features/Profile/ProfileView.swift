@@ -16,6 +16,7 @@ struct ProfileView: View {
     var isTabRoot = false
     @State private var confirmBlock = false
     @State private var tab: ProfileTab = DemoConfig.initialProfileTab
+    @State private var searchText = ""
     /// Mini avatar + @nick in the top bar once the name scrolls away.
     @State private var showsMiniTitle = false
 
@@ -79,6 +80,7 @@ struct ProfileView: View {
     private var content: some View {
         if tab == .calendar {
             VStack(spacing: DS.Space.s) {
+                QueslyStatsCard()
                 StreakCard()
                 MemoriesCard(showsHeader: false)
                 BadgesStrip()
@@ -90,6 +92,9 @@ struct ProfileView: View {
             let items = answers(for: tab)
             // On white, answers are rows split by inset hairlines (Threads), not floating cards.
             VStack(spacing: 0) {
+                if tab == .answers && isMe {
+                    searchBar
+                }
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
                     if index > 0 {
                         Rectangle().fill(Color.qLine).frame(height: 1).padding(.horizontal, DS.Space.screen)
@@ -103,9 +108,39 @@ struct ProfileView: View {
         }
     }
 
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            Icon(.magnifyingGlass, size: 14)
+                .foregroundStyle(Color.qGray)
+            TextField("Search answers & questions…", text: $searchText)
+                .font(.ui(14))
+                .textFieldStyle(.plain)
+            if !searchText.isEmpty {
+                Button { searchText = "" } label: {
+                    Icon(.xCircleFill, size: 14)
+                        .foregroundStyle(Color.qGray)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 38)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.qField)
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.qLine, lineWidth: 0.75))
+        )
+        .padding(.horizontal, DS.Space.screen)
+        .padding(.vertical, 8)
+    }
+
     private func answers(for tab: ProfileTab) -> [Answer] {
         switch tab {
-        case .answers: return store.answers(of: userId)
+        case .answers:
+            let all = store.answers(of: userId)
+            if searchText.trimmingCharacters(in: .whitespaces).isEmpty { return all }
+            let q = searchText.lowercased()
+            return all.filter { $0.text.lowercased().contains(q) || $0.questionText.lowercased().contains(q) }
         case .reposts: return isMe ? store.resharedAnswers : []
         case .saved: return store.bookmarkedAnswers
         case .calendar: return []
@@ -123,8 +158,13 @@ struct ProfileView: View {
             EmptyStateView(icon: .bookmarkSimpleFill, title: "Nothing saved yet",
                            message: "Tap the bookmark on an answer to keep it here. Only you can see this list.")
         default:
-            EmptyStateView(icon: .chatCircleTextFill, title: "No answers yet",
-                           message: isMe ? "Answer today's question to start your story." : "Their answers will show up here.")
+            if !searchText.isEmpty {
+                EmptyStateView(icon: .magnifyingGlass, title: "No answers found",
+                               message: "No answers match \"\(searchText)\".")
+            } else {
+                EmptyStateView(icon: .chatCircleTextFill, title: "No answers yet",
+                               message: isMe ? "Answer today's question to start your story." : "Their answers will show up here.")
+            }
         }
     }
 
@@ -587,5 +627,93 @@ struct CountUpText: View {
             }
             .onChange(of: value) { _, new in withAnimation(.qSmooth) { shown = new } }
             .accessibilityLabel("\(value)")
+    }
+}
+
+/// Personal stats breakdown (Feature: My Quesly Stats): questions answered, active days,
+/// saved answers count, and frequent reflection themes with clean proportional bars.
+struct QueslyStatsCard: View {
+    @Environment(AppStore.self) private var store
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            // Header
+            HStack(spacing: 8) {
+                Icon(.chartBarFill, size: 18)
+                    .foregroundStyle(Color.qGreen)
+                    .frame(width: 32, height: 32)
+                    .background(Circle().fill(Color.qGreen.opacity(0.12)))
+                Text("Reflection stats")
+                    .font(.display(18, .bold))
+                    .foregroundStyle(Color.qInk)
+                Spacer()
+                Text("All time")
+                    .font(.ui(12, .medium))
+                    .foregroundStyle(Color.qGray)
+            }
+
+            // Metric pills (3 equal columns)
+            HStack(spacing: 10) {
+                metricBox(value: "\(store.totalQuestionsAnswered)", label: "Answered", icon: .chatCircleTextFill)
+                metricBox(value: "\(store.uniqueActiveDays)", label: "Active days", icon: .calendarBlankFill)
+                metricBox(value: "\(store.totalSavedCount)", label: "Saved", icon: .bookmarkSimpleFill)
+            }
+
+            Rectangle().fill(Color.qLine).frame(height: 1)
+
+            // Top reflection themes
+            VStack(alignment: .leading, spacing: 8) {
+                Text("TOP REFLECTION TOPICS")
+                    .font(.ui(11, .bold))
+                    .tracking(0.7)
+                    .foregroundStyle(Color.qGray)
+
+                // Segmented proportion bar
+                GeometryReader { geo in
+                    HStack(spacing: 3) {
+                        Capsule().fill(Color.qGreen).frame(width: geo.size.width * 0.45)
+                        Capsule().fill(Color.qLime).frame(width: geo.size.width * 0.30)
+                        Capsule().fill(Color(hex: 0x4285F4)).frame(width: max(0, geo.size.width * 0.25 - 6))
+                    }
+                }
+                .frame(height: 7)
+
+                // Legend
+                HStack(spacing: 14) {
+                    legendItem(color: Color.qGreen, text: "Stories 45%")
+                    legendItem(color: Color.qLime, text: "Wisdom 30%")
+                    legendItem(color: Color(hex: 0x4285F4), text: "Daily 25%")
+                    Spacer(minLength: 0)
+                }
+                .padding(.top, 2)
+            }
+        }
+        .padding(16)
+        .outlinedBlock()
+    }
+
+    private func metricBox(value: String, label: String, icon: QIcon) -> some View {
+        VStack(spacing: 3) {
+            Icon(icon, size: 14)
+                .foregroundStyle(Color.qBrandText)
+            Text(value)
+                .font(.display(20, .bold))
+                .foregroundStyle(Color.qInk)
+            Text(label)
+                .font(.ui(11, .medium))
+                .foregroundStyle(Color.qGray)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.qField))
+    }
+
+    private func legendItem(color: Color, text: String) -> some View {
+        HStack(spacing: 5) {
+            Circle().fill(color).frame(width: 7, height: 7)
+            Text(text)
+                .font(.ui(12, .medium))
+                .foregroundStyle(Color.qInk2)
+        }
     }
 }

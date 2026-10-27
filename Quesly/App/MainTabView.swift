@@ -142,30 +142,21 @@ struct MainTabView: View {
                                 .frame(width: 58, height: 42)
                                 .matchedGeometryEffect(id: "tabBubble", in: ns)
                         }
-                        if t == .profile {
-                            Avatar(user: store.me, size: 26)
-                                .overlay(
-                                    Circle()
-                                        .strokeBorder(active ? Color.qLime : Color.qLine, lineWidth: active ? 2 : 1.5)
-                                )
-                                .pop(on: active)
-                        } else {
-                            Icon(active ? t.activeIcon : t.icon, size: 22, weight: active ? .semibold : .regular)
-                                .foregroundStyle(active ? Color.qLime : Color.qInk2)
-                                .pop(on: active)
-                                .overlay(alignment: .topTrailing) {
-                                    if t == .notifications && store.unreadNotifications > 0 && !active {
-                                        Text("\(min(store.unreadNotifications, 9))")
-                                            .font(.system(size: 10, weight: .bold))
-                                            .foregroundStyle(.white)
-                                            .frame(minWidth: 16, minHeight: 16)
-                                            .background(Circle().fill(Color.qFlame))
-                                            .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
-                                            .offset(x: 8, y: -6)
-                                            .transition(.scale)
-                                    }
+                        Icon(active ? t.activeIcon : t.icon, size: 22, weight: active ? .semibold : .regular)
+                            .foregroundStyle(active ? Color.qLime : Color.qInk2)
+                            .pop(on: active)
+                            .overlay(alignment: .topTrailing) {
+                                if t == .notifications && store.unreadNotifications > 0 && !active {
+                                    Text("\(min(store.unreadNotifications, 9))")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundStyle(.white)
+                                        .frame(minWidth: 16, minHeight: 16)
+                                        .background(Circle().fill(Color.qFlame))
+                                        .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
+                                        .offset(x: 8, y: -6)
+                                        .transition(.scale)
                                 }
-                        }
+                            }
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)

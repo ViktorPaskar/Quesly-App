@@ -75,16 +75,7 @@ struct NotificationPrimingView: View {
                     .padding(.top, 20)
                 Spacer()
 
-                ZStack {
-                    Circle()
-                        .fill(Color.qGreen.opacity(0.06))
-                        .frame(width: 124, height: 124)
-                    Circle()
-                        .fill(Color.qGreen.opacity(0.12))
-                        .frame(width: 90, height: 90)
-                    Icon(.bellRingingFill, size: 40)
-                        .foregroundStyle(Color.qGreen)
-                }
+                NotificationHeroArt()
 
                 Text("Never miss\ntoday's question")
                     .font(.display(30, .bold))
@@ -116,6 +107,86 @@ struct NotificationPrimingView: View {
                 }
                 .padding(.horizontal, DS.Space.screen)
                 .padding(.bottom, 12)
+            }
+        }
+    }
+}
+
+/// Dimensional branded hero composition for notification priming:
+/// glowing emerald squircle, lime bell, floating Quesly coin, and scheduled drop tag.
+private struct NotificationHeroArt: View {
+    @State private var pulsed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ZStack {
+            // Ambient soft glow
+            Circle()
+                .fill(Color.qLime.opacity(0.35))
+                .frame(width: 130, height: 130)
+                .blur(radius: 20)
+                .scaleEffect(pulsed && !reduceMotion ? 1.08 : 0.95)
+
+            // Outer tactile ring
+            Circle()
+                .fill(Color.qBlock)
+                .frame(width: 114, height: 114)
+                .overlay(Circle().stroke(Color.qLine, lineWidth: 1.5))
+                .shadow(color: Color.black.opacity(0.06), radius: 14, y: 6)
+
+            // Central branded squircle tile
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.qGreen, Color.qGreenDeep],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 76, height: 76)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.25), lineWidth: 1)
+                )
+                .shadow(color: Color.qGreen.opacity(0.35), radius: 12, y: 6)
+
+            // Ringing Lime Bell
+            Icon(.bellRingingFill, size: 36)
+                .foregroundStyle(Color.qLime)
+                .shadow(color: Color.black.opacity(0.18), radius: 3, y: 2)
+                .rotationEffect(.degrees(pulsed && !reduceMotion ? -6 : 6))
+
+            // Floating Quesly mini-coin at top-left
+            ZStack {
+                Circle().fill(Color.qLime)
+                    .frame(width: 28, height: 28)
+                QueslyMark(color: .qGreen, cutout: .qLime)
+                    .frame(width: 16)
+            }
+            .overlay(Circle().strokeBorder(Color.white, lineWidth: 2))
+            .shadow(color: Color.black.opacity(0.12), radius: 6, y: 2)
+            .offset(x: -36, y: -34)
+            .rotationEffect(.degrees(-8))
+
+            // Floating time pill at bottom-right
+            HStack(spacing: 5) {
+                Circle().fill(Color.qGreen).frame(width: 6, height: 6)
+                Text("9:00 AM")
+                    .font(.ui(11, .bold))
+                    .foregroundStyle(Color.qInk)
+            }
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(Color.qBlock))
+            .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
+            .shadow(color: Color.black.opacity(0.10), radius: 8, y: 3)
+            .offset(x: 32, y: 34)
+        }
+        .frame(width: 140, height: 140)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
+                pulsed = true
             }
         }
     }

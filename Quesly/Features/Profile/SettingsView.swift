@@ -62,14 +62,28 @@ struct SettingsView: View {
                 }
             }
 
-            Section {
+            Section("Account") {
                 Button("Sign out") { confirmSignOut = true }
-                    .foregroundStyle(Color.qBrandText)
-                Button("Delete account", role: .destructive) { confirmDelete = true }
+                    .foregroundStyle(Color.qInk)
+                Button(role: .destructive) { confirmDelete = true } label: {
+                    HStack(spacing: 8) {
+                        Icon(.trash, size: 18)
+                            .foregroundStyle(Color.qFlame)
+                        Text("Delete account")
+                            .foregroundStyle(Color.qFlame)
+                        Spacer()
+                        Text("Permanent")
+                            .font(.ui(13))
+                            .foregroundStyle(Color.qFlame.opacity(0.8))
+                    }
+                }
             } footer: {
-                Text("Quesly \(Bundle.main.appVersion)")
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, DS.Space.m)
+                VStack(spacing: 6) {
+                    Text("Deleting your account permanently wipes your profile, answers, and streak.")
+                    Text("Quesly \(Bundle.main.appVersion)")
+                        .padding(.top, DS.Space.s)
+                }
+                .frame(maxWidth: .infinity)
             }
         }
         .scrollContentBackground(.hidden)

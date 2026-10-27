@@ -93,7 +93,7 @@ struct DailyQuestionView: View {
 
     private var header: some View {
         ZStack {
-            QueslyLogo(height: 18, background: .clear)
+            QueslyLogo(height: 30, background: .clear)
             HStack {
                 Spacer()
                 if let onClose {
@@ -109,9 +109,9 @@ struct DailyQuestionView: View {
                 }
             }
         }
-        .frame(height: 44)
+        .frame(height: 48)
         .padding(.horizontal, DS.Space.xl)
-        .padding(.top, 8)
+        .padding(.top, 16)
     }
 
     /// Editorial, left-aligned question: the day's progress line, then the words arrive one by one.

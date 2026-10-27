@@ -15,9 +15,9 @@ struct WelcomeView: View {
             Color.qGreen.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                QueslyLogo(height: 22, background: .clear)
-                    .frame(height: 44)
-                    .padding(.top, DS.Space.xs)
+                QueslyLogo(height: 30, background: .clear)
+                    .frame(height: 48)
+                    .padding(.top, DS.Space.m)
                     .reveal(appeared, delay: 0)
 
                 Spacer(minLength: DS.Space.xl)

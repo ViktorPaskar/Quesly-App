@@ -8,6 +8,7 @@ struct Avatar: View {
     let user: AppUser?
     var size: CGFloat = 40
     var showsBadge = false
+    var isSticker = false
 
     @Environment(AppStore.self) private var store: AppStore?
     @Environment(\.colorScheme) private var colorScheme
@@ -37,13 +38,17 @@ struct Avatar: View {
         }
         .frame(width: size, height: size)
         .clipShape(Circle())
+        .overlay {
+            if isSticker {
+                Circle().strokeBorder(.white, lineWidth: max(2, size * 0.045))
+            }
+        }
+        .shadow(color: isSticker ? .black.opacity(0.10) : .clear, radius: 6, y: 2)
         .overlay(alignment: .bottomTrailing) {
             if showsBadge, let badge = user?.badge {
-                HexBadge(color: badge.color, icon: badge.icon)
-                    .frame(width: size * 0.3, height: size * 0.3)
-                    .padding(DS.Space.xxs)
-                    .background(Circle().fill(Color.qBackground))
-                    .offset(x: -size * 0.01, y: -size * 0.01)
+                HexBadge(tier: badge)
+                    .frame(width: size * 0.34, height: size * 0.38)
+                    .offset(x: size * 0.04, y: size * 0.04)
             }
         }
         .accessibilityHidden(true)

@@ -9,8 +9,7 @@ struct StoryLaunch: Identifiable {
 
 // MARK: - Row
 
-/// "Friends today": one ring per friend who answered, Instagram-stories style. Unseen rings are lime
-/// (the brand's "answered today" ring) with a thin green edge so they read on white.
+/// "Friends today": header + sticker-ring story bubbles for friends who answered today.
 struct FriendStoriesRow: View {
     @Environment(AppStore.self) private var store
     var onOpen: (Int) -> Void
@@ -18,17 +17,34 @@ struct FriendStoriesRow: View {
     var body: some View {
         let stories = store.friendStories
         if !stories.isEmpty {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: DS.Space.s) {
-                    ForEach(Array(stories.enumerated()), id: \.element.id) { index, answer in
-                        StoryBubble(user: store.user(answer.authorId),
-                                    isSeen: store.seenStoryAuthorIds.contains(answer.authorId)) {
-                            onOpen(index)
-                        }
-                    }
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Text("Friends today")
+                        .font(.ui(13, .semibold))
+                        .foregroundStyle(Color.qInk2)
+                    Text("\(stories.count) answered")
+                        .font(.ui(11, .bold))
+                        .foregroundStyle(Color.qGreen)
+                        .padding(.horizontal, 8)
+                        .frame(height: 20)
+                        .background(Capsule().fill(Color.qLime))
+                    Spacer()
                 }
                 .padding(.horizontal, DS.Space.m)
-                .padding(.vertical, DS.Space.s)
+                .padding(.top, 12)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 14) {
+                        ForEach(Array(stories.enumerated()), id: \.element.id) { index, answer in
+                            StoryBubble(user: store.user(answer.authorId),
+                                        isSeen: store.seenStoryAuthorIds.contains(answer.authorId)) {
+                                onOpen(index)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, DS.Space.m)
+                    .padding(.bottom, 12)
+                }
             }
         }
     }
@@ -42,21 +58,37 @@ private struct StoryBubble: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 6) {
-                Avatar(user: user, size: 58)
-                    .padding(5)
-                    .background {
-                        if isSeen {
-                            Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
-                        } else {
-                            Circle().strokeBorder(Color.qLime, lineWidth: 3.5)
-                                .overlay(Circle().strokeBorder(Color.qGreen.opacity(0.35), lineWidth: 0.75))
+                ZStack(alignment: .bottomTrailing) {
+                    Avatar(user: user, size: 56, isSticker: true)
+                        .padding(4)
+                        .background {
+                            if isSeen {
+                                Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
+                            } else {
+                                Circle()
+                                    .strokeBorder(
+                                        AngularGradient(
+                                            colors: [Color.qGreen, Color(hex: 0x169C6C), Color.qLime, Color.qGreen],
+                                            center: .center
+                                        ),
+                                        lineWidth: 3
+                                    )
+                            }
                         }
+                    if !isSeen {
+                        QueslyMark(color: .qLime, cutout: .qGreen)
+                            .frame(width: 11)
+                            .frame(width: 20, height: 20)
+                            .background(Circle().fill(Color.qGreen))
+                            .overlay(Circle().stroke(.white, lineWidth: 2))
+                            .offset(x: 1, y: 1)
                     }
+                }
                 Text(user?.username ?? "")
-                    .font(.ui(12, isSeen ? .regular : .medium))
+                    .font(.ui(12, isSeen ? .regular : .semibold))
                     .foregroundStyle(isSeen ? Color.qGray : Color.qInk)
                     .lineLimit(1)
-                    .frame(width: 72)
+                    .frame(width: 68)
             }
         }
         .buttonStyle(.pressable)

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Find people: search, invite and suggestions, as white blocks on the gray canvas.
+/// Find people: branded header + search capsule, invite card and suggestions on the gray canvas.
 struct DiscoverView: View {
     @Environment(AppStore.self) private var store
     @State private var query = ""
@@ -8,8 +8,10 @@ struct DiscoverView: View {
 
     var body: some View {
         let results = store.searchUsers(query)
-        // Native large title that collapses on scroll, with the system search bar under it.
-        ScrollView {
+        VStack(spacing: 0) {
+            headerBar
+
+            ScrollView {
                 LazyVStack(spacing: 0) {
                     if query.isEmpty {
                         InviteCard(username: store.me.username)
@@ -29,9 +31,9 @@ struct DiscoverView: View {
                                     ForEach(store.followingUsers) { user in
                                         NavigationLink(value: Route.profile(user.id)) {
                                             VStack(spacing: 8) {
-                                                Avatar(user: user, size: 58)
+                                                Avatar(user: user, size: 58, showsBadge: true, isSticker: true)
                                                 Text(user.username)
-                                                    .font(.ui(12))
+                                                    .font(.ui(12, .medium))
                                                     .foregroundStyle(Color.qInk)
                                                     .lineLimit(1)
                                                     .frame(width: 70)
@@ -55,20 +57,54 @@ struct DiscoverView: View {
                         }
                         .padding(.horizontal, DS.Space.m)
                         .outlinedBlock()
+                        .padding(.top, 12)
                     }
                 }
                 .padding(.horizontal, DS.Space.m)
                 .padding(.bottom, 16)
                 .animation(.qSmooth, value: query.isEmpty)
+            }
+            .scrollDismissesKeyboard(.immediately)
         }
-        .scrollDismissesKeyboard(.immediately)
         .background(Color.qCanvas)
-        .navigationTitle("Discover")
-        .navigationBarTitleDisplayMode(.large)
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search people")
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
-            // Snapshot so followed people don't vanish mid-scroll.
             if suggestions.isEmpty { suggestions = store.suggestedUsers }
+        }
+    }
+
+    private var headerBar: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Discover")
+                .font(.display(28, .bold))
+                .tracking(-0.4)
+                .foregroundStyle(Color.qInk)
+
+            HStack(spacing: 10) {
+                Icon(.magnifyingGlass, size: 18)
+                    .foregroundStyle(Color.qGray)
+                TextField("Search people", text: $query)
+                    .font(.ui(15))
+                    .foregroundStyle(Color.qInk)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                if !query.isEmpty {
+                    Button { query = "" } label: {
+                        Icon(.xCircleFill, size: 18)
+                            .foregroundStyle(Color.qGray)
+                    }
+                }
+            }
+            .padding(.horizontal, 14)
+            .frame(height: 40)
+            .background(Capsule().fill(Color.qField))
+        }
+        .padding(.horizontal, DS.Space.screen)
+        .padding(.top, 8)
+        .padding(.bottom, 12)
+        .background(Color.qBackground)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Color.qLine).frame(height: 1)
         }
     }
 }

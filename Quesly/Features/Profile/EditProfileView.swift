@@ -76,12 +76,12 @@ struct EditProfileView: View {
                                 .monospacedDigit()
                         }
                         TextField("Tell people about yourself", text: $draft.bio, axis: .vertical)
-                            .lineLimit(3...6)
+                            .lineLimit(2...4)
                             .onChange(of: draft.bio) { _, new in
                                 if new.count > AppUser.bioLimit { draft.bio = String(new.prefix(AppUser.bioLimit)) }
                             }
                             .font(.ui(16))
-                            .padding(DS.Space.m)
+                            .padding(DS.Space.s)
                             .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
                     }
                 }
@@ -92,10 +92,10 @@ struct EditProfileView: View {
                     store.updateProfile(draft)
                     dismiss()
                 }
-                .padding(.top, 8)
+                .padding(.top, DS.Space.xxs)
             }
             .padding(.horizontal, DS.Space.screen)
-            .padding(.bottom, 32)
+            .padding(.bottom, DS.Space.l)
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.qCanvas)
@@ -103,6 +103,9 @@ struct EditProfileView: View {
         .onAppear {
             guard !loaded else { return }
             draft = store.me
+            if draft.bio.count > AppUser.bioLimit {
+                draft.bio = String(draft.bio.prefix(AppUser.bioLimit))
+            }
             loaded = true
         }
     }

@@ -20,6 +20,7 @@ enum Route: Hashable {
 /// • compact (profile): the same row as a reply under the day's question (thread).
 struct AnswerCard: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.dynamicTypeSize) private var typeSize
     let answer: Answer
     var showsQuestion = false
     var showsAuthor = true
@@ -201,7 +202,8 @@ struct AnswerCard: View {
                     .padding(.horizontal, DS.Space.xs)
                     .frame(height: 20)
                     .background(Capsule().fill(Color.qMint))
-            } else if !isMine && !isCompact && !store.isFollowing(answer.authorId) {
+                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+            } else if !isMine && !isCompact && !typeSize.isAccessibilitySize && !store.isFollowing(answer.authorId) {
                 Button {
                     withAnimation(.qSpring) { store.toggleFollow(answer.authorId) }
                 } label: {

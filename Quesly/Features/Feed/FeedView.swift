@@ -301,50 +301,140 @@ struct StreakChip: View {
     }
 }
 
-/// Opening hero card: today's question full-width on brand green with live participant count.
+/// Opening hero card: today's question with tactile lime keyword sticker, watermark, time-left pill, and friend social proof.
 struct TodayQuestionBanner: View {
+    @Environment(AppStore.self) private var store
     let question: DailyQuestion
     var answeredCount: Int = 0
     var onTap: () -> Void = {}
 
+    private var words: [String] {
+        question.text.split(separator: " ").map(String.init)
+    }
+
     var body: some View {
+        let highlighted = question.keyWords
+        let friends = store.friendsAnsweredToday
+        let hasAnswered = store.hasAnsweredToday
+
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: DS.Space.s) {
+            VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: DS.Space.xs) {
                     QueslyMark(color: .qGreen, cutout: .qLime)
-                        .frame(width: 18)
+                        .frame(width: 17)
                         .frame(width: 28, height: 28)
                         .background(Circle().fill(Color.qLime))
                     Text("TODAY'S QUESTION")
                         .font(.ui(12, .bold))
-                        .tracking(0.5)
+                        .tracking(0.6)
+                        .lineLimit(1)
                         .foregroundStyle(Color.qLime)
                     Spacer(minLength: DS.Space.xs)
-                    if answeredCount > 0 {
-                        Text("\(answeredCount.formatted(.number.notation(.compactName))) answered")
+                    HStack(spacing: 4) {
+                        Icon(.clock, size: 12, weight: .semibold)
+                        Text("\(AppStore.timeLeftString()) left")
                             .font(.ui(12, .semibold))
-                            .foregroundStyle(.white.opacity(0.9))
-                            .padding(.horizontal, DS.Space.xs)
-                            .frame(height: 24)
-                            .background(Capsule().fill(.white.opacity(0.14)))
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(.white.opacity(0.92))
+                    .padding(.horizontal, 10)
+                    .frame(height: 26)
+                    .background(Capsule().fill(.white.opacity(0.14)))
+                }
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+
+                WrappingHStack(spacing: 6, lineSpacing: 4, centered: false) {
+                    ForEach(Array(words.enumerated()), id: \.offset) { _, word in
+                        let clean = word.uppercased().filter(\.isLetter)
+                        let isHot = highlighted.contains(clean)
+                        Text(word)
+                            .font(.display(24, .bold))
+                            .foregroundStyle(isHot ? Color.qGreen : .white)
+                            .padding(.horizontal, isHot ? 8 : 0)
+                            .padding(.vertical, isHot ? 1 : 0)
+                            .background {
+                                if isHot {
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .fill(Color.qLime)
+                                        .shadow(color: .black.opacity(0.14), radius: 4, y: 2)
+                                }
+                            }
+                            .rotationEffect(.degrees(isHot ? -2 : 0))
                     }
                 }
-                Text(question.text)
-                    .font(.display(22, .semibold))
-                    .lineSpacing(2)
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
+
+                Rectangle()
+                    .fill(.white.opacity(0.12))
+                    .frame(height: 1)
+
+                HStack(spacing: 8) {
+                    if !friends.isEmpty {
+                        AvatarStack(users: friends, size: 24, ring: Color(hex: 0x064A33))
+                    }
+                    socialSummary(friends: friends)
+                        .font(.ui(13, .medium))
+                        .foregroundStyle(.white.opacity(0.88))
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    HStack(spacing: 4) {
+                        if hasAnswered {
+                            Icon(.checkBold, size: 11, weight: .bold)
+                            Text("Answered")
+                        } else {
+                            Text("Answer")
+                            Icon(.arrowRightBold, size: 11, weight: .bold)
+                        }
+                    }
+                    .font(.ui(12, .bold))
+                    .foregroundStyle(hasAnswered ? Color.qLime : Color.qGreen)
+                    .padding(.horizontal, 10)
+                    .frame(height: 26)
+                    .background(
+                        Capsule().fill(hasAnswered ? Color.white.opacity(0.14) : Color.qLime)
+                    )
+                }
             }
-            .padding(DS.Space.m)
+            .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qGreen))
+            .background {
+                ZStack(alignment: .topTrailing) {
+                    LinearGradient(
+                        colors: [Color(hex: 0x0B6E4B), Color.qGreen, Color(hex: 0x05422C)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    Circle()
+                        .fill(Color.qLime.opacity(0.10))
+                        .frame(width: 150, height: 150)
+                        .blur(radius: 28)
+                        .offset(x: 40, y: -50)
+                    QueslyMark(color: .white.opacity(0.055), cutout: .clear)
+                        .frame(width: 110)
+                        .rotationEffect(.degrees(-14))
+                        .offset(x: 22, y: -14)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous))
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                    .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+            )
+            .shadow(color: Color.qGreen.opacity(0.18), radius: 14, y: 6)
             .padding(.horizontal, DS.Space.s)
             .padding(.top, DS.Space.s)
             .padding(.bottom, DS.Space.xs)
         }
         .buttonStyle(.pressable)
         .accessibilityElement(children: .combine)
+    }
+
+    private func socialSummary(friends: [AppUser]) -> Text {
+        let countText = answeredCount.formatted(.number.notation(.compactName))
+        if let first = friends.first {
+            return Text("**\(first.username)** & \(countText) answered")
+        }
+        return Text("**\(countText)** people answered")
     }
 }
 

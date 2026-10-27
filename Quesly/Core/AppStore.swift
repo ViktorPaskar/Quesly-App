@@ -561,27 +561,28 @@ final class AppStore {
 
     var achievements: [Achievement] {
         let answered = myAnswers.count
+        let thoughtfulAnswers = myAnswers.filter { $0.text.count >= 100 }.count
         return [
             .init(id: "crown", title: "The Crowned One", subtitle: "Given by Quesly for exceptional impact",
-                  icon: .crownSimpleFill, color: Color(hex: 0xE2A72E), progress: me.badge == .gold ? 1 : 0, goal: 1, isSpecial: true),
+                  icon: .crownSimpleFill, color: Color(hex: 0xE2A72E), progress: 1, goal: 1, isSpecial: true),
             .init(id: "first", title: "The First Step", subtitle: "You answered your first question",
-                  icon: .starFill, color: Color(hex: 0x7ED321), progress: min(answered, 1), goal: 1),
+                  icon: .starFill, color: Color(hex: 0x7ED321), progress: min(max(answered, 1), 1), goal: 1),
             .init(id: "streak3", title: "Consistent Soul", subtitle: "You answered 3 days in a row",
-                  icon: .fireFill, color: Color(hex: 0xF5A623), progress: min(streak, 3), goal: 3),
-            .init(id: "vibe", title: "Vibe Connector", subtitle: "Invited 10 friends to join Quesly",
-                  icon: .smileyFill, color: Color(hex: 0xE84FA5), progress: 7, goal: 10),
+                  icon: .fireFill, color: Color(hex: 0xF5A623), progress: min(max(bestStreak, 3), 3), goal: 3),
+            .init(id: "vibe", title: "Vibe Connector", subtitle: "Invited 3 friends to join Quesly",
+                  icon: .smileyFill, color: Color(hex: 0xE84FA5), progress: 3, goal: 3),
             .init(id: "streak14", title: "Steady Flow", subtitle: "You answered 14 days in a row",
-                  icon: .sparkleFill, color: Color(hex: 0x6F8FC0), progress: min(streak, 14), goal: 14),
+                  icon: .sparkleFill, color: Color(hex: 0x6F8FC0), progress: 14, goal: 14),
             .init(id: "weekend", title: "Weekend Reflector", subtitle: "Answered on 5 different weekends",
-                  icon: .leafFill, color: Color(hex: 0xB0643A), progress: min(weekendsAnswered, 5), goal: 5),
+                  icon: .leafFill, color: Color(hex: 0xB0643A), progress: min(max(weekendsAnswered, 5), 5), goal: 5),
             .init(id: "voice", title: "Thoughtful Voice", subtitle: "Answered 30 questions total",
-                  icon: .chatCircleTextFill, color: Color(hex: 0x3BA3A0), progress: min(answered, 30), goal: 30),
-            .init(id: "support", title: "Community Supporter", subtitle: "Reacted to 100 different people's answers",
-                  icon: .heartFill, color: Color(hex: 0xE5484D), progress: min(reactedCount, 100), goal: 100),
-            .init(id: "story", title: "Storyteller", subtitle: "Shared 10 answers to your stories",
-                  icon: .shareNetworkFill, color: Color(hex: 0x9B5CF6), progress: 0, goal: 10),
-            .init(id: "early", title: "Early Adopter", subtitle: "Joined Quesly in its first year",
-                  icon: .sparkleFill, color: Color(hex: 0x08563B), progress: 1, goal: 1),
+                  icon: .chatCircleTextFill, color: Color(hex: 0x3BA3A0), progress: min(answered, 22), goal: 30),
+            .init(id: "support", title: "Community Supporter", subtitle: "Reacted to 20 different people's answers",
+                  icon: .heartFill, color: Color(hex: 0xE5484D), progress: min(reactedCount, 12), goal: 20),
+            .init(id: "story", title: "Storyteller", subtitle: "Wrote 10 answers using 100+ characters",
+                  icon: .shareNetworkFill, color: Color(hex: 0x1B63AB), progress: min(thoughtfulAnswers, 6), goal: 10),
+            .init(id: "early", title: "Early Adopter", subtitle: "Joined Quesly before public launch",
+                  icon: .sparkleFill, color: Color(hex: 0x8052F0), progress: 0, goal: 1, isSpecial: true),
         ]
     }
 

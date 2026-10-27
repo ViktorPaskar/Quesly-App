@@ -219,7 +219,7 @@ struct ProfileHeader: View {
                     nickLine
                 }
                 Spacer(minLength: 0)
-                Avatar(user: user, size: 64)
+                Avatar(user: user, size: 68, showsBadge: true, isSticker: true)
                     .scaleEffect(appeared ? 1 : 0.6)
                     .opacity(appeared ? 1 : 0)
             }
@@ -357,28 +357,21 @@ struct ProfileHeader: View {
     }
 }
 
-/// Calendar tab, top block: the streak. Warm peach card with the flame's own orange, so it stands
-/// apart from the green brand blocks: a flame medallion and the big number, the last seven days
-/// as little flames, and the road to the next milestone with your best and this month's count.
-///
-/// The feed (and so the profile) only opens after today's answer, so the streak shown here is
-/// always at least 1. Three moods: first day, fresh start after a gap, and a running streak.
+/// Calendar tab, top block: the daily reflection rhythm card.
 struct StreakCard: View {
     @Environment(AppStore.self) private var store
     private let calendar = Calendar.current
-    private static let milestones = [3, 7, 14, 30, 50, 100, 200, 365]
-    private static let flameDeep = Color(hex: 0xC2410C)
 
     private var streak: Int { store.streak }
     private var best: Int { max(store.bestStreak, streak) }
     private var isFirstDay: Bool { store.answeredDays.count <= 1 }
 
     private var message: String {
-        if !store.hasAnsweredToday { return streak > 0 ? "Answer today to keep it going." : "Answer today's question to light the first flame." }
-        if isFirstDay { return "Your first flame. Come back tomorrow to keep it going." }
-        if streak == 1 { return "Fresh start. Your best is \(best) days." }
-        if streak > 1 && streak >= best { return "Your longest streak yet. See you tomorrow." }
-        return "See you tomorrow."
+        if !store.hasAnsweredToday { return streak > 0 ? "Answer today to keep your rhythm." : "Answer today's question to light the first flame." }
+        if isFirstDay { return "Your first reflection. Come back tomorrow." }
+        if streak == 1 { return "Fresh start. Take it one honest answer a day." }
+        if streak > 1 && streak >= best { return "Your longest rhythm yet. See you tomorrow." }
+        return "One honest answer a day. See you tomorrow."
     }
 
     private var answersThisMonth: Int {
@@ -386,17 +379,17 @@ struct StreakCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .center, spacing: DS.Space.m) {
                 medallion
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text("\(streak)")
-                            .font(.display(40, .bold))
+                            .font(.display(38, .bold))
                             .tracking(-0.5)
                             .foregroundStyle(Color.qInk)
                             .contentTransition(.numericText())
-                        Text(streak == 1 ? "day streak" : "day streak")
+                        Text("day streak")
                             .font(.display(17, .semibold))
                             .foregroundStyle(Color.qInk)
                     }
@@ -408,16 +401,28 @@ struct StreakCard: View {
                 Spacer(minLength: 0)
             }
 
-            week
-                .padding(.top, DS.Space.l)
-
-            milestone
-                .padding(DS.Space.m)
-                .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.white.opacity(0.7)))
-                .padding(.top, DS.Space.l)
+            weekRhythm
+                .padding(14)
+                .background(
+                    RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
+                        .fill(Color.white.opacity(0.82))
+                )
         }
         .padding(DS.Space.m)
-        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qPeach))
+        .background(
+            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: 0xFFF3E6), Color.qPeach],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                .strokeBorder(Color.qFlame.opacity(0.14), lineWidth: 1)
+        )
         .accessibilityElement(children: .combine)
     }
 
@@ -425,9 +430,10 @@ struct StreakCard: View {
     private var medallion: some View {
         Icon(.fireFill, size: 30)
             .foregroundStyle(Color.qFlame)
-            .frame(width: 60, height: 60)
+            .frame(width: 58, height: 58)
             .background(Circle().fill(.white))
-            .overlay(Circle().strokeBorder(Color.qFlame.opacity(0.18), lineWidth: 4))
+            .overlay(Circle().strokeBorder(Color.qFlame.opacity(0.18), lineWidth: 3.5))
+            .shadow(color: Color.qFlame.opacity(0.14), radius: 6, y: 2)
             .overlay(alignment: .bottomTrailing) {
                 if streak > 1 && streak >= best {
                     Icon(.starFill, size: 11)
@@ -441,69 +447,53 @@ struct StreakCard: View {
             }
     }
 
-    // MARK: Last seven days
+    // MARK: 7-day capsule rhythm
 
-    private var week: some View {
+    private var weekRhythm: some View {
         let today = calendar.startOfDay(for: .now)
         let days = (0..<7).reversed().compactMap { calendar.date(byAdding: .day, value: -$0, to: today) }
-        return HStack(spacing: 0) {
-            ForEach(days, id: \.self) { day in
-                let isToday = day == today
-                let done = store.answeredDays.contains(day)
-                VStack(spacing: DS.Space.xs) {
-                    ZStack {
-                        if done {
-                            Circle().fill(Color.qFlame)
-                            Icon(.fireFill, size: 16).foregroundStyle(.white)
-                        } else {
-                            Circle().strokeBorder(Color.qFlame.opacity(0.35), style: StrokeStyle(lineWidth: 1.5, dash: [2, 3]))
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                ForEach(days, id: \.self) { day in
+                    let isToday = day == today
+                    let done = store.answeredDays.contains(day)
+                    VStack(spacing: 6) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(
+                                    done
+                                    ? LinearGradient(colors: [Color(hex: 0xFF9E44), Color.qFlame], startPoint: .top, endPoint: .bottom)
+                                    : LinearGradient(colors: [Color.qFlame.opacity(0.10), Color.qFlame.opacity(0.10)], startPoint: .top, endPoint: .bottom)
+                                )
+                            if done {
+                                Icon(.fireFill, size: 16).foregroundStyle(.white)
+                            } else if isToday {
+                                Circle().fill(Color.qFlame).frame(width: 6, height: 6)
+                            }
                         }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 40)
+
+                        Text(day.formatted(.dateTime.weekday(.narrow)))
+                            .font(.ui(11, isToday ? .bold : .semibold))
+                            .foregroundStyle(isToday ? Color.qInk : Color.qGray)
                     }
-                    .frame(width: 34, height: 34)
-                    Text(day.formatted(.dateTime.weekday(.narrow)))
-                        .font(.ui(12, .semibold))
-                        .foregroundStyle(isToday ? Color.qInk : Color.qGray)
                 }
-                .frame(maxWidth: .infinity)
+            }
+
+            Rectangle()
+                .fill(Color.qFlame.opacity(0.10))
+                .frame(height: 1)
+
+            HStack(spacing: DS.Space.m) {
+                stat("\(best)", best == 1 ? "day best" : "days best")
+                Text("·").foregroundStyle(Color.qGray)
+                stat("\(answersThisMonth)", answersThisMonth == 1 ? "reflection this month" : "reflections this month")
+                Spacer(minLength: 0)
             }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Last 7 days: \(days.filter { store.answeredDays.contains($0) }.count) answered")
-    }
-
-    // MARK: Next milestone
-
-    private var milestone: some View {
-        let next = Self.milestones.first { $0 > streak } ?? (streak + 100)
-        let prev = Self.milestones.last { $0 <= streak } ?? 0
-        let progress = CGFloat(streak - prev) / CGFloat(max(1, next - prev))
-        let left = next - streak
-        return VStack(alignment: .leading, spacing: DS.Space.s) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Next goal · \(next) days")
-                    .font(.ui(13, .semibold))
-                    .foregroundStyle(Color.qInk)
-                Spacer()
-                Text(left == 1 ? "1 day to go" : "\(left) days to go")
-                    .font(.ui(13, .semibold))
-                    .foregroundStyle(Self.flameDeep)
-            }
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.qFlame.opacity(0.12))
-                    Capsule()
-                        .fill(LinearGradient(colors: [Color(hex: 0xFFB347), .qFlame], startPoint: .leading, endPoint: .trailing))
-                        .frame(width: max(8, geo.size.width * progress))
-                }
-            }
-            .frame(height: 8)
-            HStack(spacing: DS.Space.m) {
-                stat("\(best)", best == 1 ? "day best" : "days best")
-                stat("\(answersThisMonth)", answersThisMonth == 1 ? "answer this month" : "answers this month")
-                Spacer(minLength: 0)
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 
     private func stat(_ value: String, _ label: String) -> some View {
@@ -557,7 +547,7 @@ private struct ExpandableBio: View {
     }
 }
 
-/// Horizontal strip of badges with a link to all achievements.
+/// Horizontal strip of milestones with a link to all achievements.
 struct BadgesStrip: View {
     @Environment(AppStore.self) private var store
 
@@ -566,9 +556,7 @@ struct BadgesStrip: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: DS.Space.s) {
                 IconChip(icon: .medalFill, tint: .qGold, fill: .qGoldSoft)
-                Text("Badges").font(.ui(17, .semibold)).foregroundStyle(Color.qInk)
-                Text("\(items.filter(\.isUnlocked).count)/\(items.count)")
-                    .font(.ui(15)).foregroundStyle(Color.qGray)
+                Text("Milestones").font(.ui(17, .semibold)).foregroundStyle(Color.qInk)
                 Spacer()
                 NavigationLink(value: Route.achievements) {
                     HStack(spacing: 2) {
@@ -583,11 +571,10 @@ struct BadgesStrip: View {
                     ForEach(items) { item in
                         NavigationLink(value: Route.achievements) {
                             VStack(spacing: 8) {
-                                HexBadge(color: item.color, icon: item.icon, isLocked: !item.isUnlocked)
-                                    .frame(width: 54, height: 54)
-                                    .opacity(item.isUnlocked ? 1 : 0.55)
+                                HexBadge(asset: item.badgeAsset, isLocked: !item.isUnlocked)
+                                    .frame(width: 50, height: 56)
                                 Text(item.title)
-                                    .font(.ui(12))
+                                    .font(.ui(12, item.isUnlocked ? .medium : .regular))
                                     .foregroundStyle(item.isUnlocked ? Color.qInk : Color.qGray)
                                     .multilineTextAlignment(.center)
                                     .lineLimit(2)

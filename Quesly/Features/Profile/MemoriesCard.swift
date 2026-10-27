@@ -85,9 +85,9 @@ struct MemoriesCard: View {
 
     private var legend: some View {
         HStack(spacing: DS.Space.m) {
-            key("Answered") { Circle().fill(Color.qGreen) }
-            key("Today") { Circle().fill(Color.qLime) }
-            key("Missed") { Circle().strokeBorder(Color.qGray.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [2, 2])) }
+            key("Answered") { RoundedRectangle(cornerRadius: 3, style: .continuous).fill(Color.qGreen) }
+            key("Today") { RoundedRectangle(cornerRadius: 3, style: .continuous).fill(Color.qLime) }
+            key("Unanswered") { RoundedRectangle(cornerRadius: 3, style: .continuous).fill(Color.qField) }
             Spacer(minLength: 0)
         }
         .font(.ui(12))
@@ -177,21 +177,32 @@ private struct DayCell: View {
     }
 
     private var circle: some View {
-        ZStack {
+        let shape = RoundedRectangle(cornerRadius: 10, style: .continuous)
+        return ZStack {
             switch state {
             case .answered:
-                Circle().fill(isToday ? Color.qLime : Color.qGreen)
-                Text(number).font(.ui(13, isToday ? .bold : .semibold)).foregroundStyle(isToday ? Color.qInk : .white)
+                shape.fill(isToday ? Color.qLime : Color.qGreen)
+                if isToday {
+                    shape.strokeBorder(Color.qGreen.opacity(0.28), lineWidth: 1)
+                }
+                VStack(spacing: 2) {
+                    Text(number)
+                        .font(.ui(13, .bold))
+                        .foregroundStyle(isToday ? Color.qGreen : .white)
+                    Circle()
+                        .fill(isToday ? Color.qGreen : Color.qLime)
+                        .frame(width: 4, height: 4)
+                }
             case .missed:
                 if isToday {
-                    Circle().strokeBorder(Color.qGreen, lineWidth: 1.5)
+                    shape.strokeBorder(Color.qGreen, lineWidth: 1.5)
                     Text(number).font(.ui(13, .semibold)).foregroundStyle(Color.qInk)
                 } else {
-                    Circle().strokeBorder(Color.qGray4, style: StrokeStyle(lineWidth: 1.5, dash: [2, 3]))
-                    Text(number).font(.ui(13)).foregroundStyle(Color.qGray)
+                    shape.fill(Color.qField)
+                    Text(number).font(.ui(13, .medium)).foregroundStyle(Color.qGray)
                 }
             case .future:
-                Text(number).font(.ui(13)).foregroundStyle(Color(hex: 0xAEAEB2))
+                Text(number).font(.ui(13)).foregroundStyle(Color(hex: 0xC7C7CC))
             }
         }
         .frame(width: 36, height: 36)

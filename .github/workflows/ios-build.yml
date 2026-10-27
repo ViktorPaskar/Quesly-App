@@ -52,7 +52,7 @@ jobs:
           }
           ALL="welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile profileList memory settings editProfile achievements widgets"
           # Key redesigned screens for fast review. Set FOCUS="$ALL" for everything.
-          FOCUS="feed friends profile memory editProfile notifications"
+          FOCUS="feed friends profile memory achievements notifications discover"
           i=1
           for screen in $FOCUS; do
             shoot $screen "$(printf '%02d' $i)-$screen"; i=$((i+1))

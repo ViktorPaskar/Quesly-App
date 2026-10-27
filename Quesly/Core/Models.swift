@@ -54,6 +54,16 @@ enum BadgeTier: String, Codable, CaseIterable {
         case .green: return .leafFill
         }
     }
+
+    var assetName: String {
+        switch self {
+        case .gold: return "badge-crown"
+        case .red: return "badge-support"
+        case .purple: return "badge-early"
+        case .blue: return "badge-story"
+        case .green: return "badge-first"
+        }
+    }
 }
 
 // MARK: - Question
@@ -219,6 +229,7 @@ struct Achievement: Identifiable, Hashable {
     var isSpecial: Bool = false
 
     var isUnlocked: Bool { progress >= goal }
+    var badgeAsset: String { "badge-\(id)" }
 }
 
 // MARK: - Moderation

@@ -47,14 +47,16 @@ struct MainTabView: View {
     @State private var demoReactions = DemoConfig.opensReactionsSheet
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottom) {
             ZStack {
                 stack(.feed) { FeedView(onDiscover: { select(.discover) }) }
                 stack(.discover) { DiscoverView() }
                 stack(.notifications) { NotificationsView() }
                 stack(.profile) { ProfileView(userId: store.me.id, isTabRoot: true) }
             }
-            tabBar
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                tabBar
+            }
         }
         .ignoresSafeArea(.keyboard)
         .task { if DemoTour.isOn { await playTour() } }
@@ -127,10 +129,9 @@ struct MainTabView: View {
         }
     }
 
-    /// Fixed bar, icons only. The active tab is a brand-green pill with a lime filled glyph
-    /// (lime only ever sits on green); the pill glides between tabs.
+    /// Floating capsule dock: sliding brand-green pill with lime glyph, and the user's own mini sticker avatar on Profile.
     private var tabBar: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 4) {
             ForEach(MainTab.allCases, id: \.self) { t in
                 let active = tab == t
                 Button { select(t) } label: {
@@ -138,27 +139,36 @@ struct MainTabView: View {
                         if active {
                             Capsule()
                                 .fill(Color.qGreen)
-                                .frame(width: 64, height: 44)
+                                .frame(width: 58, height: 42)
                                 .matchedGeometryEffect(id: "tabBubble", in: ns)
                         }
-                        Icon(active ? t.activeIcon : t.icon, size: DS.Icon.tab, weight: active ? .semibold : .regular)
-                            .foregroundStyle(active ? Color.qLime : Color.qGray)
-                            .pop(on: active)
-                            .overlay(alignment: .topTrailing) {
-                                if t == .notifications && store.unreadNotifications > 0 && !active {
-                                    Text("\(min(store.unreadNotifications, 9))")
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundStyle(.white)
-                                        .frame(minWidth: 17, minHeight: 17)
-                                        .background(Circle().fill(Color.qFlame))
-                                        .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
-                                        .offset(x: 8, y: -6)
-                                        .transition(.scale)
+                        if t == .profile {
+                            Avatar(user: store.me, size: 26)
+                                .overlay(
+                                    Circle()
+                                        .strokeBorder(active ? Color.qLime : Color.qLine, lineWidth: active ? 2 : 1.5)
+                                )
+                                .pop(on: active)
+                        } else {
+                            Icon(active ? t.activeIcon : t.icon, size: 22, weight: active ? .semibold : .regular)
+                                .foregroundStyle(active ? Color.qLime : Color.qInk2)
+                                .pop(on: active)
+                                .overlay(alignment: .topTrailing) {
+                                    if t == .notifications && store.unreadNotifications > 0 && !active {
+                                        Text("\(min(store.unreadNotifications, 9))")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundStyle(.white)
+                                            .frame(minWidth: 16, minHeight: 16)
+                                            .background(Circle().fill(Color.qFlame))
+                                            .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
+                                            .offset(x: 8, y: -6)
+                                            .transition(.scale)
+                                    }
                                 }
-                            }
+                        }
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(height: 56)
+                    .frame(height: 50)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -166,10 +176,20 @@ struct MainTabView: View {
                 .accessibilityAddTraits(active ? .isSelected : [])
             }
         }
-        .padding(.horizontal, DS.Space.xs)
-        .padding(.top, DS.Space.xxs)
-        .background(Color.qBackground.ignoresSafeArea(edges: .bottom))
-        .overlay(alignment: .top) { Rectangle().fill(Color.qLine).frame(height: 1) }
+        .padding(.horizontal, 8)
+        .frame(height: 58)
+        .background(
+            Capsule()
+                .fill(Color.qBackground)
+                .shadow(color: .black.opacity(0.10), radius: 18, y: 6)
+        )
+        .overlay(
+            Capsule()
+                .strokeBorder(Color.qLine, lineWidth: 1)
+        )
+        .padding(.horizontal, 28)
+        .padding(.top, 4)
+        .padding(.bottom, 4)
         .animation(.qSpring, value: tab)
         .sensoryFeedback(.selection, trigger: tab)
     }

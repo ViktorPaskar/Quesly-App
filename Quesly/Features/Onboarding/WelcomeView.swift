@@ -46,7 +46,17 @@ struct WelcomeView: View {
         }
         .onAppear {
             appeared = true
-            startAutoCycle()
+        }
+        .task {
+            guard !reduceMotion else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 4_500_000_000)
+                if dragOffset == 0 {
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
+                        activeIndex = (activeIndex + 1) % catalog.count
+                    }
+                }
+            }
         }
         .sheet(item: $authMode) { mode in
             AuthView(mode: mode)
@@ -72,26 +82,15 @@ struct WelcomeView: View {
                         .rotationEffect(.degrees(isTop ? Double(dragOffset / 28) : (depth == 1 ? 1.5 : -1)))
                         .zIndex(Double(3 - depth))
                         .gesture(
-                            isTop ? DragGesture()
+                            DragGesture()
                                 .onChanged { value in
+                                    guard isTop else { return }
                                     dragOffset = value.translation.width
                                 }
                                 .onEnded { value in
-                                    if abs(value.translation.width) > 80 {
-                                        withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
-                                            dragOffset = value.translation.width > 0 ? 400 : -400
-                                        }
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
-                                            activeIndex = (activeIndex + 1) % catalog.count
-                                            dragOffset = 0
-                                        }
-                                    } else {
-                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                                            dragOffset = 0
-                                        }
-                                    }
+                                    guard isTop else { return }
+                                    handleDragEnd(value)
                                 }
-                            : nil
                         )
                 }
             }
@@ -109,6 +108,23 @@ struct WelcomeView: View {
             .padding(.top, 4)
         }
         .reveal(appeared, delay: 0.15)
+    }
+
+    private func handleDragEnd(_ value: DragGesture.Value) {
+        if abs(value.translation.width) > 80 {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
+                dragOffset = value.translation.width > 0 ? 400 : -400
+            }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 180_000_000)
+                activeIndex = (activeIndex + 1) % catalog.count
+                dragOffset = 0
+            }
+        } else {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                dragOffset = 0
+            }
+        }
     }
 
     private func catalogCard(item: CatalogQuestion, depth: Int) -> some View {
@@ -184,21 +200,6 @@ struct WelcomeView: View {
                         .stroke(Color.qLine, lineWidth: 1)
                 )
         )
-    }
-
-    private func startAutoCycle() {
-        guard !reduceMotion else { return }
-        Task {
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 4_500_000_000)
-                guard dragOffset == 0 else { continue }
-                await MainActor.run {
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
-                        activeIndex = (activeIndex + 1) % catalog.count
-                    }
-                }
-            }
-        }
     }
 
     // MARK: - Actions & Social Sign-In

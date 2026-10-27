@@ -48,7 +48,7 @@ struct EditProfileView: View {
                 .padding(.top, 4)
             }
             .padding(.horizontal, DS.Space.screen)
-            .padding(.bottom, DS.Space.l)
+            .padding(.bottom, 100)
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.qCanvas)

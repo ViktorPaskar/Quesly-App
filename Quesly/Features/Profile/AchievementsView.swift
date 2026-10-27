@@ -122,7 +122,7 @@ struct AchievementsView: View {
                     }
                 }
             }
-            .padding(.bottom, 32)
+            .padding(.bottom, 100)
         }
         .background(Color.qCanvas)
         .queslyBackHeader("Milestones")

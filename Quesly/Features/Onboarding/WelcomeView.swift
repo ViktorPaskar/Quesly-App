@@ -8,6 +8,9 @@ struct WelcomeView: View {
     @State private var appeared = false
 
     private var question: DailyQuestion { store.todayQuestion }
+    private var words: [String] {
+        question.text.split(separator: " ").map(String.init)
+    }
 
     var body: some View {
         ZStack {
@@ -37,9 +40,14 @@ struct WelcomeView: View {
     }
 
     private var heroCard: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        let highlighted = question.keyWords
+
+        return VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 8) {
-                Circle().fill(Color.qGreen).frame(width: 8, height: 8)
+                QueslyMark(color: .qGreen, cutout: .qLime)
+                    .frame(width: 16)
+                    .frame(width: 24, height: 24)
+                    .background(Circle().fill(Color.qLime))
                 Text("TODAY'S QUESTION")
                     .font(.ui(12, .bold))
                     .tracking(1.0)
@@ -50,11 +58,26 @@ struct WelcomeView: View {
                     .foregroundStyle(Color.qGray)
             }
 
-            Text(question.text)
-                .font(.display(30, .bold))
-                .foregroundStyle(Color.qInk)
-                .lineSpacing(4)
-                .fixedSize(horizontal: false, vertical: true)
+            WrappingHStack(spacing: 7, lineSpacing: 5, centered: false) {
+                ForEach(Array(words.enumerated()), id: \.offset) { _, word in
+                    let clean = word.uppercased().filter(\.isLetter)
+                    let isHot = highlighted.contains(clean)
+                    Text(word)
+                        .font(.display(28, .bold))
+                        .foregroundStyle(isHot ? Color.qGreen : Color.qInk)
+                        .padding(.horizontal, isHot ? 8 : 0)
+                        .padding(.vertical, isHot ? 2 : 0)
+                        .background {
+                            if isHot {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(Color.qLime)
+                                    .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
+                            }
+                        }
+                        .rotationEffect(.degrees(isHot ? -2 : 0))
+                }
+            }
+            .fixedSize(horizontal: false, vertical: true)
 
             Rectangle().fill(Color.qLine).frame(height: 1)
 

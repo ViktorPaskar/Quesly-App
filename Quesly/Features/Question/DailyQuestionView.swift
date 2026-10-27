@@ -18,6 +18,9 @@ struct DailyQuestionView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var question: DailyQuestion { store.todayQuestion }
+    private var words: [String] {
+        question.text.split(separator: " ").map(String.init)
+    }
 
     var body: some View {
         ZStack {
@@ -120,19 +123,35 @@ struct DailyQuestionView: View {
         .padding(.top, 16)
     }
 
-    /// Editorial, left-aligned question: the day's progress line, then the question in bold sentence case.
+    /// Editorial, left-aligned question: the day's progress line, then the question with tactile sticker.
     private var questionText: some View {
-        VStack(alignment: .leading, spacing: DS.Space.m) {
+        let highlighted = question.keyWords
+
+        return VStack(alignment: .leading, spacing: DS.Space.m) {
             DayProgress()
 
-            Text(question.text)
-                .font(.display(34, .heavy))
-                .foregroundStyle(Color.qInk)
-                .lineSpacing(4)
-                .fixedSize(horizontal: false, vertical: true)
-                .opacity(revealed > 0 || reduceMotion ? 1 : 0)
-                .offset(y: revealed > 0 || reduceMotion ? 0 : 12)
-                .animation(.qSmooth, value: revealed)
+            WrappingHStack(spacing: 8, lineSpacing: 6, centered: false) {
+                ForEach(Array(words.enumerated()), id: \.offset) { _, word in
+                    let clean = word.uppercased().filter(\.isLetter)
+                    let isHot = highlighted.contains(clean)
+                    Text(word)
+                        .font(.display(32, .heavy))
+                        .foregroundStyle(isHot ? Color.qGreen : Color.qInk)
+                        .padding(.horizontal, isHot ? 8 : 0)
+                        .padding(.vertical, isHot ? 2 : 0)
+                        .background {
+                            if isHot {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(Color.qLime)
+                                    .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
+                            }
+                        }
+                        .rotationEffect(.degrees(isHot ? -2 : 0))
+                }
+            }
+            .opacity(revealed > 0 || reduceMotion ? 1 : 0)
+            .offset(y: revealed > 0 || reduceMotion ? 0 : 12)
+            .animation(.qSmooth, value: revealed)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, DS.Space.xl)
@@ -141,7 +160,9 @@ struct DailyQuestionView: View {
 
     /// Writing happens inside a focused, tactile journal card.
     private var composer: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        let highlighted = question.keyWords
+
+        return VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 6) {
                     Circle().fill(Color.qGreen).frame(width: 7, height: 7)
@@ -151,11 +172,26 @@ struct DailyQuestionView: View {
                         .foregroundStyle(Color.qBrandText)
                 }
 
-                Text(question.text)
-                    .font(.display(19, .bold))
-                    .foregroundStyle(Color.qInk)
-                    .lineSpacing(2)
-                    .fixedSize(horizontal: false, vertical: true)
+                WrappingHStack(spacing: 6, lineSpacing: 4, centered: false) {
+                    ForEach(Array(words.enumerated()), id: \.offset) { _, word in
+                        let clean = word.uppercased().filter(\.isLetter)
+                        let isHot = highlighted.contains(clean)
+                        Text(word)
+                            .font(.display(19, .bold))
+                            .foregroundStyle(isHot ? Color.qGreen : Color.qInk)
+                            .padding(.horizontal, isHot ? 6 : 0)
+                            .padding(.vertical, isHot ? 1 : 0)
+                            .background {
+                                if isHot {
+                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                        .fill(Color.qLime)
+                                        .shadow(color: .black.opacity(0.10), radius: 3, y: 1)
+                                }
+                            }
+                            .rotationEffect(.degrees(isHot ? -2 : 0))
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
 
                 Rectangle().fill(Color.qLine).frame(height: 1)
 

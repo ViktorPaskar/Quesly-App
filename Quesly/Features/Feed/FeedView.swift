@@ -42,7 +42,7 @@ struct FeedView: View {
             .frame(height: 44)
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
-            UnderlineTabs(items: FeedScope.allCases, selection: $scope, title: \.rawValue)
+            FloatingScopePill(scope: $scope)
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
             if !network.isOnline {
@@ -318,10 +318,7 @@ struct TodayQuestionBanner: View {
             VStack(alignment: .leading, spacing: 14) {
                 // Top metadata row
                 HStack(spacing: DS.Space.xs) {
-                    QueslyMark(color: .qGreen, cutout: .qLime)
-                        .frame(width: 17)
-                        .frame(width: 28, height: 28)
-                        .background(Circle().fill(Color.qLime))
+                    MascotCoin(hasAnswered: hasAnswered)
                     Text("TODAY'S QUESTION")
                         .font(.ui(12, .bold))
                         .tracking(0.6)
@@ -447,6 +444,75 @@ struct TodayQuestionBanner: View {
         }
         .buttonStyle(.pressable)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Floating segmented Liquid Glass scope pill ("World / Friends")
+struct FloatingScopePill: View {
+    @Binding var scope: FeedScope
+    @Namespace private var ns
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(FeedScope.allCases) { item in
+                let isSelected = item == scope
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.78)) {
+                        scope = item
+                    }
+                } label: {
+                    Text(item.rawValue)
+                        .font(.ui(14, isSelected ? .bold : .medium))
+                        .foregroundStyle(isSelected ? Color.qInk : Color.qGray)
+                        .padding(.horizontal, 20)
+                        .frame(height: 32)
+                        .background {
+                            if isSelected {
+                                Capsule()
+                                    .fill(Color.white)
+                                    .shadow(color: Color.black.opacity(0.08), radius: 6, y: 2)
+                                    .matchedGeometryEffect(id: "scopePill", in: ns)
+                            }
+                        }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+        }
+        .padding(4)
+        .background(
+            Capsule()
+                .fill(Color.qField.opacity(0.92))
+                .overlay(
+                    Capsule()
+                        .strokeBorder(Color.qLine, lineWidth: 0.75)
+                )
+        )
+        .padding(.vertical, 6)
+        .sensoryFeedback(.selection, trigger: scope)
+    }
+}
+
+/// Dynamic Quesly mascot badge with subtle resting curiosity pulse
+struct MascotCoin: View {
+    let hasAnswered: Bool
+    @State private var breathing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        QueslyMark(color: .qGreen, cutout: .qLime)
+            .frame(width: 17)
+            .frame(width: 28, height: 28)
+            .background(Circle().fill(Color.qLime))
+            .shadow(color: Color.black.opacity(0.12), radius: 3, y: 1)
+            .scaleEffect(!hasAnswered && !reduceMotion && breathing ? 1.06 : 1.0)
+            .onAppear {
+                guard !hasAnswered, !reduceMotion else { return }
+                withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
+                    breathing = true
+                }
+            }
     }
 }
 

@@ -427,7 +427,7 @@ struct TodayQuestionBanner: View {
                             let clean = word.uppercased().filter(\.isLetter)
                             let isHot = highlighted.contains(clean)
                             Text(word)
-                                .font(.display(24, .semibold))
+                                .font(.display(24, .medium))
                                 .foregroundStyle(isHot ? Color.qGreen : .white)
                                 .padding(.horizontal, isHot ? 8 : 0)
                                 .padding(.vertical, isHot ? 1 : 0)

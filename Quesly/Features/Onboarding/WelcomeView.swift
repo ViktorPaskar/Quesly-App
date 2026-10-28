@@ -136,7 +136,7 @@ struct WelcomeView: View {
                     let clean = word.uppercased().filter(\.isLetter)
                     let isHot = clean == item.hotWord
                     Text(word)
-                        .font(.display(26, .semibold))
+                        .font(.display(26, .medium))
                         .foregroundStyle(isHot ? Color.qGreen : Color.qInk)
                         .padding(.horizontal, isHot ? 8 : 0)
                         .padding(.vertical, isHot ? 2 : 0)

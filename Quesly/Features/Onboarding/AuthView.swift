@@ -42,7 +42,7 @@ struct AuthView: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text(mode == .signUp ? "Create your account" : "Welcome back")
-                            .font(.display(26, .semibold)).foregroundStyle(Color.qInk)
+                            .font(.display(26, .medium)).foregroundStyle(Color.qInk)
                         Text(mode == .signUp
                              ? "One question a day. Join millions of stories."
                              : "Today's question is waiting for you.")

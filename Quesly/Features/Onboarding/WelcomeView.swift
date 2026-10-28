@@ -49,8 +49,8 @@ struct WelcomeView: View {
         .task {
             guard !reduceMotion else { return }
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 3_800_000_000)
-                withAnimation(.spring(response: 0.55, dampingFraction: 0.8)) {
+                try? await Task.sleep(nanoseconds: 1_800_000_000)
+                withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
                     activeIndex = (activeIndex + 1) % catalog.count
                 }
             }
@@ -62,16 +62,15 @@ struct WelcomeView: View {
         }
     }
 
-    // MARK: - Card Catalog ("Картотека вопросов")
+    // MARK: - Card Catalog ("Картотека вопросов" по макету Фото 2)
 
     private var questionCardDeck: some View {
         VStack(spacing: 16) {
             ZStack(alignment: .bottom) {
-                // Background Card 2 (furthest back)
-                backingCard(scale: 0.92, yOffset: -16, opacity: 0.5)
-
-                // Background Card 1 (middle)
-                backingCard(scale: 0.96, yOffset: -8, opacity: 0.8)
+                // Stepped backing tabs (like Photo 2)
+                catalogTab(offsetY: -42, scale: 0.86, fill: Color(hex: 0xDCE0DE))
+                catalogTab(offsetY: -28, scale: 0.91, fill: Color(hex: 0xE6EAE8))
+                catalogTab(offsetY: -14, scale: 0.96, fill: Color(hex: 0xF0F3F1))
 
                 // Front Active Card
                 let item = catalog[activeIndex]
@@ -79,12 +78,12 @@ struct WelcomeView: View {
                     .id(item.id)
                     .transition(
                         .asymmetric(
-                            insertion: .opacity.combined(with: .scale(scale: 0.98)),
+                            insertion: .opacity.combined(with: .scale(scale: 0.97)),
                             removal: .opacity
                         )
                     )
             }
-            .frame(height: 256)
+            .frame(height: 250)
 
             // Discreet deck pagination pills
             HStack(spacing: 6) {
@@ -100,25 +99,42 @@ struct WelcomeView: View {
         .reveal(appeared, delay: 0.15)
     }
 
-    private func backingCard(scale: CGFloat, yOffset: CGFloat, opacity: Double) -> some View {
-        RoundedRectangle(cornerRadius: 26, style: .continuous)
-            .fill(Color.qBlock)
-            .overlay(
-                RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .stroke(Color.qLine, lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.03), radius: 8, y: 3)
-            .frame(height: 240)
-            .scaleEffect(scale, anchor: .bottom)
-            .offset(y: yOffset)
-            .opacity(opacity)
+    /// Backing tab showing Mascot coin and "Daily at 9 AM" stepped at the top, exactly like Photo 2 mockup.
+    private func catalogTab(offsetY: CGFloat, scale: CGFloat, fill: Color) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                QueslyMark(color: .qGreen, cutout: .qLime)
+                    .frame(width: 14)
+                    .frame(width: 22, height: 22)
+                    .background(Circle().fill(Color.qLime))
+                Text("Daily at 9 AM")
+                    .font(.ui(12, .semibold))
+                    .foregroundStyle(Color.qGray)
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 14)
+
+            Spacer()
+        }
+        .frame(height: 200)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(fill)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.qLine.opacity(0.8), lineWidth: 1)
+                )
+        )
+        .scaleEffect(scale, anchor: .bottom)
+        .offset(y: offsetY)
     }
 
     private func frontCard(item: CatalogQuestion) -> some View {
         let words = item.text.split(separator: " ").map(String.init)
 
-        return VStack(alignment: .leading, spacing: 14) {
-            // Header Row: round icon + Daily at 9 AM (TODAY'S QUESTION removed)
+        return VStack(alignment: .leading, spacing: 18) {
+            // Header Row: round icon + Daily at 9 AM
             HStack(spacing: 8) {
                 QueslyMark(color: .qGreen, cutout: .qLime)
                     .frame(width: 16)
@@ -130,13 +146,13 @@ struct WelcomeView: View {
                 Spacer()
             }
 
-            // Headline with tactile lime keyword sticker
-            WrappingHStack(spacing: 7, lineSpacing: 5, centered: false) {
+            // Headline with tactile lime keyword sticker (NO bold, clean Outfit-Regular)
+            WrappingHStack(spacing: 7, lineSpacing: 6, centered: false) {
                 ForEach(Array(words.enumerated()), id: \.offset) { _, word in
                     let clean = word.uppercased().filter(\.isLetter)
                     let isHot = clean == item.hotWord
                     Text(word)
-                        .font(.display(26, .medium))
+                        .font(.display(24, .regular))
                         .foregroundStyle(isHot ? Color.qGreen : Color.qInk)
                         .padding(.horizontal, isHot ? 8 : 0)
                         .padding(.vertical, isHot ? 2 : 0)
@@ -153,28 +169,16 @@ struct WelcomeView: View {
             .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: 0)
-
-            Rectangle().fill(Color.qLine).frame(height: 1)
-
-            // Calm card footer: category only
-            HStack(spacing: 6) {
-                Icon(.sparkleFill, size: 12)
-                    .foregroundStyle(Color.qBrandText)
-                Text(item.category)
-                    .font(.ui(13, .semibold))
-                    .foregroundStyle(Color.qInk2)
-                Spacer()
-            }
         }
         .padding(22)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: 240)
+        .frame(height: 195)
         .background(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(Color.qBlock)
                 .shadow(color: Color.black.opacity(0.08), radius: 18, y: 8)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .stroke(Color.qLine, lineWidth: 1)
                 )
         )
@@ -194,18 +198,15 @@ struct WelcomeView: View {
             // Primary: Get started
             LimeButton(title: "Get started") { authMode = .signUp }
 
-            // Social sign-in options: Apple & Google with official vector SVGs
+            // Social sign-in options: Apple & Google
             HStack(spacing: 10) {
-                // Continue with Apple
+                // Continue with Apple (official Apple SF Symbol vector)
                 Button {
                     authMode = .signUp
                 } label: {
                     HStack(spacing: 8) {
-                        Image("ui-apple")
-                            .renderingMode(.template)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 17, height: 17)
+                        Image(systemName: "applelogo")
+                            .font(.system(size: 16, weight: .semibold))
                         Text("Apple")
                             .font(.ui(15, .semibold))
                     }

@@ -159,7 +159,7 @@ extension Font {
     }
 
     /// Brand display face (Outfit). Use only for the question, hero titles and brand moments.
-    static func display(_ size: CGFloat, _ weight: Font.Weight = .medium) -> Font {
+    static func display(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
         let (_, style) = scale(size)
         return .custom(outfitName(weight), size: size, relativeTo: style)
     }
@@ -179,10 +179,10 @@ extension Font {
     }
 
     private static func outfitName(_ weight: Font.Weight) -> String {
-        // App typography constraint: Titles are never Bold! Maximum Semibold, default Medium.
+        // App typography constraint: Titles are NEVER Bold/Heavy/Black!
         switch weight {
-        case .black, .heavy, .bold: return "Outfit-Medium"
-        case .semibold: return "Outfit-SemiBold"
+        case .black, .heavy, .bold: return "Outfit-Regular"
+        case .semibold: return "Outfit-Medium"
         case .medium: return "Outfit-Medium"
         default: return "Outfit-Regular"
         }

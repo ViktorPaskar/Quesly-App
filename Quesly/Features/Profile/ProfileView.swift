@@ -636,84 +636,146 @@ struct QueslyStatsCard: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 16) {
             // Header
-            HStack(spacing: 8) {
-                Icon(.chartBarFill, size: 18)
-                    .foregroundStyle(Color.qGreen)
-                    .frame(width: 32, height: 32)
-                    .background(Circle().fill(Color.qGreen.opacity(0.12)))
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.qLime)
+                        .frame(width: 32, height: 32)
+                    Icon(.chartBarFill, size: 16)
+                        .foregroundStyle(Color.qGreen)
+                }
                 Text("Reflection stats")
-                    .font(.display(18, .semibold))
+                    .font(.ui(17, .semibold))
                     .foregroundStyle(Color.qInk)
                 Spacer()
                 Text("All time")
-                    .font(.ui(12, .medium))
-                    .foregroundStyle(Color.qGray)
+                    .font(.ui(11, .semibold))
+                    .foregroundStyle(Color.qGreen)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(Color.qGreen.opacity(0.10)))
             }
 
-            // Metric pills (3 equal columns)
+            // Vibrant metric cards (3 equal columns)
             HStack(spacing: 10) {
-                metricBox(value: "\(store.totalQuestionsAnswered)", label: "Answered", icon: .chatCircleTextFill)
-                metricBox(value: "\(store.uniqueActiveDays)", label: "Active days", icon: .calendar)
-                metricBox(value: "\(store.totalSavedCount)", label: "Saved", icon: .bookmarkSimpleFill)
+                metricCard(
+                    value: "\(store.totalQuestionsAnswered)",
+                    label: "Answered",
+                    icon: .chatCircleTextFill,
+                    tint: Color.qGreen,
+                    bg: Color(hex: 0xEDF8F3),
+                    valColor: Color.qGreenDeep
+                )
+                metricCard(
+                    value: "\(store.uniqueActiveDays)",
+                    label: "Active days",
+                    icon: .fireFill,
+                    tint: Color.qFlame,
+                    bg: Color(hex: 0xFFF3EB),
+                    valColor: Color(hex: 0xB34700)
+                )
+                metricCard(
+                    value: "\(store.totalSavedCount)",
+                    label: "Saved",
+                    icon: .bookmarkSimpleFill,
+                    tint: Color(hex: 0x4285F4),
+                    bg: Color(hex: 0xEBF3FF),
+                    valColor: Color(hex: 0x1A56B3)
+                )
             }
 
-            Rectangle().fill(Color.qLine).frame(height: 1)
+            Rectangle().fill(Color.qLine.opacity(0.8)).frame(height: 1)
 
             // Top reflection themes
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 Text("TOP REFLECTION TOPICS")
                     .font(.ui(11, .semibold))
-                    .tracking(0.7)
-                    .foregroundStyle(Color.qGray)
+                    .tracking(0.8)
+                    .foregroundStyle(Color.qInk2)
 
-                // Segmented proportion bar
+                // Segmented proportion bar with rounded capsules
                 GeometryReader { geo in
-                    HStack(spacing: 3) {
-                        Capsule().fill(Color.qGreen).frame(width: geo.size.width * 0.45)
-                        Capsule().fill(Color.qLime).frame(width: geo.size.width * 0.30)
-                        Capsule().fill(Color(hex: 0x4285F4)).frame(width: max(0, geo.size.width * 0.25 - 6))
+                    HStack(spacing: 4) {
+                        Capsule()
+                            .fill(LinearGradient(colors: [Color.qGreen, Color.qGreenDeep], startPoint: .leading, endPoint: .trailing))
+                            .frame(width: max(8, geo.size.width * 0.45))
+                        Capsule()
+                            .fill(LinearGradient(colors: [Color.qLime, Color(hex: 0xB8E600)], startPoint: .leading, endPoint: .trailing))
+                            .frame(width: max(8, geo.size.width * 0.30))
+                        Capsule()
+                            .fill(LinearGradient(colors: [Color(hex: 0x4285F4), Color(hex: 0x6BA4F8)], startPoint: .leading, endPoint: .trailing))
+                            .frame(width: max(8, geo.size.width * 0.25 - 8))
                     }
                 }
-                .frame(height: 7)
+                .frame(height: 10)
 
-                // Legend
-                HStack(spacing: 14) {
-                    legendItem(color: Color.qGreen, text: "Stories 45%")
-                    legendItem(color: Color.qLime, text: "Wisdom 30%")
-                    legendItem(color: Color(hex: 0x4285F4), text: "Daily 25%")
+                // Interactive topic chips
+                HStack(spacing: 8) {
+                    topicChip(color: Color.qGreen, bg: Color(hex: 0xEDF8F3), text: "Stories", percent: "45%")
+                    topicChip(color: Color(hex: 0x7CA600), bg: Color.qLime.opacity(0.22), text: "Wisdom", percent: "30%")
+                    topicChip(color: Color(hex: 0x4285F4), bg: Color(hex: 0xEBF3FF), text: "Daily", percent: "25%")
                     Spacer(minLength: 0)
                 }
                 .padding(.top, 2)
             }
         }
-        .padding(16)
-        .outlinedBlock()
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.qBlock)
+                .shadow(color: Color.black.opacity(0.04), radius: 14, y: 4)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.qLine, lineWidth: 1)
+                )
+        )
     }
 
-    private func metricBox(value: String, label: String, icon: QIcon) -> some View {
-        VStack(spacing: 3) {
-            Icon(icon, size: 14)
-                .foregroundStyle(Color.qBrandText)
+    private func metricCard(value: String, label: String, icon: QIcon, tint: Color, bg: Color, valColor: Color) -> some View {
+        VStack(spacing: 6) {
+            ZStack {
+                Circle().fill(Color.white).frame(width: 28, height: 28)
+                    .shadow(color: Color.black.opacity(0.04), radius: 3, y: 1)
+                Icon(icon, size: 14)
+                    .foregroundStyle(tint)
+            }
             Text(value)
-                .font(.display(20, .semibold))
-                .foregroundStyle(Color.qInk)
+                .font(.ui(22, .semibold))
+                .foregroundStyle(valColor)
+                .monospacedDigit()
             Text(label)
+                .font(.ui(11, .semibold))
+                .foregroundStyle(tint)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(bg)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(tint.opacity(0.20), lineWidth: 1)
+                )
+        )
+    }
+
+    private func topicChip(color: Color, bg: Color, text: String, percent: String) -> some View {
+        HStack(spacing: 5) {
+            Circle().fill(color).frame(width: 6, height: 6)
+            Text(text)
+                .font(.ui(12, .semibold))
+                .foregroundStyle(Color.qInk)
+            Text(percent)
                 .font(.ui(11, .medium))
                 .foregroundStyle(Color.qGray)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.qField))
-    }
-
-    private func legendItem(color: Color, text: String) -> some View {
-        HStack(spacing: 5) {
-            Circle().fill(color).frame(width: 7, height: 7)
-            Text(text)
-                .font(.ui(12, .medium))
-                .foregroundStyle(Color.qInk2)
-        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(Capsule().fill(bg))
+        .overlay(Capsule().stroke(color.opacity(0.20), lineWidth: 0.8))
     }
 }

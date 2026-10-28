@@ -93,18 +93,39 @@ struct StoryViewer: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                Color.qGreen.ignoresSafeArea()
+                // Cinematic deep emerald gradient
+                LinearGradient(
+                    colors: [Color(hex: 0x053F2B), Color.qGreenDeep, Color(hex: 0x021E14)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+
+                // Ambient Quesly watermark
+                QueslyMark(color: Color.white.opacity(0.04))
+                    .frame(width: 340)
+                    .offset(x: 110, y: -40)
+                    .blur(radius: 1)
+                    .accessibilityHidden(true)
+
+                // Soft ambient lime glow
+                Circle()
+                    .fill(Color.qLime.opacity(0.10))
+                    .frame(width: 260, height: 260)
+                    .blur(radius: 50)
+                    .offset(y: -20)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 0) {
                     progressBars
                     header.padding(.top, DS.Space.s)
-                    Spacer(minLength: DS.Space.l)
-                    content
-                    Spacer(minLength: DS.Space.l)
+                    Spacer(minLength: DS.Space.m)
+                    peekCard
+                    Spacer(minLength: DS.Space.m)
                     ReactionBar(answer: answer)
                 }
                 .padding(.horizontal, DS.Space.screen)
-                .padding(.bottom, DS.Space.s)
+                .padding(.bottom, DS.Space.m)
             }
             .contentShape(Rectangle())
             .onTapGesture { location in
@@ -128,15 +149,15 @@ struct StoryViewer: View {
     // MARK: Parts
 
     private var progressBars: some View {
-        HStack(spacing: DS.Space.xxs) {
+        HStack(spacing: 5) {
             ForEach(stories.indices, id: \.self) { i in
                 GeometryReader { g in
-                    Capsule().fill(Color.white.opacity(0.3))
+                    Capsule().fill(Color.white.opacity(0.25))
                         .overlay(alignment: .leading) {
                             Capsule().fill(Color.qLime).frame(width: g.size.width * fill(i))
                         }
                 }
-                .frame(height: 3)
+                .frame(height: 3.5)
             }
         }
         .padding(.top, DS.Space.xs)
@@ -145,39 +166,111 @@ struct StoryViewer: View {
 
     private var header: some View {
         HStack(spacing: DS.Space.s) {
-            Avatar(user: author, size: 36)
-            VStack(alignment: .leading, spacing: 0) {
-                Text(author?.username ?? "")
-                    .font(.ui(15, .semibold))
-                    .foregroundStyle(.white)
+            Avatar(user: author, size: 38)
+                .overlay(Circle().stroke(Color.qLime, lineWidth: 1.8))
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(author?.username ?? "")
+                        .font(.ui(15, .semibold))
+                        .foregroundStyle(.white)
+                    // Peeks badge
+                    HStack(spacing: 4) {
+                        Circle().fill(Color.qLime).frame(width: 5, height: 5)
+                        Text("PEEK")
+                            .font(.ui(10, .semibold))
+                            .tracking(0.8)
+                            .foregroundStyle(Color.qLime)
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(Color.white.opacity(0.12)))
+                }
                 Text(RelativeTime.short(answer.createdAt))
-                    .font(.ui(13))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .font(.ui(12))
+                    .foregroundStyle(.white.opacity(0.72))
             }
             Spacer()
             Button { dismiss() } label: {
-                Icon(.xBold, size: DS.Icon.row)
-                    .foregroundStyle(.white)
-                    .frame(width: DS.hitTarget, height: DS.hitTarget)
-                    .contentShape(Rectangle())
+                Circle()
+                    .fill(Color.white.opacity(0.16))
+                    .frame(width: 36, height: 36)
+                    .overlay(Icon(.xBold, size: 13).foregroundStyle(.white))
             }
-            .padding(.trailing, -DS.Space.s)
             .accessibilityLabel("Close")
         }
         .accessibilityElement(children: .contain)
     }
 
-    private var content: some View {
-        VStack(alignment: .leading, spacing: DS.Space.s) {
-            Text(answer.questionText.uppercased())
-                .font(.ui(13, .semibold))
-                .foregroundStyle(Color.qLime)
+    /// Dimensional glassmorphic card framing the answer
+    private var peekCard: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            // Branded question chip
+            HStack(spacing: 7) {
+                QueslyMark(color: .qGreen, cutout: .qLime)
+                    .frame(width: 14)
+                    .frame(width: 20, height: 20)
+                    .background(Circle().fill(Color.qLime))
+                Text(answer.questionText.uppercased())
+                    .font(.ui(12, .semibold))
+                    .tracking(0.5)
+                    .foregroundStyle(Color.qLime)
+                    .lineLimit(2)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule().fill(Color.black.opacity(0.28))
+                    .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 0.8))
+            )
+
+            // The Answer Text: clean, un-bold, with relaxed line spacing
             Text(answer.text)
-                .font(.display(28, .semibold))
+                .font(.display(24, .regular))
                 .foregroundStyle(.white)
-                .lineSpacing(2)
+                .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.vertical, 4)
+
+            // Card footer info
+            HStack {
+                HStack(spacing: 5) {
+                    Icon(.sparkleFill, size: 12)
+                        .foregroundStyle(Color.qLime)
+                    Text("Daily reflection")
+                        .font(.ui(12, .medium))
+                        .foregroundStyle(.white.opacity(0.72))
+                }
+                Spacer()
+                Text(RelativeTime.short(answer.createdAt))
+                    .font(.ui(11, .medium))
+                    .foregroundStyle(.white.opacity(0.5))
+            }
+            .padding(.top, 4)
         }
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.14), Color.white.opacity(0.06)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.35), Color.white.opacity(0.10)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.2
+                        )
+                )
+                .shadow(color: Color.black.opacity(0.22), radius: 24, y: 12)
+        )
         .id(answer.id)
         .transition(.opacity)
         .accessibilityElement(children: .combine)
@@ -224,30 +317,46 @@ private struct ReactionBar: View {
     let answer: Answer
 
     var body: some View {
-        HStack(spacing: DS.Space.s) {
+        HStack(spacing: 6) {
             ForEach(ReactionKind.allCases) { kind in
                 let isOn = answer.myReaction == kind
                 Button {
                     withAnimation(.qSpring) { store.react(kind, on: answer.id) }
                 } label: {
-                    ReactionSticker(kind: kind, size: 34)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(
-                            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                                .fill(Color.white.opacity(isOn ? 0.22 : 0.1))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                                .strokeBorder(isOn ? Color.qLime : .clear, lineWidth: 2)
-                        )
-                        .scaleEffect(isOn ? 1.04 : 1)
+                    VStack(spacing: 3) {
+                        ReactionSticker(kind: kind, size: 28)
+                        Text(kind.label)
+                            .font(.ui(9, .semibold))
+                            .foregroundStyle(isOn ? Color.qLime : Color.white.opacity(0.85))
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.white.opacity(isOn ? 0.22 : 0.08))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(isOn ? Color.qLime : Color.white.opacity(0.12), lineWidth: isOn ? 1.5 : 0.8)
+                    )
+                    .scaleEffect(isOn ? 1.05 : 1)
                 }
                 .buttonStyle(.pressable)
                 .accessibilityLabel(kind.label)
                 .accessibilityAddTraits(isOn ? .isSelected : [])
             }
         }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.black.opacity(0.28))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.white.opacity(0.14), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.20), radius: 12, y: 6)
+        )
         .sensoryFeedback(.selection, trigger: answer.myReaction)
     }
 }

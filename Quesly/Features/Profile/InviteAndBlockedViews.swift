@@ -9,7 +9,7 @@ struct InviteFriendsView: View {
             HexBadge(color: Color(hex: 0xE84FA5), icon: .smileyFill)
                 .frame(width: 110)
             Text("Invite your friends")
-                .font(.display(28, .bold))
+                .font(.display(28, .semibold))
                 .foregroundStyle(Color.qInk)
             Text("Quesly is better with people you care about. Invite 10 friends to unlock the **Vibe Connector** badge.")
                 .font(.ui(16))

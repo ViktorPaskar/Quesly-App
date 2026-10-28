@@ -187,7 +187,7 @@ private struct DayCell: View {
                 }
                 VStack(spacing: 2) {
                     Text(number)
-                        .font(.ui(13, .bold))
+                        .font(.ui(13, .semibold))
                         .foregroundStyle(isToday ? Color.qGreen : .white)
                     Circle()
                         .fill(isToday ? Color.qGreen : Color.qLime)

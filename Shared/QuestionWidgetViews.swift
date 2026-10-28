@@ -48,7 +48,7 @@ enum WidgetPalette {
     static let flame = Color(red: 1, green: 106 / 255, blue: 26 / 255)           // qFlame #FF6A1A
 
     static func display(_ size: CGFloat, relativeTo style: Font.TextStyle = .headline) -> Font {
-        .custom("Outfit-Bold", size: size, relativeTo: style)
+        .custom("Outfit-SemiBold", size: size, relativeTo: style)
     }
 }
 
@@ -70,7 +70,7 @@ struct QuestionWidgetSmallView: View {
             if model.answered {
                 HStack(spacing: 4) {
                     Image(systemName: "flame.fill").foregroundStyle(WidgetPalette.flame)
-                    Text("\(model.streak)").fontWeight(.bold)
+                    Text("\(model.streak)").fontWeight(.semibold)
                     if model.friendsAnswered > 0 {
                         Text("· \(model.friendsAnswered) friends").foregroundStyle(.white.opacity(0.75))
                     }
@@ -83,7 +83,7 @@ struct QuestionWidgetSmallView: View {
                     Text("Answer")
                     Image(systemName: "arrow.right")
                 }
-                .font(.system(size: 13, weight: .bold))
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(WidgetPalette.lime)
             }
         }
@@ -128,7 +128,7 @@ struct QuestionWidgetMediumView: View {
                 } else {
                     Spacer(minLength: 0)
                     Text("Answer")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(WidgetPalette.green)
                         .padding(.horizontal, 16)
                         .frame(height: 36)
@@ -152,7 +152,7 @@ struct QuestionWidgetMediumView: View {
 private struct WidgetEyebrow: View {
     var body: some View {
         Text("TODAY'S QUESTION")
-            .font(.system(size: 10, weight: .bold))
+            .font(.system(size: 10, weight: .semibold))
             .foregroundStyle(WidgetPalette.lime)
     }
 }
@@ -172,7 +172,7 @@ struct QuestionWidgetRectangularView: View {
                     Text("\(model.streak)")
                 }
             }
-            .font(.system(size: 11, weight: .bold))
+            .font(.system(size: 11, weight: .semibold))
             Text(model.question)
                 .font(.system(size: 14, weight: .semibold))
                 .lineLimit(3)
@@ -192,7 +192,7 @@ struct QuestionWidgetCircularView: View {
                 Image(systemName: model.answered ? "flame.fill" : "flame")
                     .font(.system(size: 15, weight: .semibold))
                 Text("\(model.streak)")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
             }
         }
     }

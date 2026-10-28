@@ -124,7 +124,7 @@ struct EditProfileView: View {
                         .font(.ui(13, .semibold))
                         .foregroundStyle(Color.qInk)
                     Text("*")
-                        .font(.ui(13, .bold))
+                        .font(.ui(13, .semibold))
                         .foregroundStyle(Color.qFlame)
                 }
                 TextField("Your full name", text: Binding(get: { draft.name ?? "" }, set: { draft.name = $0 }))
@@ -139,7 +139,7 @@ struct EditProfileView: View {
                         .font(.ui(13, .semibold))
                         .foregroundStyle(Color.qInk)
                     Text("*")
-                        .font(.ui(13, .bold))
+                        .font(.ui(13, .semibold))
                         .foregroundStyle(Color.qFlame)
                 }
                 HStack(spacing: 4) {
@@ -174,7 +174,7 @@ struct EditProfileView: View {
                             .font(.ui(13, .semibold))
                             .foregroundStyle(Color.qInk)
                         Text("*")
-                            .font(.ui(13, .bold))
+                            .font(.ui(13, .semibold))
                             .foregroundStyle(Color.qFlame)
                     }
                     Spacer()
@@ -206,7 +206,7 @@ struct EditProfileView: View {
     private var accountCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("ACCOUNT & SECURITY")
-                .font(.ui(11, .bold))
+                .font(.ui(11, .semibold))
                 .tracking(0.8)
                 .foregroundStyle(Color.qBrandText)
 

@@ -365,7 +365,7 @@ struct StreakChip: View {
                 .foregroundStyle(Color.qFlame)
                 .pop(on: days)
             Text("\(days)")
-                .font(.display(15, .bold))
+                .font(.display(15, .semibold))
                 .foregroundStyle(Color.qInk)
                 .contentTransition(.numericText())
         }
@@ -401,7 +401,7 @@ struct TodayQuestionBanner: View {
                     HStack(spacing: DS.Space.xs) {
                         MascotCoin(hasAnswered: hasAnswered)
                         Text("TODAY'S QUESTION")
-                            .font(.ui(12, .bold))
+                            .font(.ui(12, .semibold))
                             .tracking(0.6)
                             .lineLimit(1)
                             .foregroundStyle(Color.qLime)
@@ -427,7 +427,7 @@ struct TodayQuestionBanner: View {
                             let clean = word.uppercased().filter(\.isLetter)
                             let isHot = highlighted.contains(clean)
                             Text(word)
-                                .font(.display(24, .bold))
+                                .font(.display(24, .semibold))
                                 .foregroundStyle(isHot ? Color.qGreen : .white)
                                 .padding(.horizontal, isHot ? 8 : 0)
                                 .padding(.vertical, isHot ? 1 : 0)
@@ -465,7 +465,7 @@ struct TodayQuestionBanner: View {
                         Spacer(minLength: 8)
                         HStack(spacing: 5) {
                             Text("Answer")
-                                .font(.ui(13, .bold))
+                                .font(.ui(13, .semibold))
                             Icon(.arrowRightBold, size: 11)
                         }
                         .foregroundStyle(Color.qGreenDeep)
@@ -513,7 +513,7 @@ struct FullWidthFeedScopeBar: View {
                     } label: {
                         VStack(spacing: 8) {
                             Text(item.rawValue)
-                                .font(.ui(15, isSelected ? .bold : .medium))
+                                .font(.ui(15, isSelected ? .semibold : .medium))
                                 .foregroundStyle(isSelected ? Color.qInk : Color.qGray)
                                 .frame(maxWidth: .infinity)
                                 .padding(.top, 8)

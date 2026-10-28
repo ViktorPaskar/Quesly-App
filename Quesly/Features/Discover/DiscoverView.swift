@@ -76,7 +76,7 @@ struct DiscoverView: View {
     private var headerBar: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Discover")
-                .font(.display(28, .bold))
+                .font(.display(28, .semibold))
                 .tracking(-0.4)
                 .foregroundStyle(Color.qInk)
 

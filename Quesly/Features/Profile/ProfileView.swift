@@ -251,7 +251,7 @@ struct ProfileHeader: View {
             HStack(alignment: .center, spacing: DS.Space.m) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(user?.displayName ?? "")
-                        .font(.display(28, .bold))
+                        .font(.display(28, .semibold))
                         .tracking(-0.4)
                         .foregroundStyle(Color.qInk)
                         .lineLimit(1)
@@ -304,7 +304,7 @@ struct ProfileHeader: View {
 
     private func number(_ value: Int, color: Color = .qInk) -> some View {
         Text(value.formatted(.number.notation(.compactName)))
-            .font(.ui(20, .bold))
+            .font(.ui(20, .semibold))
             .foregroundStyle(color)
             .monospacedDigit()
             .contentTransition(.numericText())
@@ -427,12 +427,12 @@ struct StreakCard: View {
             // Header: big count in flame color + label (no verbose clutter)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("\(streak)")
-                    .font(.display(46, .bold))
+                    .font(.display(46, .semibold))
                     .tracking(-1.5)
                     .foregroundStyle(Color.qFlame)
                     .contentTransition(.numericText())
                 Text(streak == 1 ? "day streak" : "days streak")
-                    .font(.display(19, .bold))
+                    .font(.display(19, .semibold))
                     .foregroundStyle(Color.qInk)
                 Spacer(minLength: 0)
             }
@@ -447,10 +447,10 @@ struct StreakCard: View {
 
             HStack {
                 (Text("Personal best: ").font(.ui(12)).foregroundStyle(Color.qGray)
-                    + Text("\(best) \(best == 1 ? "day" : "days")").font(.ui(12.5, .bold)).foregroundStyle(Color.qInk))
+                    + Text("\(best) \(best == 1 ? "day" : "days")").font(.ui(12.5, .semibold)).foregroundStyle(Color.qInk))
                 Spacer(minLength: 0)
                 (Text("This month: ").font(.ui(12)).foregroundStyle(Color.qGray)
-                    + Text("\(answersThisMonth) \(answersThisMonth == 1 ? "day" : "days")").font(.ui(12.5, .bold)).foregroundStyle(Color.qInk))
+                    + Text("\(answersThisMonth) \(answersThisMonth == 1 ? "day" : "days")").font(.ui(12.5, .semibold)).foregroundStyle(Color.qInk))
             }
         }
         .padding(20)
@@ -485,7 +485,7 @@ struct StreakCard: View {
                             Circle()
                                 .fill(Color.qFlame)
                             Image(systemName: "checkmark")
-                                .font(.system(size: 13, weight: .bold))
+                                .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(.white)
                         } else {
                             Circle()
@@ -644,7 +644,7 @@ struct QueslyStatsCard: View {
                     .frame(width: 32, height: 32)
                     .background(Circle().fill(Color.qGreen.opacity(0.12)))
                 Text("Reflection stats")
-                    .font(.display(18, .bold))
+                    .font(.display(18, .semibold))
                     .foregroundStyle(Color.qInk)
                 Spacer()
                 Text("All time")
@@ -664,7 +664,7 @@ struct QueslyStatsCard: View {
             // Top reflection themes
             VStack(alignment: .leading, spacing: 8) {
                 Text("TOP REFLECTION TOPICS")
-                    .font(.ui(11, .bold))
+                    .font(.ui(11, .semibold))
                     .tracking(0.7)
                     .foregroundStyle(Color.qGray)
 
@@ -697,7 +697,7 @@ struct QueslyStatsCard: View {
             Icon(icon, size: 14)
                 .foregroundStyle(Color.qBrandText)
             Text(value)
-                .font(.display(20, .bold))
+                .font(.display(20, .semibold))
                 .foregroundStyle(Color.qInk)
             Text(label)
                 .font(.ui(11, .medium))

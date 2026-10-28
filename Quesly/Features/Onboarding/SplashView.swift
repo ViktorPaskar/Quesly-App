@@ -51,7 +51,7 @@ struct LimeTransitionView: View {
                     .frame(width: 84)
                     .scaleEffect(pop ? 1 : 0.4)
                 Text("Answer posted!")
-                    .font(.display(24, .bold))
+                    .font(.display(24, .semibold))
                     .foregroundStyle(Color.qGreen)
                     .opacity(pop ? 1 : 0)
                     .offset(y: pop ? 0 : 12)

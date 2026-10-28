@@ -150,16 +150,16 @@ extension Font {
     }
 
     private static func interName(_ weight: Font.Weight) -> String {
+        // App typography constraint: Maximum Semibold, never Bold/Heavy/Black
         switch weight {
-        case .bold, .heavy, .black: return "Inter-Bold"
-        case .semibold: return "Inter-SemiBold"
+        case .bold, .heavy, .black, .semibold: return "Inter-SemiBold"
         case .medium: return "Inter-Medium"
         default: return "Inter-Regular"
         }
     }
 
     /// Brand display face (Outfit). Use only for the question, hero titles and brand moments.
-    static func display(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font {
+    static func display(_ size: CGFloat, _ weight: Font.Weight = .semibold) -> Font {
         let (_, style) = scale(size)
         return .custom(outfitName(weight), size: size, relativeTo: style)
     }
@@ -179,11 +179,9 @@ extension Font {
     }
 
     private static func outfitName(_ weight: Font.Weight) -> String {
+        // App typography constraint: Maximum Semibold, never Bold/Heavy/Black
         switch weight {
-        case .black: return "Outfit-Black"
-        case .heavy: return "Outfit-ExtraBold"
-        case .bold: return "Outfit-Bold"
-        case .semibold: return "Outfit-SemiBold"
+        case .black, .heavy, .bold, .semibold: return "Outfit-SemiBold"
         case .medium: return "Outfit-Medium"
         default: return "Outfit-Regular"
         }

@@ -25,7 +25,7 @@ struct AchievementsView: View {
                         }
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Quiet milestones")
-                                .font(.display(20, .bold))
+                                .font(.display(20, .semibold))
                                 .foregroundStyle(.white)
                             Text("Earned through honest daily reflection — never a race.")
                                 .font(.ui(13))
@@ -38,11 +38,11 @@ struct AchievementsView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
                             Text("\(totalUnlocked) of \(totalCount) unlocked")
-                                .font(.ui(13, .bold))
+                                .font(.ui(13, .semibold))
                                 .foregroundStyle(Color.qLime)
                             Spacer()
                             Text("\(Int(Double(totalUnlocked) / Double(totalCount) * 100))%")
-                                .font(.ui(13, .bold))
+                                .font(.ui(13, .semibold))
                                 .foregroundStyle(Color.white.opacity(0.90))
                         }
                         GeometryReader { geo in
@@ -137,7 +137,7 @@ struct AchievementsView: View {
 
     private func sectionTitle(_ text: String) -> some View {
         Text(text.uppercased())
-            .font(.ui(12, .bold))
+            .font(.ui(12, .semibold))
             .tracking(0.8)
             .foregroundStyle(Color.qGray)
     }
@@ -156,7 +156,7 @@ struct AchievementsView: View {
                         HStack(spacing: 3) {
                             Icon(.checkBold, size: 9)
                             Text("Done")
-                                .font(.ui(11, .bold))
+                                .font(.ui(11, .semibold))
                         }
                         .foregroundStyle(Color.qGreen)
                         .padding(.horizontal, 6)

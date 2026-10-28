@@ -148,7 +148,7 @@ struct MainTabView: View {
                             .overlay(alignment: .topTrailing) {
                                 if t == .notifications && store.unreadNotifications > 0 && !active {
                                     Text("\(min(store.unreadNotifications, 9))")
-                                        .font(.system(size: 10, weight: .bold))
+                                        .font(.system(size: 10, weight: .semibold))
                                         .foregroundStyle(.white)
                                         .frame(minWidth: 16, minHeight: 16)
                                         .background(Circle().fill(Color.qFlame))

@@ -17,7 +17,7 @@ struct FindFriendsView: View {
                 StepDots(current: 0, total: 2)
                     .padding(.bottom, 2)
                 Text("Find your people")
-                    .font(.display(24, .bold))
+                    .font(.display(24, .semibold))
                     .foregroundStyle(Color.qInk)
                 Text("Quesly is better with friends. Follow a few people to fill your Friends feed.")
                     .font(.ui(14))
@@ -79,7 +79,7 @@ struct NotificationPrimingView: View {
                 NotificationHeroArt()
 
                 Text("Never miss\ntoday's question")
-                    .font(.display(30, .bold))
+                    .font(.display(30, .semibold))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Color.qInk)
                     .padding(.top, 28)

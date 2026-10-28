@@ -141,7 +141,7 @@ struct DailyQuestionView: View {
                     let clean = word.uppercased().filter(\.isLetter)
                     let isHot = highlighted.contains(clean)
                     Text(word)
-                        .font(.display(32, .heavy))
+                        .font(.display(32, .semibold))
                         .foregroundStyle(isHot ? Color.qGreen : Color.qInk)
                         .padding(.horizontal, isHot ? 8 : 0)
                         .padding(.vertical, isHot ? 2 : 0)
@@ -173,7 +173,7 @@ struct DailyQuestionView: View {
                 HStack(spacing: 6) {
                     Circle().fill(Color.qGreen).frame(width: 7, height: 7)
                     Text("TODAY'S QUESTION")
-                        .font(.ui(11, .bold))
+                        .font(.ui(11, .semibold))
                         .tracking(0.8)
                         .foregroundStyle(Color.qBrandText)
                 }
@@ -183,7 +183,7 @@ struct DailyQuestionView: View {
                         let clean = word.uppercased().filter(\.isLetter)
                         let isHot = highlighted.contains(clean)
                         Text(word)
-                            .font(.display(19, .bold))
+                            .font(.display(19, .semibold))
                             .foregroundStyle(isHot ? Color.qGreen : Color.qInk)
                             .padding(.horizontal, isHot ? 6 : 0)
                             .padding(.vertical, isHot ? 1 : 0)

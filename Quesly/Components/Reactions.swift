@@ -55,7 +55,7 @@ struct ReactionsSheet: View {
             VStack(spacing: 0) {
                 HStack {
                     Text("Reactions")
-                        .font(.display(20, .bold))
+                        .font(.display(20, .semibold))
                         .tracking(-0.2)
                         .foregroundStyle(Color.qInk)
                     Spacer()

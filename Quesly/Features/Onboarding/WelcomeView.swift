@@ -1,278 +1,430 @@
 import SwiftUI
 
-/// First screen. An interactive card deck ("картотека вопросов") showcasing daily questions
-/// cycling one after another with tactile physics, social sign-in options, and clear secondary sign-in.
+/// Welcome & First Launch Onboarding screen.
+/// Modern 3-step photographic walkthrough inspired by premium apps (Famio, BeReal, Opal):
+/// - Segmented top progress bar with "Skip" button
+/// - High-resolution commercial studio hero portraits melting smoothly into the clean background
+/// - Dynamic floating circular avatars and interactive sticker badges around the phone
+/// - Clean Outfit-Regular display typography (never bold)
+/// - Seamless social authentication (Apple & Google) and sign-in
 struct WelcomeView: View {
     @Environment(AppStore.self) private var store
+    @State private var currentPage = 0
     @State private var authMode: AuthView.Mode?
-    @State private var appeared = false
-    @State private var activeIndex = 0
+    @State private var floating = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private struct CatalogQuestion: Identifiable {
-        let id: Int
-        let text: String
-        let hotWord: String
-        let category: String
-    }
-
-    private let catalog: [CatalogQuestion] = [
-        .init(id: 0, text: "What's something you're quietly proud of?", hotWord: "PROUD", category: "Daily Reflection"),
-        .init(id: 1, text: "Which song always puts you in a good mood?", hotWord: "MOOD", category: "Joy & Music"),
-        .init(id: 2, text: "What is a small kindness you never forgot?", hotWord: "KINDNESS", category: "Human Stories"),
-        .init(id: 3, text: "What advice would you give your younger self?", hotWord: "ADVICE", category: "Life Wisdom")
-    ]
+    private let totalPages = 3
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             Color.qBackground.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                QueslyLogo(height: 32, markColor: .qGreen, textColor: .qInk, background: .qLime)
-                    .frame(height: 48)
-                    .padding(.top, DS.Space.m)
-                    .reveal(appeared, delay: 0)
-
-                Spacer(minLength: 12)
-
-                questionCardDeck
-                    .padding(.horizontal, DS.Space.screen)
-
-                Spacer(minLength: 12)
-
-                actions
+            // 3-step Interactive Walkthrough Carousel
+            TabView(selection: $currentPage) {
+                slideOne.tag(0)
+                slideTwo.tag(1)
+                slideThree.tag(2)
             }
-        }
-        .onAppear {
-            appeared = true
-        }
-        .task {
-            guard !reduceMotion else { return }
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 1_800_000_000)
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
-                    activeIndex = (activeIndex + 1) % catalog.count
-                }
-            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .ignoresSafeArea(edges: .top)
+
+            // Top Status & Segmented Progress Bar
+            topBar
+                .padding(.horizontal, DS.Space.screen)
+                .padding(.top, 10)
         }
         .sheet(item: $authMode) { mode in
             AuthView(mode: mode)
                 .presentationDetents([.large])
                 .presentationCornerRadius(28)
         }
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) {
+                floating = true
+            }
+        }
     }
 
-    // MARK: - Card Catalog ("Картотека вопросов" по макету Фото 2)
+    // MARK: - Top Progress Bar
 
-    private var questionCardDeck: some View {
-        VStack(spacing: 16) {
-            ZStack(alignment: .bottom) {
-                // Stepped backing tabs (like Photo 2)
-                catalogTab(offsetY: -42, scale: 0.86, fill: Color(hex: 0xDCE0DE))
-                catalogTab(offsetY: -28, scale: 0.91, fill: Color(hex: 0xE6EAE8))
-                catalogTab(offsetY: -14, scale: 0.96, fill: Color(hex: 0xF0F3F1))
-
-                // Front Active Card
-                let item = catalog[activeIndex]
-                frontCard(item: item)
-                    .id(item.id)
-                    .transition(
-                        .asymmetric(
-                            insertion: .opacity.combined(with: .scale(scale: 0.97)),
-                            removal: .opacity
-                        )
-                    )
-            }
-            .frame(height: 250)
-
-            // Discreet deck pagination pills
+    private var topBar: some View {
+        HStack(spacing: 12) {
+            // Segmented Indicators
             HStack(spacing: 6) {
-                ForEach(0..<catalog.count, id: \.self) { i in
+                ForEach(0..<totalPages, id: \.self) { index in
                     Capsule()
-                        .fill(i == activeIndex ? Color.qGreen : Color.qLine)
-                        .frame(width: i == activeIndex ? 18 : 6, height: 5)
-                        .animation(.qSpring, value: activeIndex)
+                        .fill(index == currentPage ? Color.qInk : Color.qInk.opacity(0.18))
+                        .frame(height: 3.5)
+                        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: currentPage)
                 }
             }
-            .padding(.top, 4)
+
+            // Skip Button
+            if currentPage < totalPages - 1 {
+                Button {
+                    withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
+                        currentPage = totalPages - 1
+                    }
+                } label: {
+                    Text("Skip")
+                        .font(.ui(14, .medium))
+                        .foregroundStyle(Color.qInk)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity)
+            }
         }
-        .reveal(appeared, delay: 0.15)
     }
 
-    /// Backing tab showing Mascot coin and "Daily at 9 AM" stepped at the top, exactly like Photo 2 mockup.
-    private func catalogTab(offsetY: CGFloat, scale: CGFloat, fill: Color) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
-                QueslyMark(color: .qGreen, cutout: .qLime)
-                    .frame(width: 14)
-                    .frame(width: 22, height: 22)
-                    .background(Circle().fill(Color.qLime))
-                Text("Daily at 9 AM")
-                    .font(.ui(12, .semibold))
-                    .foregroundStyle(Color.qGray)
-                Spacer()
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 14)
+    // MARK: - Slide 1: Connect through one question a day
 
-            Spacer()
+    private var slideOne: some View {
+        GeometryReader { geo in
+            VStack(spacing: 0) {
+                // Hero Photo with floating friend bubbles
+                ZStack(alignment: .bottom) {
+                    Image("onboarding-hero-1")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geo.size.width, height: geo.size.height * 0.54)
+                        .clipped()
+
+                    // Soft bottom gradient fade into canvas
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0.35),
+                            .init(color: Color.qBackground.opacity(0.70), location: 0.72),
+                            .init(color: Color.qBackground, location: 0.98)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: geo.size.height * 0.54)
+
+                    // Floating circular friend avatars around phone
+                    ZStack {
+                        floatingAvatar(name: "avatar-u1", size: 48)
+                            .offset(x: 100, y: -50 + (floating ? -4 : 3))
+
+                        floatingAvatar(name: "avatar-u2", size: 42)
+                            .offset(x: 138, y: 6 + (floating ? 3 : -3))
+
+                        floatingAvatar(name: "avatar-u3", size: 46)
+                            .offset(x: 106, y: 62 + (floating ? -3 : 4))
+                    }
+                }
+                .frame(width: geo.size.width, height: geo.size.height * 0.54)
+
+                Spacer(minLength: 12)
+
+                // Text block
+                VStack(spacing: 10) {
+                    Text("Connect through one question a day")
+                        .font(.display(28, .regular))
+                        .foregroundStyle(Color.qInk)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text("Every morning at 9 AM, one thoughtful prompt brings your friends and the world together.")
+                        .font(.ui(15))
+                        .foregroundStyle(Color.qGray)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                        .padding(.horizontal, DS.Space.s)
+                }
+                .padding(.horizontal, DS.Space.screen)
+
+                Spacer(minLength: 20)
+
+                // Continue Button
+                primaryContinueButton(title: "Continue") {
+                    withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
+                        currentPage = 1
+                    }
+                }
+                .padding(.horizontal, DS.Space.screen)
+                .padding(.bottom, DS.Space.l)
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
         }
-        .frame(height: 200)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(fill)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.qLine.opacity(0.8), lineWidth: 1)
-                )
-        )
-        .scaleEffect(scale, anchor: .bottom)
-        .offset(y: offsetY)
     }
 
-    private func frontCard(item: CatalogQuestion) -> some View {
-        let words = item.text.split(separator: " ").map(String.init)
+    // MARK: - Slide 2: Answer first, then reveal the world
 
-        return VStack(alignment: .leading, spacing: 18) {
-            // Header Row: round icon + Daily at 9 AM
-            HStack(spacing: 8) {
-                QueslyMark(color: .qGreen, cutout: .qLime)
-                    .frame(width: 16)
-                    .frame(width: 24, height: 24)
-                    .background(Circle().fill(Color.qLime))
-                Text("Daily at 9 AM")
-                    .font(.ui(12, .semibold))
-                    .foregroundStyle(Color.qGray)
-                Spacer()
-            }
+    private var slideTwo: some View {
+        GeometryReader { geo in
+            VStack(spacing: 0) {
+                // Hero Photo with question chip & reaction bubbles
+                ZStack(alignment: .bottom) {
+                    Image("onboarding-hero-2")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geo.size.width, height: geo.size.height * 0.54)
+                        .clipped()
 
-            // Headline with tactile lime keyword sticker (NO bold, clean Outfit-Regular)
-            WrappingHStack(spacing: 7, lineSpacing: 6, centered: false) {
-                ForEach(Array(words.enumerated()), id: \.offset) { _, word in
-                    let clean = word.uppercased().filter(\.isLetter)
-                    let isHot = clean == item.hotWord
-                    Text(word)
-                        .font(.display(24, .regular))
-                        .foregroundStyle(isHot ? Color.qGreen : Color.qInk)
-                        .padding(.horizontal, isHot ? 8 : 0)
-                        .padding(.vertical, isHot ? 2 : 0)
-                        .background {
-                            if isHot {
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .fill(Color.qLime)
-                                    .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
-                            }
+                    // Soft bottom gradient fade into canvas
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0.35),
+                            .init(color: Color.qBackground.opacity(0.70), location: 0.72),
+                            .init(color: Color.qBackground, location: 0.98)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: geo.size.height * 0.54)
+
+                    // Floating prompt & reaction chips
+                    ZStack {
+                        // Daily at 9 AM Prompt pill
+                        HStack(spacing: 7) {
+                            QueslyMark(color: .qGreen, cutout: .qLime)
+                                .frame(width: 14)
+                                .frame(width: 22, height: 22)
+                                .background(Circle().fill(Color.qLime))
+                            Text("Daily at 9 AM")
+                                .font(.ui(12, .semibold))
+                                .foregroundStyle(Color.qInk)
                         }
-                        .rotationEffect(.degrees(isHot ? -2 : 0))
-                }
-            }
-            .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(
+                            Capsule().fill(Color.white)
+                                .shadow(color: Color.black.opacity(0.10), radius: 10, y: 4)
+                        )
+                        .offset(x: -85, y: -45 + (floating ? -3 : 4))
 
-            Spacer(minLength: 0)
-        }
-        .padding(22)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: 195)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.qBlock)
-                .shadow(color: Color.black.opacity(0.08), radius: 18, y: 8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.qLine, lineWidth: 1)
-                )
-        )
-    }
-
-    // MARK: - Actions & Social Sign-In
-
-    private var actions: some View {
-        VStack(spacing: 12) {
-            Text("Answer first. Then see what your friends and the world said.")
-                .font(.ui(14))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Color.qGray)
-                .padding(.horizontal, DS.Space.xl)
-                .padding(.bottom, 2)
-
-            // Primary: Get started
-            LimeButton(title: "Get started") { authMode = .signUp }
-
-            // Social sign-in options: Apple & Google
-            HStack(spacing: 10) {
-                // Continue with Apple (official Apple SF Symbol vector)
-                Button {
-                    authMode = .signUp
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "applelogo")
-                            .font(.system(size: 16, weight: .semibold))
-                        Text("Apple")
-                            .font(.ui(15, .semibold))
+                        // Heart Like Reaction Pill
+                        HStack(spacing: 6) {
+                            Text("❤️")
+                                .font(.system(size: 14))
+                            Text("Like")
+                                .font(.ui(12, .semibold))
+                                .foregroundStyle(Color.qInk)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(
+                            Capsule().fill(Color.white)
+                                .shadow(color: Color.black.opacity(0.10), radius: 8, y: 3)
+                        )
+                        .offset(x: 105, y: 25 + (floating ? 4 : -3))
                     }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .background(Capsule().fill(Color.black))
                 }
-                .buttonStyle(.pressable)
+                .frame(width: geo.size.width, height: geo.size.height * 0.54)
 
-                // Continue with Google
-                Button {
-                    authMode = .signUp
-                } label: {
-                    HStack(spacing: 8) {
-                        Image("ui-google")
-                            .renderingMode(.original)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 17, height: 17)
-                        Text("Google")
-                            .font(.ui(15, .semibold))
+                Spacer(minLength: 12)
+
+                // Text block
+                VStack(spacing: 10) {
+                    Text("Answer first, then reveal the world")
+                        .font(.display(28, .regular))
+                        .foregroundStyle(Color.qInk)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text("No mindless doomscrolling. Answer today's question to unlock what the people you care about shared.")
+                        .font(.ui(15))
+                        .foregroundStyle(Color.qGray)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                        .padding(.horizontal, DS.Space.s)
+                }
+                .padding(.horizontal, DS.Space.screen)
+
+                Spacer(minLength: 20)
+
+                // Continue Button
+                primaryContinueButton(title: "Continue") {
+                    withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
+                        currentPage = 2
                     }
-                    .foregroundStyle(Color.qInk)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .background(Capsule().fill(Color.qBlock))
-                    .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
                 }
-                .buttonStyle(.pressable)
+                .padding(.horizontal, DS.Space.screen)
+                .padding(.bottom, DS.Space.l)
             }
-
-            // Secondary: I already have an account
-            Button {
-                authMode = .signIn
-            } label: {
-                Text("I already have an account")
-                    .font(.ui(14, .medium))
-                    .foregroundStyle(Color.qGray)
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 4)
-            .frame(height: 32)
+            .frame(width: geo.size.width, height: geo.size.height)
         }
-        .padding(.horizontal, DS.Space.screen)
-        .padding(.bottom, DS.Space.xs)
-        .reveal(appeared, delay: 0.3)
     }
-}
 
-private extension View {
-    func reveal(_ shown: Bool, delay: Double) -> some View {
-        modifier(Reveal(shown: shown, delay: delay))
+    // MARK: - Slide 3: Build your streak, collect memories
+
+    private var slideThree: some View {
+        GeometryReader { geo in
+            VStack(spacing: 0) {
+                // Hero Photo with streak badge & milestones
+                ZStack(alignment: .bottom) {
+                    Image("onboarding-hero-3")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geo.size.width, height: geo.size.height * 0.50)
+                        .clipped()
+
+                    // Soft bottom gradient fade into canvas
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0.35),
+                            .init(color: Color.qBackground.opacity(0.70), location: 0.72),
+                            .init(color: Color.qBackground, location: 0.98)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: geo.size.height * 0.50)
+
+                    // Floating Streak & Milestone Badges
+                    ZStack {
+                        // Streak Pill
+                        HStack(spacing: 6) {
+                            Icon(.fireFill, size: 14)
+                                .foregroundStyle(Color.qFlame)
+                            Text("9 Day streak")
+                                .font(.ui(13, .semibold))
+                                .foregroundStyle(Color.qInk)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule().fill(Color.white)
+                                .shadow(color: Color.black.opacity(0.10), radius: 10, y: 4)
+                        )
+                        .offset(x: -85, y: -40 + (floating ? -4 : 3))
+
+                        // Milestone Pill
+                        HStack(spacing: 6) {
+                            Icon(.sparkleFill, size: 13)
+                                .foregroundStyle(Color.qBrandText)
+                            Text("Milestones")
+                                .font(.ui(12, .semibold))
+                                .foregroundStyle(Color.qInk)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(
+                            Capsule().fill(Color.white)
+                                .shadow(color: Color.black.opacity(0.10), radius: 8, y: 3)
+                        )
+                        .offset(x: 100, y: 20 + (floating ? 3 : -4))
+                    }
+                }
+                .frame(width: geo.size.width, height: geo.size.height * 0.50)
+
+                Spacer(minLength: 8)
+
+                // Text block
+                VStack(spacing: 8) {
+                    Text("Build streaks, collect memories")
+                        .font(.display(26, .regular))
+                        .foregroundStyle(Color.qInk)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text("Reflect daily, celebrate milestones, and create a quiet archive of who you were over time.")
+                        .font(.ui(14))
+                        .foregroundStyle(Color.qGray)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(2)
+                        .padding(.horizontal, DS.Space.s)
+                }
+                .padding(.horizontal, DS.Space.screen)
+
+                Spacer(minLength: 12)
+
+                // Action buttons: Get started + Apple + Google + I already have an account
+                VStack(spacing: 10) {
+                    // Primary: Get started
+                    primaryContinueButton(title: "Get started") {
+                        authMode = .signUp
+                    }
+
+                    // Social sign-in options: Apple & Google
+                    HStack(spacing: 10) {
+                        // Continue with Apple
+                        Button {
+                            authMode = .signUp
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "applelogo")
+                                    .font(.system(size: 16, weight: .semibold))
+                                Text("Apple")
+                                    .font(.ui(15, .semibold))
+                            }
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(Capsule().fill(Color.black))
+                        }
+                        .buttonStyle(.pressable)
+
+                        // Continue with Google
+                        Button {
+                            authMode = .signUp
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image("ui-google")
+                                    .renderingMode(.original)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 17, height: 17)
+                                Text("Google")
+                                    .font(.ui(15, .semibold))
+                            }
+                            .foregroundStyle(Color.qInk)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(Capsule().fill(Color.qBlock))
+                            .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
+                        }
+                        .buttonStyle(.pressable)
+                    }
+
+                    // Secondary: I already have an account
+                    Button {
+                        authMode = .signIn
+                    } label: {
+                        Text("I already have an account")
+                            .font(.ui(14, .medium))
+                            .foregroundStyle(Color.qGray)
+                    }
+                    .buttonStyle(.plain)
+                    .frame(height: 28)
+                }
+                .padding(.horizontal, DS.Space.screen)
+                .padding(.bottom, DS.Space.m)
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+        }
     }
-}
 
-private struct Reveal: ViewModifier {
-    let shown: Bool
-    let delay: Double
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    // MARK: - Reusable Components
 
-    func body(content: Content) -> some View {
-        content
-            .opacity(shown || reduceMotion ? 1 : 0)
-            .offset(y: shown || reduceMotion ? 0 : 12)
-            .animation(.qSmooth.delay(delay), value: shown)
+    private func floatingAvatar(name: String, size: CGFloat) -> some View {
+        Image(name)
+            .resizable()
+            .scaledToFill()
+            .frame(width: size, height: size)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color.white, lineWidth: 2.5))
+            .shadow(color: Color.black.opacity(0.12), radius: 8, x: 0, y: 4)
+    }
+
+    private func primaryContinueButton(title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.ui(16, .semibold))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(Capsule().fill(Color.black))
+        }
+        .buttonStyle(.pressable)
     }
 }
 

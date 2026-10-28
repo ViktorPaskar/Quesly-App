@@ -70,7 +70,14 @@ struct JourneyView: View {
             }
 
             // Memory Quote
-            let sampleAnswer = store.myAnswers.first ?? MockData.sampleAnswer
+            let sampleAnswer = store.myAnswers.first ?? MockData.myHistory().first ?? Answer(
+                id: "sample",
+                questionId: "q-kindness",
+                questionText: "What is a small kindness you never forgot?",
+                authorId: store.me.id,
+                text: "A stranger held the train door for me when I was running late with heavy bags.",
+                createdAt: .now
+            )
             VStack(alignment: .leading, spacing: 8) {
                 Text(sampleAnswer.questionText)
                     .font(.ui(13, .semibold))
@@ -147,13 +154,14 @@ struct JourneyView: View {
                 }
 
                 // Progress scale
+                let percentage = totalCount > 0 ? Int(Double(totalUnlocked) / Double(totalCount) * 100) : 0
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text("\(totalUnlocked) of \(totalCount) unlocked")
                             .font(.ui(12, .semibold))
                             .foregroundStyle(Color.qLime)
                         Spacer()
-                        Text("\(Int(Double(totalUnlocked) / Double(totalCount) * 100))%")
+                        Text("\(percentage)%")
                             .font(.ui(12, .semibold))
                             .foregroundStyle(Color.white.opacity(0.90))
                     }
@@ -161,7 +169,7 @@ struct JourneyView: View {
                         ZStack(alignment: .leading) {
                             Capsule().fill(Color.white.opacity(0.20))
                             Capsule().fill(Color.qLime)
-                                .frame(width: max(4, geo.size.width * CGFloat(totalUnlocked) / CGFloat(totalCount)))
+                                .frame(width: max(4, geo.size.width * CGFloat(totalUnlocked) / CGFloat(max(1, totalCount))))
                         }
                     }
                     .frame(height: 6)
@@ -218,11 +226,8 @@ private struct MilestoneRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(achievement.imageName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 44, height: 44)
-                .opacity(achievement.isUnlocked ? 1.0 : 0.65)
+            HexBadge(asset: achievement.badgeAsset, isLocked: !achievement.isUnlocked)
+                .frame(width: 44, height: 50)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
@@ -243,23 +248,23 @@ private struct MilestoneRow: View {
                     }
                 }
 
-                Text(achievement.desc)
+                Text(achievement.subtitle)
                     .font(.ui(12))
                     .foregroundStyle(Color.qGray)
                     .lineLimit(2)
 
-                if !achievement.isUnlocked && achievement.total > 0 {
+                if !achievement.isUnlocked && !achievement.isSpecial && achievement.goal > 1 {
                     HStack(spacing: 8) {
                         GeometryReader { g in
                             ZStack(alignment: .leading) {
                                 Capsule().fill(Color.qLine)
                                 Capsule().fill(Color.qGreen)
-                                    .frame(width: max(3, g.size.width * CGFloat(achievement.progress) / CGFloat(achievement.total)))
+                                    .frame(width: max(3, g.size.width * CGFloat(achievement.progress) / CGFloat(achievement.goal)))
                             }
                         }
                         .frame(height: 4)
 
-                        Text("\(achievement.progress)/\(achievement.total)")
+                        Text("\(achievement.progress)/\(achievement.goal)")
                             .font(.ui(11, .semibold))
                             .foregroundStyle(Color.qInk2)
                             .monospacedDigit()

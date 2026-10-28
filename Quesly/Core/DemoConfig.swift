@@ -55,15 +55,16 @@ enum DemoConfig {
     static var initialTab: MainTab {
         switch screen {
         case .discover: return .discover
-        case .notifications: return .notifications
-        case .profile, .profileList, .profileReposts, .profileSaved, .memory, .streakFirst, .streakRestart, .achievements, .menu, .settings, .editProfile: return .profile
+        case .notifications: return .feed
+        case .achievements: return .journey
+        case .profile, .profileList, .profileReposts, .profileSaved, .memory, .streakFirst, .streakRestart, .menu, .settings, .editProfile: return .profile
         default: return .feed
         }
     }
 
     static var initialRoute: Route? {
         switch screen {
-        case .achievements: return .achievements
+        case .achievements: return nil
         case .menu: return .menu
         case .settings: return .settings
         case .editProfile: return .editProfile

@@ -9,27 +9,109 @@ struct StoryLaunch: Identifiable {
 
 // MARK: - Row
 
-/// Peeks stories bar: clean gradient-ring story bubbles for friends who answered today.
+/// Peeks stories bar for both World and Friends feeds:
+/// - Always starts with "My Peek": shows avatar with '+' if unanswered (tap to write answer), or gradient ring if answered (tap to view story).
+/// - Followed by friends' or community members' stories for today.
+struct PeeksStoriesBar: View {
+    @Environment(AppStore.self) private var store
+    let scope: FeedScope
+    var onAddAnswer: () -> Void
+    var onOpenStory: ([Answer], Int) -> Void
+
+    private var feedStories: [Answer] {
+        if scope == .friends {
+            return store.friendStories.filter { $0.authorId != store.me.id }
+        } else {
+            // World scope: community answers for today (excluding my own)
+            return store.todayAnswers.filter { $0.authorId != store.me.id }
+        }
+    }
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(alignment: .top, spacing: 14) {
+                // MARK: 1. My Peek (Always First)
+                myPeekBubble
+
+                // MARK: 2. Feed stories (Friends or World)
+                ForEach(Array(feedStories.enumerated()), id: \.element.id) { index, answer in
+                    StoryBubble(
+                        user: store.user(answer.authorId),
+                        isSeen: store.seenStoryAuthorIds.contains(answer.authorId)
+                    ) {
+                        onOpenStory(feedStories, index)
+                    }
+                }
+            }
+            .padding(.horizontal, DS.Space.screen)
+            .padding(.vertical, 6)
+        }
+    }
+
+    private var myPeekBubble: some View {
+        Button {
+            if let myAnswer = store.todaysAnswer {
+                onOpenStory([myAnswer], 0)
+            } else {
+                onAddAnswer()
+            }
+        } label: {
+            VStack(spacing: 5) {
+                ZStack(alignment: .bottomTrailing) {
+                    Avatar(user: store.me, size: 54, isSticker: true)
+                        .padding(3)
+                        .background {
+                            if store.hasAnsweredToday {
+                                Circle().strokeBorder(
+                                    LinearGradient(
+                                        colors: [Color.qGreen, Color.qLime],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 2.2
+                                )
+                            } else {
+                                Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
+                            }
+                        }
+
+                    if !store.hasAnsweredToday {
+                        Circle()
+                            .fill(Color.qLime)
+                            .frame(width: 19, height: 19)
+                            .overlay(
+                                Image(systemName: "plus")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(Color.qGreenDeep)
+                            )
+                            .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                            .offset(x: 2, y: 2)
+                    }
+                }
+
+                Text(store.hasAnsweredToday ? "Your Peek" : "My Peek")
+                    .font(.ui(11, .medium))
+                    .foregroundStyle(Color.qInk)
+                    .lineLimit(1)
+                    .frame(width: 62)
+            }
+        }
+        .buttonStyle(.pressable)
+        .accessibilityLabel(store.hasAnsweredToday ? "Your Peek" : "Add your Peek")
+    }
+}
+
+/// Backwards compatibility alias
 struct FriendStoriesRow: View {
     @Environment(AppStore.self) private var store
     var onOpen: (Int) -> Void
 
     var body: some View {
-        let stories = store.friendStories
-        if !stories.isEmpty {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: 14) {
-                    ForEach(Array(stories.enumerated()), id: \.element.id) { index, answer in
-                        StoryBubble(user: store.user(answer.authorId),
-                                    isSeen: store.seenStoryAuthorIds.contains(answer.authorId)) {
-                            onOpen(index)
-                        }
-                    }
-                }
-                .padding(.horizontal, DS.Space.screen)
-                .padding(.vertical, 6)
-            }
-        }
+        PeeksStoriesBar(
+            scope: .friends,
+            onAddAnswer: {},
+            onOpenStory: { stories, index in onOpen(index) }
+        )
     }
 }
 

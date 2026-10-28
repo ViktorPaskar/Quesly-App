@@ -14,6 +14,7 @@ struct FeedView: View {
     private var tour: DemoTour { DemoTour.shared }
 
     @State private var storyLaunch: StoryLaunch?
+    @State private var showNotifications = false
     // "Feed unlocked" moment after posting: rows reveal one by one, the streak ticks up.
     @State private var revealCount = Int.max
     @State private var shownStreak: Int?
@@ -67,6 +68,11 @@ struct FeedView: View {
         .fullScreenCover(item: $storyLaunch) { launch in
             StoryViewer(stories: launch.stories, start: launch.start)
         }
+        .sheet(isPresented: $showNotifications) {
+            NavigationStack {
+                NotificationsView()
+            }
+        }
         .sheet(isPresented: $showStreak) {
             NavigationStack {
                 ScrollView {
@@ -98,23 +104,47 @@ struct FeedView: View {
 
     private var headerView: some View {
         VStack(spacing: 0) {
-            ZStack {
+            HStack(spacing: 12) {
+                // Brand logo on the left edge
                 Image("brand-wordmark")
                     .renderingMode(.template)
                     .resizable()
                     .aspectRatio(1900.0 / 602.0, contentMode: .fit)
-                    .frame(height: 28)
+                    .frame(height: 26)
                     .foregroundStyle(Color.qInk)
                     .accessibilityLabel("Quesly")
-                HStack {
-                    Spacer()
-                    Button { showStreak = true } label: { StreakChip(days: shownStreak ?? store.streak) }
-                        .buttonStyle(.pressable)
-                        .accessibilityHint("Opens your streak calendar")
+
+                Spacer()
+
+                // Circular Notification Button on the right with unread badge dot
+                Button {
+                    showNotifications = true
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Circle()
+                            .fill(Color.qBlock)
+                            .frame(width: 38, height: 38)
+                            .overlay(Circle().stroke(Color.qLine, lineWidth: 1))
+                            .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
+
+                        Icon(.bell, size: 18)
+                            .foregroundStyle(Color.qInk)
+                            .frame(width: 38, height: 38)
+
+                        if store.unreadNotifications > 0 {
+                            Circle()
+                                .fill(Color.qFlame)
+                                .frame(width: 8, height: 8)
+                                .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+                                .offset(x: -2, y: 2)
+                        }
+                    }
                 }
+                .buttonStyle(.pressable)
+                .accessibilityLabel("Notifications")
             }
-            .padding(.horizontal, DS.Space.s)
-            .frame(height: 44)
+            .padding(.horizontal, DS.Space.screen)
+            .frame(height: 48)
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
             FullWidthFeedScopeBar(scope: $scope)
@@ -180,15 +210,17 @@ struct FeedView: View {
                         .frame(height: 0)
                     }
 
-                    Color.clear.frame(height: 84).id("top")
+                    Color.clear.frame(height: 88).id("top")
 
-                    if scope == .friends && !store.friendStories.isEmpty {
-                        FriendStoriesRow { index in
-                            storyLaunch = StoryLaunch(stories: store.friendStories, start: index)
+                    PeeksStoriesBar(
+                        scope: scope,
+                        onAddAnswer: { showQuestion = true },
+                        onOpenStory: { stories, index in
+                            storyLaunch = StoryLaunch(stories: stories, start: index)
                         }
-                        .padding(.top, 4)
-                        .padding(.bottom, 2)
-                    }
+                    )
+                    .padding(.top, 4)
+                    .padding(.bottom, 2)
 
                     TodayQuestionBanner(question: store.todayQuestion,
                                         answeredCount: store.answeredTodayCount) {

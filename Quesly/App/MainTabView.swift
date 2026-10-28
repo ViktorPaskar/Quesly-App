@@ -1,13 +1,13 @@
 import SwiftUI
 
 enum MainTab: CaseIterable {
-    case feed, discover, notifications, profile
+    case feed, discover, journey, profile
 
     var icon: QIcon {
         switch self {
         case .feed: return .house
         case .discover: return .magnifyingGlass
-        case .notifications: return .bell
+        case .journey: return .fireFill
         case .profile: return .user
         }
     }
@@ -16,7 +16,7 @@ enum MainTab: CaseIterable {
         switch self {
         case .feed: return .houseFill
         case .discover: return .magnifyingGlass
-        case .notifications: return .bellFill
+        case .journey: return .fireFill
         case .profile: return .userFill
         }
     }
@@ -25,7 +25,7 @@ enum MainTab: CaseIterable {
         switch self {
         case .feed: return "Feed"
         case .discover: return "Discover"
-        case .notifications: return "Notifications"
+        case .journey: return "Journey"
         case .profile: return "Profile"
         }
     }
@@ -34,6 +34,7 @@ enum MainTab: CaseIterable {
 struct MainTabView: View {
     @Environment(AppStore.self) private var store
     @State private var tab: MainTab = DemoConfig.initialTab
+    @State private var showNotificationsSheet = DemoConfig.screen == .notifications
     @State private var paths: [MainTab: NavigationPath] = {
         guard let route = DemoConfig.initialRoute else { return [:] }
         var path = NavigationPath()
@@ -51,7 +52,7 @@ struct MainTabView: View {
             ZStack {
                 stack(.feed) { FeedView(onDiscover: { select(.discover) }) }
                 stack(.discover) { DiscoverView() }
-                stack(.notifications) { NotificationsView() }
+                stack(.journey) { JourneyView() }
                 stack(.profile) { ProfileView(userId: store.me.id, isTabRoot: true) }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -66,6 +67,11 @@ struct MainTabView: View {
         .sheet(isPresented: $demoReactions) {
             if let answer = store.myAnswers.first(where: { $0.totalReactions > 0 }) {
                 ReactionsSheet(answer: answer).presentationDetents([.medium, .large])
+            }
+        }
+        .sheet(isPresented: $showNotificationsSheet) {
+            NavigationStack {
+                NotificationsView()
             }
         }
     }
@@ -101,7 +107,7 @@ struct MainTabView: View {
         await DemoTour.pause(6)
         tour.showStory = false
         await DemoTour.pause(1.5)
-        for t in [MainTab.notifications, .discover, .profile] {
+        for t in [MainTab.journey, .discover, .profile] {
             select(t)
             await DemoTour.pause(3)
         }
@@ -145,18 +151,6 @@ struct MainTabView: View {
                         Icon(active ? t.activeIcon : t.icon, size: 22, weight: active ? .semibold : .regular)
                             .foregroundStyle(active ? Color.qLime : Color.qInk2)
                             .pop(on: active)
-                            .overlay(alignment: .topTrailing) {
-                                if t == .notifications && store.unreadNotifications > 0 && !active {
-                                    Text("\(min(store.unreadNotifications, 9))")
-                                        .font(.system(size: 10, weight: .semibold))
-                                        .foregroundStyle(.white)
-                                        .frame(minWidth: 16, minHeight: 16)
-                                        .background(Circle().fill(Color.qFlame))
-                                        .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
-                                        .offset(x: 8, y: -6)
-                                        .transition(.scale)
-                                }
-                            }
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)

@@ -182,18 +182,17 @@ struct FeedView: View {
 
                     Color.clear.frame(height: 84).id("top")
 
-                    TodayQuestionBanner(question: store.todayQuestion,
-                                        answeredCount: store.answeredTodayCount) {
-                        showQuestion = true
-                    }
-
                     if scope == .friends && !store.friendStories.isEmpty {
                         FriendStoriesRow { index in
                             storyLaunch = StoryLaunch(stories: store.friendStories, start: index)
                         }
-                        .outlinedBlock()
-                        .padding(.horizontal, DS.Space.s)
-                        .padding(.bottom, gap)
+                        .padding(.top, 4)
+                        .padding(.bottom, 2)
+                    }
+
+                    TodayQuestionBanner(question: store.todayQuestion,
+                                        answeredCount: store.answeredTodayCount) {
+                        showQuestion = true
                     }
 
                     if let mine {

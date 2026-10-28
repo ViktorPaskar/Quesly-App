@@ -9,7 +9,7 @@ struct StoryLaunch: Identifiable {
 
 // MARK: - Row
 
-/// "Friends today": header + clean green-ring story bubbles for friends who answered today.
+/// Peeks stories bar: clean gradient-ring story bubbles for friends who answered today.
 struct FriendStoriesRow: View {
     @Environment(AppStore.self) private var store
     var onOpen: (Int) -> Void
@@ -17,28 +17,17 @@ struct FriendStoriesRow: View {
     var body: some View {
         let stories = store.friendStories
         if !stories.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
-                    Text("Friends today")
-                        .font(.ui(13, .semibold))
-                        .foregroundStyle(Color.qInk2)
-                    Spacer()
-                }
-                .padding(.horizontal, DS.Space.m)
-                .padding(.top, 12)
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .center, spacing: 14) {
-                        ForEach(Array(stories.enumerated()), id: \.element.id) { index, answer in
-                            StoryBubble(user: store.user(answer.authorId),
-                                        isSeen: store.seenStoryAuthorIds.contains(answer.authorId)) {
-                                onOpen(index)
-                            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: 14) {
+                    ForEach(Array(stories.enumerated()), id: \.element.id) { index, answer in
+                        StoryBubble(user: store.user(answer.authorId),
+                                    isSeen: store.seenStoryAuthorIds.contains(answer.authorId)) {
+                            onOpen(index)
                         }
                     }
-                    .padding(.horizontal, DS.Space.m)
-                    .padding(.bottom, 10)
                 }
+                .padding(.horizontal, DS.Space.screen)
+                .padding(.vertical, 6)
             }
         }
     }
@@ -51,15 +40,30 @@ private struct StoryBubble: View {
 
     var body: some View {
         Button(action: action) {
-            Avatar(user: user, size: 56, isSticker: true)
-                .padding(3.5)
-                .background {
-                    if isSeen {
-                        Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
-                    } else {
-                        Circle().strokeBorder(Color.qGreen, lineWidth: 2.5)
+            VStack(spacing: 5) {
+                Avatar(user: user, size: 54, isSticker: true)
+                    .padding(3)
+                    .background {
+                        if isSeen {
+                            Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
+                        } else {
+                            Circle().strokeBorder(
+                                LinearGradient(
+                                    colors: [Color.qGreen, Color.qLime],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 2.2
+                            )
+                        }
                     }
-                }
+
+                Text(user?.username.replacingOccurrences(of: "@", with: "") ?? "")
+                    .font(.ui(11, .medium))
+                    .foregroundStyle(isSeen ? Color.qGray : Color.qInk)
+                    .lineLimit(1)
+                    .frame(width: 62)
+            }
         }
         .buttonStyle(.pressable)
         .accessibilityLabel("\(user?.username ?? "") answered today" + (isSeen ? ", seen" : ""))

@@ -65,20 +65,26 @@ struct WelcomeView: View {
     // MARK: - Card Catalog ("Картотека вопросов")
 
     private var questionCardDeck: some View {
-        VStack(spacing: 14) {
-            ZStack(alignment: .top) {
-                ForEach((0..<3).reversed(), id: \.self) { depth in
-                    let index = (activeIndex + depth) % catalog.count
-                    let item = catalog[index]
+        VStack(spacing: 16) {
+            ZStack(alignment: .bottom) {
+                // Background Card 2 (furthest back)
+                backingCard(scale: 0.92, yOffset: -16, opacity: 0.5)
 
-                    catalogCard(item: item, depth: depth)
-                        .offset(y: CGFloat(depth) * 10)
-                        .scaleEffect(1.0 - CGFloat(depth) * 0.05, anchor: .top)
-                        .opacity(1.0 - Double(depth) * 0.22)
-                        .zIndex(Double(3 - depth))
-                }
+                // Background Card 1 (middle)
+                backingCard(scale: 0.96, yOffset: -8, opacity: 0.8)
+
+                // Front Active Card
+                let item = catalog[activeIndex]
+                frontCard(item: item)
+                    .id(item.id)
+                    .transition(
+                        .asymmetric(
+                            insertion: .opacity.combined(with: .scale(scale: 0.98)),
+                            removal: .opacity
+                        )
+                    )
             }
-            .frame(height: 260)
+            .frame(height: 256)
 
             // Discreet deck pagination pills
             HStack(spacing: 6) {
@@ -94,7 +100,21 @@ struct WelcomeView: View {
         .reveal(appeared, delay: 0.15)
     }
 
-    private func catalogCard(item: CatalogQuestion, depth: Int) -> some View {
+    private func backingCard(scale: CGFloat, yOffset: CGFloat, opacity: Double) -> some View {
+        RoundedRectangle(cornerRadius: 26, style: .continuous)
+            .fill(Color.qBlock)
+            .overlay(
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .stroke(Color.qLine, lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.03), radius: 8, y: 3)
+            .frame(height: 240)
+            .scaleEffect(scale, anchor: .bottom)
+            .offset(y: yOffset)
+            .opacity(opacity)
+    }
+
+    private func frontCard(item: CatalogQuestion) -> some View {
         let words = item.text.split(separator: " ").map(String.init)
 
         return VStack(alignment: .leading, spacing: 14) {
@@ -152,7 +172,7 @@ struct WelcomeView: View {
         .background(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .fill(Color.qBlock)
-                .shadow(color: Color.black.opacity(depth == 0 ? 0.08 : 0.03), radius: depth == 0 ? 18 : 8, y: depth == 0 ? 6 : 3)
+                .shadow(color: Color.black.opacity(0.08), radius: 18, y: 8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 26, style: .continuous)
                         .stroke(Color.qLine, lineWidth: 1)

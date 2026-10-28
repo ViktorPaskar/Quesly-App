@@ -53,15 +53,11 @@ struct DailyQuestionView: View {
 
                     Spacer(minLength: 16)
 
-                    VStack(alignment: .leading, spacing: DS.Space.m) {
-                        LockedFriendsPreview(answers: Array(store.friendStories.prefix(3)),
-                                             users: store.friendsAnsweredToday)
-                        AnsweredTodayProof(count: store.answeredTodayCount,
-                                           friends: store.friendsAnsweredToday)
-                    }
-                    .padding(.horizontal, DS.Space.xl)
-                    .padding(.bottom, DS.Space.l)
-                    .transition(.opacity)
+                    LockedFriendsPreview(answers: Array(store.friendStories.prefix(3)),
+                                         users: store.friendsAnsweredToday)
+                        .padding(.horizontal, DS.Space.xl)
+                        .padding(.bottom, DS.Space.l)
+                        .transition(.opacity)
                 }
 
                 Spacer(minLength: 16)

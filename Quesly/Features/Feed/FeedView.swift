@@ -25,16 +25,7 @@ struct FeedView: View {
     @State private var lastScrollY: CGFloat = 0
 
     var body: some View {
-        VStack(spacing: 0) {
-            if !isHeaderHidden {
-                headerView
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
-
-            if !network.isOnline {
-                OfflineBanner().transition(.move(edge: .top).combined(with: .opacity))
-            }
-
+        ZStack(alignment: .top) {
             // Swipe sideways between the two feeds.
             TabView(selection: $scope) {
                 ForEach(FeedScope.allCases) { s in
@@ -45,10 +36,27 @@ struct FeedView: View {
             .animation(.qSmooth, value: network.isOnline)
             // Light gray behind the list; each answer is a white strip, 6 pt apart.
             .background(Color.qFeedCanvas)
+
+            // Twitter/X style collapsing header on scroll
+            VStack(spacing: 0) {
+                headerView
+                if !network.isOnline {
+                    OfflineBanner()
+                }
+            }
+            .background(Color.qBackground.ignoresSafeArea(edges: .top))
+            .offset(y: isHeaderHidden ? -100 : 0)
+            .opacity(isHeaderHidden ? 0 : 1)
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.82), value: isHeaderHidden)
         .background(Color.qBackground)
         .toolbar(.hidden, for: .navigationBar)
+        .onChange(of: scope) { _, _ in
+            lastScrollY = 0
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                isHeaderHidden = false
+            }
+        }
         .fullScreenCover(isPresented: $showQuestion) {
             DailyQuestionView(onSubmitted: {
                                   showQuestion = false
@@ -115,28 +123,42 @@ struct FeedView: View {
     }
 
     private func handleScroll(currentY: CGFloat) {
-        guard currentY != 0 else { return }
-        let diff = currentY - lastScrollY
-        lastScrollY = currentY
+        guard lastScrollY != 0 else {
+            lastScrollY = currentY
+            return
+        }
 
-        if currentY >= -15 {
+        if currentY >= -10 {
             if isHeaderHidden {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
-                    isHeaderHidden = false
+                Task { @MainActor in
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                        isHeaderHidden = false
+                    }
                 }
             }
-        } else if diff < -12 {
+            lastScrollY = currentY
+            return
+        }
+
+        let diff = currentY - lastScrollY
+        if diff < -24 {
             if !isHeaderHidden {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
-                    isHeaderHidden = true
+                Task { @MainActor in
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                        isHeaderHidden = true
+                    }
                 }
             }
-        } else if diff > 12 {
+            lastScrollY = currentY
+        } else if diff > 24 {
             if isHeaderHidden {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
-                    isHeaderHidden = false
+                Task { @MainActor in
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                        isHeaderHidden = false
+                    }
                 }
             }
+            lastScrollY = currentY
         }
     }
 
@@ -148,15 +170,17 @@ struct FeedView: View {
         return ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    GeometryReader { geo in
-                        Color.clear.preference(
-                            key: FeedScrollOffsetKey.self,
-                            value: geo.frame(in: .named("feedScrollSpace")).minY
-                        )
+                    if scope == self.scope {
+                        GeometryReader { geo in
+                            Color.clear.preference(
+                                key: FeedScrollOffsetKey.self,
+                                value: geo.frame(in: .named("feedScrollSpace_\(scope.rawValue)")).minY
+                            )
+                        }
+                        .frame(height: 0)
                     }
-                    .frame(height: 0)
 
-                    Color.clear.frame(height: 0).id("top")
+                    Color.clear.frame(height: 84).id("top")
 
                     TodayQuestionBanner(question: store.todayQuestion,
                                         answeredCount: store.answeredTodayCount) {
@@ -233,12 +257,17 @@ struct FeedView: View {
                 .padding(.bottom, DS.Space.s)
                 .animation(.qSmooth, value: scope)
             }
-            .coordinateSpace(name: "feedScrollSpace")
+            .coordinateSpace(name: "feedScrollSpace_\(scope.rawValue)")
             .onPreferenceChange(FeedScrollOffsetKey.self) { currentY in
-                handleScroll(currentY: currentY)
+                if scope == self.scope {
+                    handleScroll(currentY: currentY)
+                }
             }
             .refreshable { await store.reloadFeed() }
             .onChange(of: scrollToTopSignal) { _, _ in
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                    isHeaderHidden = false
+                }
                 withAnimation(.qSmooth) { proxy.scrollTo("top", anchor: .top) }
             }
             .task {

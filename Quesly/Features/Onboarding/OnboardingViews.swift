@@ -13,29 +13,30 @@ struct FindFriendsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 StepDots(current: 0, total: 2)
+                    .padding(.bottom, 2)
                 Text("Find your people")
-                    .font(.display(30, .bold))
+                    .font(.display(24, .bold))
                     .foregroundStyle(Color.qInk)
                 Text("Quesly is better with friends. Follow a few people to fill your Friends feed.")
-                    .font(.ui(16))
+                    .font(.ui(14))
                     .foregroundStyle(Color.qGray)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, DS.Space.screen)
-            .padding(.top, 20)
+            .padding(.top, 14)
 
             SearchField(text: $query, prompt: "Search by nickname")
                 .padding(.horizontal, DS.Space.screen)
-                .padding(.vertical, 16)
+                .padding(.vertical, 10)
 
             ScrollView {
                 LazyVStack(spacing: 0) {
                     if query.isEmpty {
                         InviteCard(username: store.me.username)
                             .padding(.horizontal, DS.Space.screen)
-                            .padding(.bottom, 12)
+                            .padding(.bottom, 10)
                         SectionLabel("Suggested for you").padding(.horizontal, DS.Space.screen)
                     }
                     ForEach(Array(shown.enumerated()), id: \.element.id) { index, user in
@@ -52,7 +53,7 @@ struct FindFriendsView: View {
                 withAnimation(.qSmooth) { store.finishFindFriends() }
             }
             .padding(.horizontal, DS.Space.screen)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
             .contentTransition(.numericText())
             .animation(.qSpring, value: count)
         }
@@ -113,76 +114,68 @@ struct NotificationPrimingView: View {
 }
 
 /// Dimensional branded hero composition for notification priming:
-/// glowing emerald squircle, lime bell, floating Quesly coin, and scheduled drop tag.
+/// sleek emerald squircle with centered crisp bell, Quesly lime mark, and clean scheduled drop tag.
 private struct NotificationHeroArt: View {
     @State private var pulsed = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        ZStack {
-            // Ambient soft glow
-            Circle()
-                .fill(Color.qLime.opacity(0.35))
-                .frame(width: 130, height: 130)
-                .blur(radius: 20)
-                .scaleEffect(pulsed && !reduceMotion ? 1.08 : 0.95)
-
-            // Outer tactile ring
-            Circle()
-                .fill(Color.qBlock)
-                .frame(width: 114, height: 114)
-                .overlay(Circle().stroke(Color.qLine, lineWidth: 1.5))
-                .shadow(color: Color.black.opacity(0.06), radius: 14, y: 6)
-
-            // Central branded squircle tile
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.qGreen, Color.qGreenDeep],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+        VStack(spacing: 14) {
+            ZStack(alignment: .topTrailing) {
+                // Central branded squircle tile
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.qGreen, Color.qGreenDeep],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
-                )
-                .frame(width: 76, height: 76)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.25), lineWidth: 1)
-                )
-                .shadow(color: Color.qGreen.opacity(0.35), radius: 12, y: 6)
+                    .frame(width: 88, height: 88)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 26, style: .continuous)
+                            .strokeBorder(
+                                LinearGradient(
+                                    colors: [Color.white.opacity(0.32), Color.white.opacity(0.08)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                lineWidth: 1.2
+                            )
+                    )
+                    .shadow(color: Color.qGreen.opacity(0.28), radius: 18, y: 10)
 
-            // Ringing Lime Bell
-            Icon(.bellRingingFill, size: 36)
-                .foregroundStyle(Color.qLime)
-                .shadow(color: Color.black.opacity(0.18), radius: 3, y: 2)
-                .rotationEffect(.degrees(pulsed && !reduceMotion ? -6 : 6))
+                // Pure bell
+                Icon(.bellRingingFill, size: 40)
+                    .foregroundStyle(.white)
+                    .frame(width: 88, height: 88)
+                    .scaleEffect(pulsed && !reduceMotion ? 1.05 : 1.0)
 
-            // Floating Quesly mini-coin at top-left
-            ZStack {
-                Circle().fill(Color.qLime)
-                    .frame(width: 28, height: 28)
-                QueslyMark(color: .qGreen, cutout: .qLime)
-                    .frame(width: 16)
+                // Quesly mini-coin anchored to top-right
+                ZStack {
+                    Circle().fill(Color.qLime)
+                        .frame(width: 26, height: 26)
+                    QueslyMark(color: .qGreen, cutout: .qLime)
+                        .frame(width: 14)
+                }
+                .overlay(Circle().strokeBorder(Color.white, lineWidth: 2))
+                .shadow(color: Color.black.opacity(0.12), radius: 4, y: 2)
+                .offset(x: 6, y: -6)
             }
-            .overlay(Circle().strokeBorder(Color.white, lineWidth: 2))
-            .shadow(color: Color.black.opacity(0.12), radius: 6, y: 2)
-            .offset(x: -36, y: -34)
-            .rotationEffect(.degrees(-8))
 
-            // Floating time pill at bottom-right
-            HStack(spacing: 5) {
-                Circle().fill(Color.qGreen).frame(width: 6, height: 6)
-                Text("9:00 AM")
-                    .font(.ui(11, .bold))
+            // Clean floating time pill
+            HStack(spacing: 6) {
+                Circle().fill(Color.qLime).frame(width: 6, height: 6)
+                Text("Daily at 9:00 AM")
+                    .font(.ui(12, .semibold))
                     .foregroundStyle(Color.qInk)
             }
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
             .background(Capsule().fill(Color.qBlock))
             .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
-            .shadow(color: Color.black.opacity(0.10), radius: 8, y: 3)
-            .offset(x: 32, y: 34)
+            .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
         }
-        .frame(width: 140, height: 140)
         .onAppear {
             guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
@@ -236,11 +229,11 @@ struct StepDots: View {
     var onDark = false
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             ForEach(0..<total, id: \.self) { i in
                 Capsule()
                     .fill(i == current ? (onDark ? Color.qLime : Color.qBrandText) : (onDark ? Color.white.opacity(0.3) : Color.qLine))
-                    .frame(width: i == current ? 24 : 8, height: 8)
+                    .frame(width: i == current ? 20 : 6, height: 4)
             }
         }
         .accessibilityLabel("Step \(current + 1) of \(total)")
@@ -254,22 +247,22 @@ struct SearchField: View {
     var prompt: String = "Search"
 
     var body: some View {
-        HStack(spacing: 12) {
-            Icon(.magnifyingGlass, size: DS.Icon.inline).foregroundStyle(Color.qGray)
+        HStack(spacing: 10) {
+            Icon(.magnifyingGlass, size: 16).foregroundStyle(Color.qGray)
             TextField(prompt, text: $text)
-                .font(.ui(16))
+                .font(.ui(15))
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
             if !text.isEmpty {
                 Button { text = "" } label: {
-                    Icon(.xCircleFill, size: DS.Icon.row).foregroundStyle(Color.qGray.opacity(0.6))
+                    Icon(.xCircleFill, size: 16).foregroundStyle(Color.qGray.opacity(0.6))
                 }
                 .accessibilityLabel("Clear search")
                 .transition(.scale.combined(with: .opacity))
             }
         }
-        .padding(.horizontal, 16)
-        .frame(height: 46)
+        .padding(.horizontal, 14)
+        .frame(height: 42)
         .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
         .animation(.qSpring, value: text.isEmpty)
     }
@@ -283,13 +276,13 @@ struct PersonRow: View {
         HStack(spacing: 12) {
             NavigationLink(value: Route.profile(user.id)) {
                 HStack(spacing: 12) {
-                    Avatar(user: user, size: 46)
+                    Avatar(user: user, size: 40)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(user.username)
-                            .font(.ui(16, .semibold))
+                            .font(.ui(15, .semibold))
                             .foregroundStyle(Color.qInk)
                         Text(user.bio.isEmpty ? "\(user.followers) followers" : user.bio)
-                            .font(.ui(15))
+                            .font(.ui(13))
                             .foregroundStyle(Color.qGray)
                             .lineLimit(1)
                     }
@@ -301,7 +294,7 @@ struct PersonRow: View {
                 FollowPill(isFollowing: store.isFollowing(user.id)) { store.toggleFollow(user.id) }
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
     }
 }
 
@@ -311,10 +304,11 @@ struct SectionLabel: View {
 
     var body: some View {
         Text(title.uppercased())
-            .font(.ui(13, .semibold))
+            .font(.ui(12, .semibold))
+            .tracking(0.5)
             .foregroundStyle(Color.qGray)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 8)
+            .padding(.vertical, 4)
     }
 }
 
@@ -323,27 +317,27 @@ struct InviteCard: View {
     let username: String
 
     var body: some View {
-        HStack(spacing: 16) {
-            Icon(.paperPlaneTiltFill, size: 20)
+        HStack(spacing: 12) {
+            Icon(.paperPlaneTiltFill, size: 16)
                 .foregroundStyle(Color.qGreen)
-                .frame(width: 44, height: 44)
+                .frame(width: 36, height: 36)
                 .background(Circle().fill(Color.qGreen.opacity(0.10)))
             VStack(alignment: .leading, spacing: 2) {
-                Text("Invite your friends").font(.ui(16, .semibold)).foregroundStyle(Color.qInk)
-                Text("Answer together").font(.ui(14)).foregroundStyle(Color.qGray).lineLimit(1)
+                Text("Invite your friends").font(.ui(14, .semibold)).foregroundStyle(Color.qInk)
+                Text("Answer together").font(.ui(12)).foregroundStyle(Color.qGray).lineLimit(1)
             }
             Spacer()
             ShareLink(item: Invite.text(for: username)) {
                 Text("Invite")
-                    .font(.ui(14, .semibold))
+                    .font(.ui(13, .semibold))
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 18)
-                    .frame(height: 34)
+                    .padding(.horizontal, 14)
+                    .frame(height: 30)
                     .background(Capsule().fill(Color.qGreen))
             }
             .buttonStyle(.pressable)
         }
-        .padding(16)
+        .padding(12)
         .background(
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                 .fill(Color.qBlock)

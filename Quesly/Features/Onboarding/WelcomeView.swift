@@ -7,7 +7,6 @@ struct WelcomeView: View {
     @State private var authMode: AuthView.Mode?
     @State private var appeared = false
     @State private var activeIndex = 0
-    @State private var dragOffset: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private struct CatalogQuestion: Identifiable {
@@ -50,11 +49,9 @@ struct WelcomeView: View {
         .task {
             guard !reduceMotion else { return }
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 4_500_000_000)
-                if dragOffset == 0 {
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
-                        activeIndex = (activeIndex + 1) % catalog.count
-                    }
+                try? await Task.sleep(nanoseconds: 3_800_000_000)
+                withAnimation(.spring(response: 0.55, dampingFraction: 0.8)) {
+                    activeIndex = (activeIndex + 1) % catalog.count
                 }
             }
         }
@@ -73,28 +70,15 @@ struct WelcomeView: View {
                 ForEach((0..<3).reversed(), id: \.self) { depth in
                     let index = (activeIndex + depth) % catalog.count
                     let item = catalog[index]
-                    let isTop = depth == 0
 
                     catalogCard(item: item, depth: depth)
-                        .offset(x: isTop ? dragOffset : 0, y: CGFloat(depth) * 12)
-                        .scaleEffect(1.0 - CGFloat(depth) * 0.045, anchor: .top)
+                        .offset(y: CGFloat(depth) * 10)
+                        .scaleEffect(1.0 - CGFloat(depth) * 0.05, anchor: .top)
                         .opacity(1.0 - Double(depth) * 0.22)
-                        .rotationEffect(.degrees(isTop ? Double(dragOffset / 28) : (depth == 1 ? 1.5 : -1)))
                         .zIndex(Double(3 - depth))
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    guard isTop else { return }
-                                    dragOffset = value.translation.width
-                                }
-                                .onEnded { value in
-                                    guard isTop else { return }
-                                    handleDragEnd(value)
-                                }
-                        )
                 }
             }
-            .frame(height: 270)
+            .frame(height: 260)
 
             // Discreet deck pagination pills
             HStack(spacing: 6) {
@@ -110,41 +94,20 @@ struct WelcomeView: View {
         .reveal(appeared, delay: 0.15)
     }
 
-    private func handleDragEnd(_ value: DragGesture.Value) {
-        if abs(value.translation.width) > 60 {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
-                if value.translation.width < 0 {
-                    activeIndex = (activeIndex + 1) % catalog.count
-                } else {
-                    activeIndex = (activeIndex - 1 + catalog.count) % catalog.count
-                }
-                dragOffset = 0
-            }
-        } else {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                dragOffset = 0
-            }
-        }
-    }
-
     private func catalogCard(item: CatalogQuestion, depth: Int) -> some View {
         let words = item.text.split(separator: " ").map(String.init)
 
         return VStack(alignment: .leading, spacing: 14) {
-            // Header Row
+            // Header Row: round icon + Daily at 9 AM (TODAY'S QUESTION removed)
             HStack(spacing: 8) {
                 QueslyMark(color: .qGreen, cutout: .qLime)
                     .frame(width: 16)
                     .frame(width: 24, height: 24)
                     .background(Circle().fill(Color.qLime))
-                Text("TODAY'S QUESTION")
-                    .font(.ui(11, .bold))
-                    .tracking(0.8)
-                    .foregroundStyle(Color.qBrandText)
-                Spacer()
                 Text("Daily at 9 AM")
-                    .font(.ui(11, .medium))
+                    .font(.ui(12, .semibold))
                     .foregroundStyle(Color.qGray)
+                Spacer()
             }
 
             // Headline with tactile lime keyword sticker
@@ -173,7 +136,7 @@ struct WelcomeView: View {
 
             Rectangle().fill(Color.qLine).frame(height: 1)
 
-            // Calm card footer: category & promise (NO avatar counter)
+            // Calm card footer: category only
             HStack(spacing: 6) {
                 Icon(.sparkleFill, size: 12)
                     .foregroundStyle(Color.qBrandText)
@@ -181,20 +144,15 @@ struct WelcomeView: View {
                     .font(.ui(13, .semibold))
                     .foregroundStyle(Color.qInk2)
                 Spacer()
-                Text("Swipe card")
-                    .font(.ui(12, .medium))
-                    .foregroundStyle(Color.qGray)
-                Icon(.caretRightBold, size: 10)
-                    .foregroundStyle(Color.qGray)
             }
         }
         .padding(22)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: 250)
+        .frame(height: 240)
         .background(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .fill(Color.qBlock)
-                .shadow(color: Color.black.opacity(depth == 0 ? 0.08 : 0.03), radius: depth == 0 ? 20 : 10, y: depth == 0 ? 8 : 4)
+                .shadow(color: Color.black.opacity(depth == 0 ? 0.08 : 0.03), radius: depth == 0 ? 18 : 8, y: depth == 0 ? 6 : 3)
                 .overlay(
                     RoundedRectangle(cornerRadius: 26, style: .continuous)
                         .stroke(Color.qLine, lineWidth: 1)
@@ -216,15 +174,18 @@ struct WelcomeView: View {
             // Primary: Get started
             LimeButton(title: "Get started") { authMode = .signUp }
 
-            // Social sign-in options: Apple & Google
+            // Social sign-in options: Apple & Google with official vector SVGs
             HStack(spacing: 10) {
                 // Continue with Apple
                 Button {
                     authMode = .signUp
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "applelogo")
-                            .font(.system(size: 15, weight: .semibold))
+                        Image("ui-apple")
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 17, height: 17)
                         Text("Apple")
                             .font(.ui(15, .semibold))
                     }
@@ -240,9 +201,11 @@ struct WelcomeView: View {
                     authMode = .signUp
                 } label: {
                     HStack(spacing: 8) {
-                        Text("G")
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color(hex: 0x4285F4))
+                        Image("ui-google")
+                            .renderingMode(.original)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 17, height: 17)
                         Text("Google")
                             .font(.ui(15, .semibold))
                     }

@@ -406,18 +406,7 @@ struct TodayQuestionBanner: View {
                             .lineLimit(1)
                             .foregroundStyle(Color.qLime)
                         Spacer(minLength: DS.Space.xs)
-                        if hasAnswered {
-                            HStack(spacing: 5) {
-                                Icon(.checkBold, size: 11)
-                                Text("Answered")
-                                    .font(.ui(12, .semibold))
-                                    .lineLimit(1)
-                            }
-                            .foregroundStyle(Color.qLime)
-                            .padding(.horizontal, 10)
-                            .frame(height: 26)
-                            .background(Capsule().fill(Color.white.opacity(0.14)))
-                        } else {
+                        if !hasAnswered {
                             HStack(spacing: 4) {
                                 Icon(.clock, size: 12, weight: .semibold)
                                 Text("\(AppStore.timeLeftString()) left")

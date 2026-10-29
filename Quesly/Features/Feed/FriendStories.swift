@@ -217,7 +217,7 @@ struct StoryViewer: View {
                     progressBars
                     header.padding(.top, DS.Space.s)
                     Spacer(minLength: DS.Space.m)
-                    peekCard
+                    StoryAnswerCard(answer: answer)
                     Spacer(minLength: DS.Space.m)
                     ReactionBar(answer: answer)
                 }
@@ -298,79 +298,56 @@ struct StoryViewer: View {
         .accessibilityElement(children: .contain)
     }
 
-    /// Dimensional glassmorphic card framing the answer
-    private var peekCard: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            // Branded question chip
-            HStack(spacing: 7) {
+/// Dimensional glassmorphic card framing the answer
+private struct StoryAnswerCard: View {
+    let answer: Answer
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            // Clean Question header (Sentence case, pure white with lime icon)
+            HStack(spacing: 8) {
                 QueslyMark(color: .qGreen, cutout: .qLime)
                     .frame(width: 14)
-                    .frame(width: 20, height: 20)
+                    .frame(width: 22, height: 22)
                     .background(Circle().fill(Color.qLime))
-                Text(answer.questionText.uppercased())
-                    .font(.ui(12, .semibold))
-                    .tracking(0.5)
-                    .foregroundStyle(Color.qLime)
+
+                Text(answer.questionText)
+                    .font(.ui(14, .semibold))
+                    .foregroundStyle(Color.white.opacity(0.92))
                     .lineLimit(2)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(
-                Capsule().fill(Color.black.opacity(0.28))
-                    .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 0.8))
-            )
 
-            // The Answer Text: clean, un-bold, with relaxed line spacing
+            // The Answer Text: elegant display typography with relaxed line spacing
             Text(answer.text)
                 .font(.display(24, .regular))
-                .foregroundStyle(.white)
-                .lineSpacing(4)
+                .foregroundStyle(Color.white)
+                .lineSpacing(5)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.vertical, 4)
+                .padding(.vertical, 2)
 
-            // Card footer info
+            // Minimalist metadata
             HStack {
-                HStack(spacing: 5) {
-                    Icon(.sparkleFill, size: 12)
-                        .foregroundStyle(Color.qLime)
-                    Text("Daily reflection")
-                        .font(.ui(12, .medium))
-                        .foregroundStyle(.white.opacity(0.72))
-                }
-                Spacer()
                 Text(RelativeTime.short(answer.createdAt))
-                    .font(.ui(11, .medium))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .font(.ui(12, .medium))
+                    .foregroundStyle(Color.white.opacity(0.55))
+                Spacer()
             }
-            .padding(.top, 4)
         }
-        .padding(24)
+        .padding(26)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.14), Color.white.opacity(0.06)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(Color.white.opacity(0.08))
                 .overlay(
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [Color.white.opacity(0.35), Color.white.opacity(0.10)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1.2
-                        )
+                        .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
                 )
         )
         .id(answer.id)
         .transition(.opacity)
         .accessibilityElement(children: .combine)
     }
+}
 
     private func fill(_ i: Int) -> CGFloat {
         if i < index { return 1 }

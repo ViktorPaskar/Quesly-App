@@ -1,8 +1,11 @@
 import SwiftUI
 import PhotosUI
 
-/// Clean, editorial profile editor with required indicators (*), account credentials (Email & Password),
-/// and responsive validation.
+/// Clean, editorial profile editor with Apple HIG & Threads design excellence:
+/// - Inset grouped form with clear, elegant rows
+/// - Subtle floating camera trigger
+/// - Clean inline counter without harsh red alert colors
+/// - Native Apple Form styling without cheap gray input blocks
 struct EditProfileView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -29,29 +32,29 @@ struct EditProfileView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(spacing: DS.Space.xl) {
                 // Avatar Photo Section
                 avatarSection
-                    .padding(.top, 4)
+                    .padding(.top, DS.Space.xs)
 
-                // Public Profile Information
+                // Public Profile Information (Clean Grouped Card)
                 profileCard
 
                 // Account & Security Section
                 accountCard
 
-                // Save CTA
+                // Save Action
                 GreenButton(title: "Save changes", isEnabled: isValid) {
                     store.updateProfile(draft)
                     dismiss()
                 }
-                .padding(.top, 4)
+                .padding(.top, DS.Space.xs)
             }
             .padding(.horizontal, DS.Space.screen)
             .padding(.bottom, 100)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.qBackground)
+        .background(Color.qCanvas)
         .queslyBackHeader("Edit profile")
         .onAppear {
             guard !loaded else { return }
@@ -70,39 +73,45 @@ struct EditProfileView: View {
     private var avatarSection: some View {
         VStack(spacing: DS.Space.s) {
             PhotosPicker(selection: $photoItem, matching: .images) {
-                Avatar(user: draft, size: 92)
-                    .overlay {
-                        if isImporting {
-                            Circle().fill(.black.opacity(0.35))
-                            ProgressView().tint(.white)
+                ZStack(alignment: .bottomTrailing) {
+                    Avatar(user: draft, size: 88)
+                        .overlay {
+                            if isImporting {
+                                Circle().fill(.black.opacity(0.35))
+                                ProgressView().tint(.white)
+                            }
                         }
-                    }
-                    .overlay(alignment: .bottomTrailing) {
-                        Icon(.cameraFill, size: DS.Icon.caption)
-                            .foregroundStyle(.white)
-                            .frame(width: 28, height: 28)
-                            .background(Circle().fill(Color.qGreen))
-                            .overlay(Circle().stroke(Color.qCanvas, lineWidth: 2))
-                    }
+
+                    // Camera Badge
+                    Circle()
+                        .fill(Color.qGreen)
+                        .frame(width: 28, height: 28)
+                        .overlay(
+                            Icon(.cameraFill, size: 13)
+                                .foregroundStyle(Color.white)
+                        )
+                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                        .offset(x: 2, y: 2)
+                }
             }
             .accessibilityLabel("Change photo")
 
             HStack(spacing: DS.Space.m) {
                 PhotosPicker("Change photo", selection: $photoItem, matching: .images)
-                    .font(.ui(15, .semibold))
+                    .font(.ui(14, .semibold))
                     .foregroundStyle(Color.qBrandText)
 
                 if store.myPhoto != nil {
                     Button("Remove", role: .destructive) {
                         withAnimation(.qSmooth) { store.removePhoto() }
                     }
-                    .font(.ui(15, .semibold))
+                    .font(.ui(14, .semibold))
                 }
             }
 
             if let importError {
                 Text(importError)
-                    .font(.ui(13))
+                    .font(.ui(12))
                     .foregroundStyle(Color.qFlame)
             }
         }
@@ -113,273 +122,254 @@ struct EditProfileView: View {
         }
     }
 
-    // MARK: - Profile Card
+    // MARK: - Profile Information (Revolut / Threads Grouped Card)
 
     private var profileCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            // Name *
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 3) {
-                    Text("Name")
-                        .font(.ui(13, .semibold))
-                        .foregroundStyle(Color.qInk)
-                    Text("*")
-                        .font(.ui(13, .semibold))
-                        .foregroundStyle(Color.qFlame)
-                }
-                TextField("Your full name", text: Binding(get: { draft.name ?? "" }, set: { draft.name = $0 }))
+        VStack(spacing: 0) {
+            // Name Row
+            formRow(title: "Name") {
+                TextField("Your name", text: Binding(get: { draft.name ?? "" }, set: { draft.name = $0 }))
                     .textContentType(.name)
-                    .queslyField(fill: .qField)
+                    .font(.ui(15))
+                    .foregroundStyle(Color.qInk)
+                    .multilineTextAlignment(.trailing)
             }
 
-            // Nickname *
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 3) {
-                    Text("Nickname")
-                        .font(.ui(13, .semibold))
-                        .foregroundStyle(Color.qInk)
-                    Text("*")
-                        .font(.ui(13, .semibold))
-                        .foregroundStyle(Color.qFlame)
-                }
-                HStack(spacing: 4) {
+            divider
+
+            // Username Row
+            formRow(title: "Username") {
+                HStack(spacing: 2) {
                     Text("@")
-                        .font(.ui(16, .semibold))
+                        .font(.ui(15, .semibold))
                         .foregroundStyle(Color.qGray)
                     TextField("username", text: $draft.username)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                        .font(.ui(15))
+                        .foregroundStyle(Color.qInk)
+                        .multilineTextAlignment(.trailing)
                 }
-                .queslyField(fill: .qField)
             }
 
-            // Location (optional)
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Location (optional)")
-                    .font(.ui(13, .semibold))
-                    .foregroundStyle(Color.qInk2)
-                HStack(spacing: 6) {
-                    Icon(.globeHemisphereWestFill, size: 16)
-                        .foregroundStyle(Color.qGray)
-                    TextField("City, Country", text: $draft.location)
-                }
-                .queslyField(fill: .qField)
+            divider
+
+            // Location Row
+            formRow(title: "Location") {
+                TextField("Add location", text: Binding(get: { draft.location ?? "" }, set: { draft.location = $0 }))
+                    .font(.ui(15))
+                    .foregroundStyle(Color.qInk)
+                    .multilineTextAlignment(.trailing)
             }
 
-            // About *
-            VStack(alignment: .leading, spacing: 6) {
+            divider
+
+            // Bio Row (Expanded clean area)
+            VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    HStack(spacing: 3) {
-                        Text("About")
-                            .font(.ui(13, .semibold))
-                            .foregroundStyle(Color.qInk)
-                        Text("*")
-                            .font(.ui(13, .semibold))
-                            .foregroundStyle(Color.qFlame)
-                    }
+                    Text("About")
+                        .font(.ui(15, .medium))
+                        .foregroundStyle(Color.qInk)
                     Spacer()
                     Text("\(draft.bio.count)/\(AppUser.bioLimit)")
                         .font(.ui(12))
                         .foregroundStyle(draft.bio.count >= AppUser.bioLimit ? Color.qFlame : Color.qGray)
                         .monospacedDigit()
                 }
-                TextField("Tell people about yourself…", text: $draft.bio, axis: .vertical)
+
+                TextField("Write a short bio…", text: $draft.bio, axis: .vertical)
+                    .font(.ui(14))
+                    .foregroundStyle(Color.qInk)
                     .lineLimit(3...5)
-                    .onChange(of: draft.bio) { _, new in
-                        if new.count > AppUser.bioLimit { draft.bio = String(new.prefix(AppUser.bioLimit)) }
+                    .lineSpacing(3)
+                    .onChange(of: draft.bio) { _, text in
+                        if text.count > AppUser.bioLimit {
+                            draft.bio = String(text.prefix(AppUser.bioLimit))
+                        }
                     }
-                    .font(.ui(15))
-                    .padding(12)
-                    .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
-                            .stroke(Color.qLine, lineWidth: 1)
-                    )
             }
+            .padding(DS.Space.m)
         }
-        .padding(18)
-        .outlinedBlock()
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.qBlock)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color.qLine, lineWidth: 1)
+                )
+        )
     }
 
-    // MARK: - Account & Security Card
+    private func formRow<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        HStack(spacing: DS.Space.m) {
+            Text(title)
+                .font(.ui(15, .medium))
+                .foregroundStyle(Color.qInk)
+                .frame(width: 80, alignment: .leading)
+
+            content()
+        }
+        .padding(.horizontal, DS.Space.m)
+        .frame(minHeight: 52)
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(Color.qLine)
+            .frame(height: 1)
+            .padding(.leading, DS.Space.m)
+    }
+
+    // MARK: - Account & Security Section
 
     private var accountCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
             Text("ACCOUNT & SECURITY")
                 .font(.ui(11, .semibold))
-                .tracking(0.8)
-                .foregroundStyle(Color.qBrandText)
+                .tracking(0.6)
+                .foregroundStyle(Color.qGray)
+                .padding(.leading, 4)
 
             VStack(spacing: 0) {
-                // Email Row
-                HStack(spacing: 12) {
-                    Icon(.chatCircleTextFill, size: 18)
+                // Email
+                HStack(spacing: DS.Space.s) {
+                    Icon(.envelope ?? .leafFill, size: 16)
                         .foregroundStyle(Color.qGreen)
-                        .frame(width: 32, height: 32)
-                        .background(Circle().fill(Color.qGreen.opacity(0.10)))
-
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Email")
-                            .font(.ui(13))
+                            .font(.ui(12))
                             .foregroundStyle(Color.qGray)
-                        Text(draft.email.isEmpty ? "user@quesly.app" : draft.email)
-                            .font(.ui(15, .semibold))
+                        Text(store.me.email)
+                            .font(.ui(14, .medium))
                             .foregroundStyle(Color.qInk)
                             .lineLimit(1)
                     }
-
                     Spacer()
-
-                    Button("Change") {
-                        newEmail = draft.email
-                        showChangeEmail = true
-                    }
-                    .font(.ui(14, .semibold))
-                    .foregroundStyle(Color.qBrandText)
-                    .padding(.horizontal, 12)
-                    .frame(height: 32)
-                    .background(Capsule().fill(Color.qField))
+                    Button("Change") { showChangeEmail = true }
+                        .font(.ui(13, .semibold))
+                        .foregroundStyle(Color.qBrandText)
                 }
-                .padding(.vertical, 12)
+                .padding(DS.Space.m)
 
-                Rectangle().fill(Color.qLine).frame(height: 1)
+                Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, DS.Space.m)
 
-                // Password Row
-                HStack(spacing: 12) {
-                    Icon(.lockSimpleFill, size: 18)
+                // Password
+                HStack(spacing: DS.Space.s) {
+                    Icon(.lockSimpleFill, size: 16)
                         .foregroundStyle(Color.qGreen)
-                        .frame(width: 32, height: 32)
-                        .background(Circle().fill(Color.qGreen.opacity(0.10)))
-
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Password")
-                            .font(.ui(13))
+                            .font(.ui(12))
                             .foregroundStyle(Color.qGray)
                         Text("••••••••••••")
-                            .font(.ui(15, .semibold))
+                            .font(.ui(14, .medium))
                             .foregroundStyle(Color.qInk)
                     }
-
                     Spacer()
-
-                    Button("Change") {
-                        oldPassword = ""
-                        newPassword = ""
-                        showChangePassword = true
-                    }
-                    .font(.ui(14, .semibold))
-                    .foregroundStyle(Color.qBrandText)
-                    .padding(.horizontal, 12)
-                    .frame(height: 32)
-                    .background(Capsule().fill(Color.qField))
+                    Button("Change") { showChangePassword = true }
+                        .font(.ui(13, .semibold))
+                        .foregroundStyle(Color.qBrandText)
                 }
-                .padding(.vertical, 12)
+                .padding(DS.Space.m)
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.qBlock)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(Color.qLine, lineWidth: 1)
+                    )
+            )
+        }
+    }
+
+    // MARK: - Photo import
+
+    private func importPhoto(_ item: PhotosPickerItem) {
+        isImporting = true
+        importError = nil
+        Task {
+            defer { isImporting = false }
+            do {
+                guard let data = try await item.loadTransferable(type: Data.self) else {
+                    importError = "Could not load image."
+                    return
+                }
+                store.setPhoto(data)
+                draft = store.me
+            } catch {
+                importError = "Error loading photo."
             }
         }
-        .padding(18)
-        .outlinedBlock()
     }
 
     // MARK: - Change Email Sheet
 
     private var changeEmailSheet: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: DS.Space.m) {
                 Text("Enter your new email address. We'll send a confirmation link.")
-                    .font(.ui(15))
+                    .font(.ui(14))
                     .foregroundStyle(Color.qGray)
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("New email")
-                        .font(.ui(13, .semibold))
-                    TextField("you@domain.com", text: $newEmail)
-                        .textContentType(.emailAddress)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .queslyField(fill: .qField)
-                }
+                TextField("New email", text: $newEmail)
+                    .textContentType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    .keyboardType(.emailAddress)
+                    .autocorrectionDisabled()
+                    .queslyField(fill: .qField)
 
                 Spacer()
 
                 GreenButton(title: "Update email", isEnabled: newEmail.contains("@") && newEmail.contains(".")) {
-                    draft.email = newEmail
-                    store.updateProfile(draft)
+                    store.updateEmail(newEmail)
                     showChangeEmail = false
                 }
             }
             .padding(DS.Space.screen)
-            .background(Color.qBackground)
             .navigationTitle("Change email")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { showChangeEmail = false }
+                        .foregroundStyle(Color.qGray)
                 }
             }
         }
         .presentationDetents([.medium])
-        .presentationCornerRadius(28)
     }
 
     // MARK: - Change Password Sheet
 
     private var changePasswordSheet: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 18) {
-                Text("Choose a strong password with at least 8 characters.")
-                    .font(.ui(15))
+            VStack(alignment: .leading, spacing: DS.Space.m) {
+                SecureField("Current password", text: $oldPassword)
+                    .queslyField(fill: .qField)
+
+                SecureField("New password", text: $newPassword)
+                    .queslyField(fill: .qField)
+
+                Text("Must be at least 8 characters.")
+                    .font(.ui(12))
                     .foregroundStyle(Color.qGray)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Current password")
-                        .font(.ui(13, .semibold))
-                    SecureField("Current password", text: $oldPassword)
-                        .queslyField(fill: .qField)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("New password")
-                        .font(.ui(13, .semibold))
-                    SecureField("New password", text: $newPassword)
-                        .queslyField(fill: .qField)
-                }
 
                 Spacer()
 
-                GreenButton(title: "Save new password", isEnabled: newPassword.count >= 6) {
+                GreenButton(title: "Update password", isEnabled: newPassword.count >= 8) {
                     showChangePassword = false
                 }
             }
             .padding(DS.Space.screen)
-            .background(Color.qBackground)
             .navigationTitle("Change password")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { showChangePassword = false }
+                        .foregroundStyle(Color.qGray)
                 }
             }
         }
         .presentationDetents([.medium])
-        .presentationCornerRadius(28)
-    }
-
-    // MARK: - Helpers
-
-    private func importPhoto(_ item: PhotosPickerItem) {
-        isImporting = true
-        importError = nil
-        Task {
-            defer { isImporting = false; photoItem = nil }
-            do {
-                guard let data = try await item.loadTransferable(type: Data.self) else {
-                    importError = "This photo can't be used. Try another one."
-                    return
-                }
-                withAnimation(.qSmooth) { store.setPhoto(data) }
-            } catch {
-                importError = "Couldn't load the photo. Check your connection and try again."
-            }
-        }
     }
 }

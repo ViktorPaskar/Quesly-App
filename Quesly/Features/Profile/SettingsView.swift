@@ -1,6 +1,10 @@
 import SwiftUI
 
-/// Single, native grouped settings screen (replaces the old "Profile menu → Settings" two-level path).
+/// Single, native grouped settings screen.
+/// Follows strict Apple HIG & Revolut elegance:
+/// - Rounded grouped list sections on clean canvas
+/// - Monochromatic or brand-tinted icons with subtle rounded squircle glyphs
+/// - Clean font weights and balanced row heights
 struct SettingsView: View {
     @Environment(AppStore.self) private var store
     @State private var confirmSignOut = false
@@ -8,88 +12,28 @@ struct SettingsView: View {
 
     var body: some View {
         @Bindable var store = store
-        Form {
-            Section {
-                NavigationLink(value: Route.editProfile) {
-                    HStack(spacing: DS.Space.s) {
-                        Avatar(user: store.me, size: 48)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(store.me.username).font(.ui(17, .semibold)).foregroundStyle(Color.qInk)
-                            Text("Edit profile").font(.ui(15)).foregroundStyle(Color.qGray)
-                        }
-                    }
-                    .padding(.vertical, DS.Space.xxs)
-                }
-            }
+        ScrollView {
+            VStack(spacing: DS.Space.xl) {
+                // Profile Header Card
+                profileCard
 
-            Section("Activity") {
-                row("Invite friends", .paperPlaneTiltFill, tint: Color(hex: 0xE84FA5), route: .invite)
-            }
+                // Preferences & Rituals
+                preferencesSection
 
-            Section {
-                Toggle(isOn: $store.remindersEnabled) {
-                    label("Daily reminder", .bellFill, tint: Color(hex: 0xFF9F0A))
-                }
-                if store.remindersEnabled {
-                    DatePicker("Time", selection: $store.reminderTime, displayedComponents: .hourAndMinute)
-                }
-            } header: {
-                Text("Notifications")
-            } footer: {
-                Text("One reminder a day, when you haven't answered yet.")
-            }
+                // Privacy & Security
+                privacySection
 
-            Section {
-                Toggle(isOn: $store.isPrivateAccount) {
-                    label("Private account", .lockSimpleFill, tint: Color(hex: 0x5E5CE6))
-                }
-                row("Blocked people", .prohibitFill, tint: Color(hex: 0xE5484D), route: .blocked,
-                    value: store.blockedIds.isEmpty ? nil : "\(store.blockedIds.count)")
-            } header: {
-                Text("Privacy & safety")
-            } footer: {
-                Text("A private account shows your answers only to people you approve.")
-            }
+                // Support & Legal
+                supportSection
 
-            Section("Support") {
-                row("Send feedback", .chatCircleTextFill, tint: Color(hex: 0x2D7BF0), route: .feedback)
-                Link(destination: URL(string: "https://quesly.app/terms")!) {
-                    label("Terms of Service", .copy, tint: .gray)
-                }
-                Link(destination: URL(string: "https://quesly.app/privacy")!) {
-                    label("Privacy Policy", .shieldCheckFill, tint: .gray)
-                }
+                // Account Actions
+                accountSection
             }
-
-            Section {
-                Button("Sign out") { confirmSignOut = true }
-                    .foregroundStyle(Color.qInk)
-                Button(role: .destructive) { confirmDelete = true } label: {
-                    HStack(spacing: 8) {
-                        Icon(.trash, size: 18)
-                            .foregroundStyle(Color.qFlame)
-                        Text("Delete account")
-                            .foregroundStyle(Color.qFlame)
-                        Spacer()
-                        Text("Permanent")
-                            .font(.ui(13))
-                            .foregroundStyle(Color.qFlame.opacity(0.8))
-                    }
-                }
-            } header: {
-                Text("Account")
-            } footer: {
-                VStack(spacing: 6) {
-                    Text("Deleting your account permanently wipes your profile, answers, and streak.")
-                    Text("Quesly \(Bundle.main.appVersion)")
-                        .padding(.top, DS.Space.s)
-                }
-                .frame(maxWidth: .infinity)
-            }
+            .padding(.horizontal, DS.Space.screen)
+            .padding(.top, DS.Space.s)
+            .padding(.bottom, 60)
         }
-        .scrollContentBackground(.hidden)
         .background(Color.qCanvas)
-        .tint(Color.qGreen)
         .queslyBackHeader("Settings")
         .confirmationDialog("Sign out of Quesly?", isPresented: $confirmSignOut, titleVisibility: .visible) {
             Button("Sign out", role: .destructive) { store.signOut() }
@@ -100,35 +44,253 @@ struct SettingsView: View {
         }
     }
 
-    private func row(_ title: String, _ icon: QIcon, tint: Color, route: Route, value: String? = nil) -> some View {
-        NavigationLink(value: route) {
-            HStack {
-                label(title, icon, tint: tint)
-                if let value {
+    // MARK: - Profile Header Card
+
+    private var profileCard: some View {
+        NavigationLink(value: Route.editProfile) {
+            HStack(spacing: DS.Space.m) {
+                Avatar(user: store.me, size: 50)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(store.me.username)
+                        .font(.ui(16, .semibold))
+                        .foregroundStyle(Color.qInk)
+                    Text("Edit personal details")
+                        .font(.ui(13))
+                        .foregroundStyle(Color.qGray)
+                }
+
+                Spacer()
+
+                Icon(.caretRightBold, size: 12)
+                    .foregroundStyle(Color.qGray4)
+            }
+            .padding(DS.Space.m)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.qBlock)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(Color.qLine, lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Preferences & Rituals
+
+    private var preferencesSection: some View {
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
+            sectionHeader("DAILY RITUAL")
+
+            VStack(spacing: 0) {
+                // Daily reminder toggle
+                HStack(spacing: DS.Space.s) {
+                    iconSquare(.bellFill, tint: Color.qGreen)
+                    Text("Daily reminder")
+                        .font(.ui(15, .medium))
+                        .foregroundStyle(Color.qInk)
                     Spacer()
-                    Text(value).foregroundStyle(Color.qGray)
+                    Toggle("", isOn: $store.remindersEnabled)
+                        .labelsHidden()
+                        .tint(Color.qGreen)
+                }
+                .padding(DS.Space.m)
+
+                if store.remindersEnabled {
+                    divider
+
+                    HStack(spacing: DS.Space.s) {
+                        iconSquare(.clock, tint: Color.qGreen)
+                        Text("Reminder time")
+                            .font(.ui(15, .medium))
+                            .foregroundStyle(Color.qInk)
+                        Spacer()
+                        DatePicker("", selection: $store.reminderTime, displayedComponents: .hourAndMinute)
+                            .labelsHidden()
+                            .tint(Color.qGreen)
+                    }
+                    .padding(DS.Space.m)
+                }
+
+                divider
+
+                // Invite friends
+                NavigationLink(value: Route.invite) {
+                    settingsRow(icon: .paperPlaneTiltFill, tint: Color.qGreen, title: "Invite friends")
+                }
+                .buttonStyle(.plain)
+            }
+            .background(cardBackground)
+        }
+    }
+
+    // MARK: - Privacy & Safety
+
+    private var privacySection: some View {
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
+            sectionHeader("PRIVACY & SAFETY")
+
+            VStack(spacing: 0) {
+                // Private account toggle
+                HStack(spacing: DS.Space.s) {
+                    iconSquare(.lockSimpleFill, tint: Color.qBrandText)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Private account")
+                            .font(.ui(15, .medium))
+                            .foregroundStyle(Color.qInk)
+                        Text("Only approved people see answers")
+                            .font(.ui(11.5))
+                            .foregroundStyle(Color.qGray)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $store.isPrivateAccount)
+                        .labelsHidden()
+                        .tint(Color.qGreen)
+                }
+                .padding(DS.Space.m)
+
+                divider
+
+                // Blocked people
+                NavigationLink(value: Route.blocked) {
+                    settingsRow(
+                        icon: .prohibitFill,
+                        tint: Color.qFlame,
+                        title: "Blocked people",
+                        detail: store.blockedIds.isEmpty ? nil : "\(store.blockedIds.count)"
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+            .background(cardBackground)
+        }
+    }
+
+    // MARK: - Support & Legal
+
+    private var supportSection: some View {
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
+            sectionHeader("SUPPORT & ABOUT")
+
+            VStack(spacing: 0) {
+                NavigationLink(value: Route.feedback) {
+                    settingsRow(icon: .chatCircleTextFill, tint: Color.qBrandText, title: "Send feedback")
+                }
+                .buttonStyle(.plain)
+
+                divider
+
+                Link(destination: URL(string: "https://quesly.app/terms")!) {
+                    settingsRow(icon: .copy, tint: Color.qGray, title: "Terms of Service")
+                }
+
+                divider
+
+                Link(destination: URL(string: "https://quesly.app/privacy")!) {
+                    settingsRow(icon: .shieldCheckFill, tint: Color.qGray, title: "Privacy Policy")
                 }
             }
+            .background(cardBackground)
         }
     }
 
-    /// Settings-style label: white glyph on a small colored rounded square (iOS Settings pattern).
-    private func label(_ title: String, _ icon: QIcon, tint: Color) -> some View {
-        Label {
-            Text(title).foregroundStyle(Color.qInk)
-        } icon: {
-            Icon(icon, size: DS.Icon.inline)
-                .foregroundStyle(.white)
-                .frame(width: 29, height: 29)
-                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(tint))
+    // MARK: - Account Actions
+
+    private var accountSection: some View {
+        VStack(spacing: 0) {
+            Button {
+                confirmSignOut = true
+            } label: {
+                HStack {
+                    Text("Sign out")
+                        .font(.ui(15, .medium))
+                        .foregroundStyle(Color.qInk)
+                    Spacer()
+                }
+                .padding(DS.Space.m)
+            }
+            .buttonStyle(.plain)
+
+            divider
+
+            Button {
+                confirmDelete = true
+            } label: {
+                HStack(spacing: 8) {
+                    Icon(.trash, size: 16)
+                        .foregroundStyle(Color.qFlame)
+                    Text("Delete account")
+                        .font(.ui(15, .medium))
+                        .foregroundStyle(Color.qFlame)
+                    Spacer()
+                }
+                .padding(DS.Space.m)
+            }
+            .buttonStyle(.plain)
+        }
+        .background(cardBackground)
+        .overlay(alignment: .bottom) {
+            Text("Quesly \(Bundle.main.appVersion)")
+                .font(.ui(11))
+                .foregroundStyle(Color.qGray4)
+                .offset(y: 28)
         }
     }
-}
 
-extension Bundle {
-    var appVersion: String {
-        let v = infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-        let b = infoDictionary?["CFBundleVersion"] as? String ?? "1"
-        return "\(v) (\(b))"
+    // MARK: - Helpers & Components
+
+    private func sectionHeader(_ text: String) -> some View {
+        Text(text)
+            .font(.ui(11, .semibold))
+            .tracking(0.6)
+            .foregroundStyle(Color.qGray)
+            .padding(.leading, 4)
+    }
+
+    private func settingsRow(icon: QIcon, tint: Color, title: String, detail: String? = nil) -> some View {
+        HStack(spacing: DS.Space.s) {
+            iconSquare(icon, tint: tint)
+            Text(title)
+                .font(.ui(15, .medium))
+                .foregroundStyle(Color.qInk)
+            Spacer()
+            if let detail {
+                Text(detail)
+                    .font(.ui(13))
+                    .foregroundStyle(Color.qGray)
+            }
+            Icon(.caretRightBold, size: 12)
+                .foregroundStyle(Color.qGray4)
+        }
+        .padding(DS.Space.m)
+        .contentShape(Rectangle())
+    }
+
+    private func iconSquare(_ icon: QIcon, tint: Color) -> some View {
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
+            .fill(tint.opacity(0.12))
+            .frame(width: 28, height: 28)
+            .overlay(
+                Icon(icon, size: 14)
+                    .foregroundStyle(tint)
+            )
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(Color.qLine)
+            .frame(height: 1)
+            .padding(.leading, 48)
+    }
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(Color.qBlock)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(Color.qLine, lineWidth: 1)
+            )
     }
 }

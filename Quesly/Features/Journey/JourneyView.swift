@@ -9,6 +9,7 @@ import SwiftUI
 struct JourneyView: View {
     @Environment(AppStore.self) private var store
     @State private var openedMemory: Answer?
+    @State private var showInsightsSheet = false
 
     var body: some View {
         ScrollView {
@@ -17,7 +18,12 @@ struct JourneyView: View {
                 StreakCard()
 
                 // MARK: 2. Personal Reflection Rhythm & Habit Dashboard
-                ReflectionRhythmCard()
+                Button {
+                    showInsightsSheet = true
+                } label: {
+                    ReflectionRhythmCard()
+                }
+                .buttonStyle(.plain)
 
                 // MARK: 3. "On This Day" Memory Flashback
                 onThisDayCard
@@ -35,6 +41,11 @@ struct JourneyView: View {
         .sheet(item: $openedMemory) { answer in
             MemoryDetailSheet(answer: answer)
                 .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showInsightsSheet) {
+            ReflectionInsightsView()
+                .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
     }
@@ -376,20 +387,25 @@ struct ReflectionRhythmCard: View {
 
                 Spacer()
 
-                // Archetype Pill
-                HStack(spacing: 4) {
-                    Text(peakSlot.icon)
-                        .font(.system(size: 11))
-                    Text(archetypeInfo.title)
-                        .font(.ui(11, .semibold))
-                        .foregroundStyle(Color.qGreenDeep)
+                // Archetype Pill & drilldown indicator
+                HStack(spacing: 6) {
+                    HStack(spacing: 4) {
+                        Text(peakSlot.icon)
+                            .font(.system(size: 11))
+                        Text(archetypeInfo.title)
+                            .font(.ui(11, .semibold))
+                            .foregroundStyle(Color.qGreenDeep)
+                    }
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4.5)
+                    .background(
+                        Capsule()
+                            .fill(Color.qLime.opacity(0.30))
+                    )
+
+                    Icon(.caretRightBold, size: 12)
+                        .foregroundStyle(Color.qGray4)
                 }
-                .padding(.horizontal, 9)
-                .padding(.vertical, 4.5)
-                .background(
-                    Capsule()
-                        .fill(Color.qLime.opacity(0.30))
-                )
             }
 
             // Hero insight

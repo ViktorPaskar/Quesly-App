@@ -190,9 +190,10 @@ struct ReflectionInsightsView: View {
                         .font(.ui(12.5))
                         .foregroundStyle(Color.qGray)
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .frame(height: 38)
+            .frame(minHeight: 38)
         }
         .padding(20)
         .background(
@@ -295,29 +296,35 @@ struct ReflectionInsightsView: View {
     // MARK: - Period Filter Chips
 
     private var periodFilterChips: some View {
-        HStack(spacing: 8) {
-            chip(label: "All 24h", icon: "🕒", active: selectedPeriod == nil) {
-                withAnimation(.qSpring) { selectedPeriod = nil }
-            }
-            ForEach(DayPeriod.allCases) { period in
-                chip(label: period.rawValue, icon: period.icon, active: selectedPeriod == period) {
-                    withAnimation(.qSpring) {
-                        selectedPeriod = (selectedPeriod == period) ? nil : period
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                chip(label: "All 24h", icon: "🕒", active: selectedPeriod == nil) {
+                    withAnimation(.qSpring) { selectedPeriod = nil }
+                }
+                ForEach(DayPeriod.allCases) { period in
+                    chip(label: period.rawValue, icon: period.icon, active: selectedPeriod == period) {
+                        withAnimation(.qSpring) {
+                            selectedPeriod = (selectedPeriod == period) ? nil : period
+                        }
                     }
                 }
             }
+            .padding(.vertical, 2)
         }
     }
 
     private func chip(label: String, icon: String, active: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 4) {
-                Text(icon).font(.system(size: 10))
-                Text(label).font(.ui(11.5, active ? .semibold : .medium))
+            HStack(spacing: 5) {
+                Text(icon).font(.system(size: 11))
+                Text(label)
+                    .font(.ui(12, active ? .semibold : .medium))
+                    .lineLimit(1)
             }
-            .foregroundStyle(active ? Color.qGreenDeep : Color.qGray)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .fixedSize(horizontal: true, vertical: false)
+            .foregroundStyle(active ? Color.qGreenDeep : Color.qInk2)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
             .background(
                 Capsule().fill(active ? Color.qLime.opacity(0.35) : Color.qField)
             )
@@ -537,7 +544,7 @@ private struct Circular24hClockView: View {
                     .foregroundStyle(Color.qGray)
                     .offset(x: -radius - 16)
 
-                // Highlighted Peak Arc: 06:00 to 12:00 (90° to 180° clockwise)
+                // Highlighted Peak Arc: 06:00 to 12:00 (90° to 180° clockwise from 00:00 top)
                 Circle()
                     .trim(from: 0.25, to: 0.50) // from 6h to 12h
                     .stroke(
@@ -545,7 +552,7 @@ private struct Circular24hClockView: View {
                         style: StrokeStyle(lineWidth: 6, lineCap: .round)
                     )
                     .frame(width: radius * 2, height: radius * 2)
-                    .rotationEffect(.degrees(0))
+                    .rotationEffect(.degrees(-90))
 
                 // Reflection Density Dots along the track
                 ForEach(Array(dots.enumerated()), id: \.offset) { _, dot in

@@ -481,30 +481,33 @@ struct ReflectionRhythmCard: View {
     }
 
     private func barColumn(_ slot: Slot) -> some View {
-        let barMaxHeight: CGFloat = 58
-        let barHeight = max(8, barMaxHeight * CGFloat(slot.percentage) / 100.0)
+        let barMaxHeight: CGFloat = 62
+        let maxPct = CGFloat(max(slots.map(\.percentage).max() ?? 100, 1))
+        let normalized = CGFloat(slot.percentage) / maxPct
+        let barHeight = slot.percentage == 0 ? 8 : max(12, barMaxHeight * (0.18 + 0.74 * normalized))
 
-        return VStack(spacing: 5) {
+        return VStack(spacing: 6) {
             // Percentage label
             Text("\(slot.percentage)%")
-                .font(.ui(11, slot.isPeak ? .bold : .medium))
-                .foregroundStyle(slot.isPeak ? Color.qGreenDeep : Color.qGray)
+                .font(.ui(11.5, slot.isPeak ? .bold : .semibold))
+                .foregroundStyle(slot.isPeak ? Color.qGreenDeep : Color.qInk2)
                 .monospacedDigit()
 
-            // Vertical capsule bar
+            // Vertical bar inside rounded track
             ZStack(alignment: .bottom) {
-                Capsule()
-                    .fill(Color.qLine.opacity(0.6))
-                    .frame(width: 32, height: barMaxHeight)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.qLine.opacity(0.55))
+                    .frame(width: 30, height: barMaxHeight)
 
-                Capsule()
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(
                         slot.isPeak
                             ? LinearGradient(colors: [Color.qGreen, Color.qGreenDeep], startPoint: .top, endPoint: .bottom)
-                            : LinearGradient(colors: [Color.qGray4, Color.qGray4], startPoint: .top, endPoint: .bottom)
+                            : LinearGradient(colors: [Color.qGreen.opacity(0.32), Color.qGreen.opacity(0.22)], startPoint: .top, endPoint: .bottom)
                     )
-                    .frame(width: 32, height: barHeight)
+                    .frame(width: 30, height: barHeight)
             }
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
             // Slot icon & hours
             HStack(spacing: 2) {

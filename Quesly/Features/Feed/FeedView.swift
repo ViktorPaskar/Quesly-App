@@ -104,8 +104,8 @@ struct FeedView: View {
 
     private var headerView: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                // Brand logo on the left edge
+            ZStack {
+                // Centered brand logo
                 Image("brand-wordmark")
                     .renderingMode(.template)
                     .resizable()
@@ -114,34 +114,36 @@ struct FeedView: View {
                     .foregroundStyle(Color.qInk)
                     .accessibilityLabel("Quesly")
 
-                Spacer()
+                HStack {
+                    Spacer()
 
-                // Circular Notification Button on the right with unread badge dot
-                Button {
-                    showNotifications = true
-                } label: {
-                    ZStack(alignment: .topTrailing) {
-                        Circle()
-                            .fill(Color.qBlock)
-                            .frame(width: 38, height: 38)
-                            .overlay(Circle().stroke(Color.qLine, lineWidth: 1))
-                            .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
-
-                        Icon(.bell, size: 18)
-                            .foregroundStyle(Color.qInk)
-                            .frame(width: 38, height: 38)
-
-                        if store.unreadNotifications > 0 {
+                    // Circular Notification Button on the right with unread badge dot
+                    Button {
+                        showNotifications = true
+                    } label: {
+                        ZStack(alignment: .topTrailing) {
                             Circle()
-                                .fill(Color.qFlame)
-                                .frame(width: 8, height: 8)
-                                .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
-                                .offset(x: -2, y: 2)
+                                .fill(Color.qBlock)
+                                .frame(width: 38, height: 38)
+                                .overlay(Circle().stroke(Color.qLine, lineWidth: 1))
+                                .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
+
+                            Icon(.bell, size: 18)
+                                .foregroundStyle(Color.qInk)
+                                .frame(width: 38, height: 38)
+
+                            if store.unreadNotifications > 0 {
+                                Circle()
+                                    .fill(Color.qFlame)
+                                    .frame(width: 8, height: 8)
+                                    .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+                                    .offset(x: -2, y: 2)
+                            }
                         }
                     }
+                    .buttonStyle(.pressable)
+                    .accessibilityLabel("Notifications")
                 }
-                .buttonStyle(.pressable)
-                .accessibilityLabel("Notifications")
             }
             .padding(.horizontal, DS.Space.screen)
             .frame(height: 48)

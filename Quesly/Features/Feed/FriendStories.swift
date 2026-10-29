@@ -49,15 +49,15 @@ struct PeeksStoriesBar: View {
     }
 
     private var myPeekBubble: some View {
-        Button {
-            if let myAnswer = store.todaysAnswer {
-                onOpenStory([myAnswer], 0)
-            } else {
-                onAddAnswer()
-            }
-        } label: {
-            VStack(spacing: 5) {
-                ZStack(alignment: .bottomTrailing) {
+        VStack(spacing: 5) {
+            ZStack(alignment: .bottomTrailing) {
+                Button {
+                    if let myAnswer = store.todaysAnswer {
+                        onOpenStory([myAnswer], 0)
+                    } else {
+                        onAddAnswer()
+                    }
+                } label: {
                     Avatar(user: store.me, size: 54, isSticker: true)
                         .padding(3)
                         .background {
@@ -74,30 +74,34 @@ struct PeeksStoriesBar: View {
                                 Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
                             }
                         }
-
-                    if !store.hasAnsweredToday {
-                        Circle()
-                            .fill(Color.qLime)
-                            .frame(width: 19, height: 19)
-                            .overlay(
-                                Image(systemName: "plus")
-                                    .font(.system(size: 11, weight: .bold))
-                                    .foregroundStyle(Color.qGreenDeep)
-                            )
-                            .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                            .offset(x: 2, y: 2)
-                    }
                 }
+                .buttonStyle(.pressable)
 
-                Text(store.hasAnsweredToday ? "Your Peek" : "My Peek")
-                    .font(.ui(11, .medium))
-                    .foregroundStyle(Color.qInk)
-                    .lineLimit(1)
-                    .frame(width: 62)
+                // Instagram-style circular '+' badge to add a Peek
+                Button {
+                    onAddAnswer()
+                } label: {
+                    Circle()
+                        .fill(Color.qLime)
+                        .frame(width: 19, height: 19)
+                        .overlay(
+                            Image(systemName: "plus")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color.qGreenDeep)
+                        )
+                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                }
+                .buttonStyle(.pressable)
+                .offset(x: 2, y: 2)
+                .accessibilityLabel("Add Peek")
             }
+
+            Text(store.hasAnsweredToday ? "Your Peek" : "My Peek")
+                .font(.ui(11, .medium))
+                .foregroundStyle(Color.qInk)
+                .lineLimit(1)
+                .frame(width: 62)
         }
-        .buttonStyle(.pressable)
-        .accessibilityLabel(store.hasAnsweredToday ? "Your Peek" : "Add your Peek")
     }
 }
 

@@ -171,18 +171,8 @@ struct NotificationsView: View {
     @ViewBuilder
     private func leading(_ group: NotificationGroup, actors: [AppUser]) -> some View {
         switch group.kind {
-        case .reaction:
+        case .reaction, .follow:
             Avatar(user: actors.first, size: 42, isSticker: true)
-        case .follow:
-            ZStack(alignment: .bottomTrailing) {
-                Avatar(user: actors.first, size: 42, isSticker: true)
-                Icon(.userPlusFill, size: DS.Icon.caption)
-                    .foregroundStyle(Color.qLime)
-                    .frame(width: 20, height: 20)
-                    .background(Circle().fill(Color.qGreen))
-                    .overlay(Circle().stroke(.white, lineWidth: 2))
-                    .offset(x: 3, y: 3)
-            }
         case .badge:
             HexBadge(asset: "badge-streak3")
                 .frame(width: 40, height: 44)

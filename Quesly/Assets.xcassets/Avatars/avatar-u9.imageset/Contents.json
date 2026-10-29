@@ -1,12 +1,12 @@
-{
-  "images": [
-    {
-      "filename": "avatar-u9.png",
-      "idiom": "universal"
-    }
-  ],
-  "info": {
-    "author": "xcode",
-    "version": 1
-  }
+﻿{
+    "images":  [
+                   {
+                       "filename":  "avatar-u9.jpg",
+                       "idiom":  "universal"
+                   }
+               ],
+    "info":  {
+                 "author":  "xcode",
+                 "version":  1
+             }
 }

@@ -37,10 +37,36 @@ enum MockData {
         .init(id: "u12", username: "camille_b", name: "Camille Blanc", bio: "Always hungry, always curious.", avatarHue: 0.9, badge: .purple, followers: 980, following: 410, streak: 15),
         .init(id: "u13", username: "yasmine.k", name: "Yasmine Karim", bio: "Med student. Coffee-powered.", avatarHue: 0.05, followers: 220, following: 180, streak: 4),
         .init(id: "u14", username: "theo_runs", name: "Théo Roux", bio: "Marathon in progress 🏃", avatarHue: 0.58, badge: .blue, followers: 150, following: 120, streak: 30),
+        .init(id: "u15", username: "sophie.l", name: "Sophie Laurent", bio: "Ceramics and matcha 🍵", avatarHue: 0.22, badge: .gold, followers: 312, following: 145, streak: 8),
+        .init(id: "u16", username: "mateo_b", name: "Mateo Rossi", bio: "Architecture & vinyl records 🎵", avatarHue: 0.68, badge: .green, followers: 184, following: 92, streak: 14),
+        .init(id: "u17", username: "elena_w", name: "Elena Wu", bio: "Urban sketcher in Berlin 🎨", avatarHue: 0.42, followers: 270, following: 180, streak: 5),
+        .init(id: "u18", username: "lucas_d", name: "Lucas Dubois", bio: "Bakery owner, dawn lover 🥐", avatarHue: 0.15, badge: .purple, followers: 640, following: 320, streak: 19),
+        .init(id: "u19", username: "zara_m", name: "Zara Mensah", bio: "Poetry, quiet rains & jazz", avatarHue: 0.88, badge: .blue, followers: 415, following: 210, streak: 11),
+        .init(id: "u20", username: "noah_k", name: "Noah Keller", bio: "Woodworking & forest walks 🌲", avatarHue: 0.35, followers: 95, following: 68, streak: 7),
+        .init(id: "u21", username: "clara_p", name: "Clara Pinto", bio: "Lisbon light & film archives 📷", avatarHue: 0.08, badge: .red, followers: 520, following: 280, streak: 23),
+        .init(id: "u22", username: "samuel_j", name: "Samuel Jones", bio: "Building tiny tools that matter", avatarHue: 0.52, followers: 160, following: 110, streak: 4),
+        .init(id: "u23", username: "maya_s", name: "Maya Sharma", bio: "Tea ceremonies & slow living", avatarHue: 0.78, badge: .gold, followers: 380, following: 190, streak: 16),
+        .init(id: "u24", username: "julien_f", name: "Julien Faure", bio: "Night cyclist, typography nerd", avatarHue: 0.65, followers: 230, following: 175, streak: 6),
+        .init(id: "u25", username: "hannah_b", name: "Hannah Berg", bio: "Nordic winters & warm sweaters", avatarHue: 0.28, badge: .green, followers: 490, following: 310, streak: 25),
+        .init(id: "u26", username: "david_c", name: "David Chen", bio: "Coffee roasting & analog cameras", avatarHue: 0.18, followers: 145, following: 88, streak: 3),
+        .init(id: "u27", username: "ines_m", name: "Inès Morales", bio: "Flamenco beats & seaside sketches", avatarHue: 0.92, badge: .purple, followers: 360, following: 205, streak: 13),
+        .init(id: "u28", username: "felix_g", name: "Félix Girard", bio: "Acoustic guitar & rooftop talks", avatarHue: 0.48, followers: 175, following: 130, streak: 10),
+        .init(id: "u29", username: "alicia_t", name: "Alicia Torres", bio: "Botanist, mountain explorer 🏔️", avatarHue: 0.38, badge: .blue, followers: 610, following: 240, streak: 18),
+        .init(id: "u30", username: "gabriel_v", name: "Gabriel Vance", bio: "Writing stories nobody asked for", avatarHue: 0.72, followers: 290, following: 160, streak: 9),
+        .init(id: "u31", username: "nina_k", name: "Nina Krawczyk", bio: "Graphic design & indie cinema", avatarHue: 0.82, badge: .red, followers: 440, following: 215, streak: 22),
+        .init(id: "u32", username: "arthur_l", name: "Arthur Leroy", bio: "Vintage bookshops in Montmartre", avatarHue: 0.14, followers: 110, following: 95, streak: 5),
+        .init(id: "u33", username: "selma_h", name: "Selma Hadad", bio: "Architect, baker on weekends 🥖", avatarHue: 0.56, badge: .gold, followers: 580, following: 340, streak: 28),
+        .init(id: "u34", username: "liam_o", name: "Liam O'Connor", bio: "Ocean swimming all year round 🌊", avatarHue: 0.61, followers: 205, following: 140, streak: 12),
+        .init(id: "u35", username: "eva_r", name: "Eva Rostova", bio: "Cellist, starry night watcher ✨", avatarHue: 0.86, badge: .purple, followers: 375, following: 185, streak: 15),
+        .init(id: "u36", username: "benjamin_m", name: "Benjamin Mercier", bio: "Restoring old motorcycles 🏍️", avatarHue: 0.04, followers: 165, following: 120, streak: 8),
+        .init(id: "u37", username: "chloe_d", name: "Chloé Delacroix", bio: "Pastry chef dreaming of Japan", avatarHue: 0.74, badge: .green, followers: 430, following: 260, streak: 17),
+        .init(id: "u38", username: "oscar_n", name: "Oscar Nilsson", bio: "Nordic folklore & sauna lover", avatarHue: 0.30, followers: 135, following: 90, streak: 7),
+        .init(id: "u39", username: "amira_z", name: "Amira Zadeh", bio: "Calligraphy & golden hours ☀️", avatarHue: 0.16, badge: .blue, followers: 510, following: 275, streak: 24),
+        .init(id: "u40", username: "victor_s", name: "Victor Sorel", bio: "Sound design & quiet reflections", avatarHue: 0.44, badge: .gold, followers: 320, following: 150, streak: 19),
     ]
 
     /// Users that `me` follows (drives the Friends feed).
-    static let followingIds: Set<String> = ["u2", "u3", "u4", "u5", "u8", "u9", "u10"]
+    static let followingIds: Set<String> = ["u1", "u2", "u3", "u4", "u5", "u7", "u8", "u9", "u10", "u12", "u15", "u18", "u21", "u25"]
 
     /// Other people's answers per question: (authorId, text, minutesAgo).
     private static let feedAnswers: [String: [(String, String, Double)]] = [

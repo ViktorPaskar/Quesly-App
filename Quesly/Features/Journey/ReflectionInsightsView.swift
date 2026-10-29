@@ -1,7 +1,10 @@
 import SwiftUI
 
-/// Dedicated screen for "Reflection Rhythm & 24-Hour Clock" (Ритм рефлексии и суточный циферблат).
-/// Clean, restrained, and 100% on brand — no generic AI slop, no emojis, only native vector QIcons.
+/// Dedicated screen for "Reflection Rhythm" (Ритм рефлексии).
+/// Designed with premium Apple / Revolut / Threads restraint:
+/// - Hero Clock Dial with high breathing room, clean focal point
+/// - Single segmented day periods control (pill bar)
+/// - Clean card feed of past reflections with generous typography and no cramped boxes
 struct ReflectionInsightsView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -16,21 +19,12 @@ struct ReflectionInsightsView: View {
 
         var id: String { rawValue }
 
-        var hoursRange: ClosedRange<Int> {
+        var hoursLabel: String {
             switch self {
-            case .morning: return 6...11
-            case .afternoon: return 12...17
-            case .evening: return 18...22
-            case .night: return 23...24
-            }
-        }
-
-        var label: String {
-            switch self {
-            case .morning: return "06:00 – 12:00"
-            case .afternoon: return "12:00 – 18:00"
-            case .evening: return "18:00 – 23:00"
-            case .night: return "23:00 – 06:00"
+            case .morning: return "6 AM – 12 PM"
+            case .afternoon: return "12 PM – 6 PM"
+            case .evening: return "6 PM – 11 PM"
+            case .night: return "11 PM – 6 AM"
             }
         }
 
@@ -68,26 +62,24 @@ struct ReflectionInsightsView: View {
             let c = count(in: answers)
             return Int(round(Double(c) / Double(answers.count) * 100))
         }
-
-        var isPeak: Bool { self == .morning }
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DS.Space.l) {
-                    // MARK: 1. 24-Hour Circular Clock Dial Card
-                    clockDialCard
+                VStack(spacing: DS.Space.xl) {
+                    // MARK: 1. Hero 24-Hour Circular Dial
+                    heroDialSection
 
-                    // MARK: 2. Period Filter Tiles (4 Day Quarters)
-                    periodFilterTiles
+                    // MARK: 2. Period Filter Segmented Bar
+                    periodSegmentedBar
 
-                    // MARK: 3. Real Reflections in Selected Window
-                    answersInWindowSection
+                    // MARK: 3. Reflection History Stream
+                    reflectionsStreamSection
                 }
                 .padding(.horizontal, DS.Space.screen)
-                .padding(.vertical, DS.Space.m)
-                .padding(.bottom, 40)
+                .padding(.top, DS.Space.s)
+                .padding(.bottom, DS.Space.xxl)
             }
             .background(Color.qBackground)
             .navigationTitle("Reflection Rhythm")
@@ -95,78 +87,55 @@ struct ReflectionInsightsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { dismiss() } label: {
-                        Icon(.xCircleFill, size: 20)
+                        Icon(.xCircleFill, size: 22)
                             .foregroundStyle(Color.qGray)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Close")
                 }
             }
         }
     }
 
-    // MARK: - 24-Hour Circular Clock Dial Card
+    // MARK: - 1. Hero 24-Hour Dial Section (Clean, uncluttered, focused)
 
-    private var clockDialCard: some View {
-        VStack(spacing: 16) {
-            // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("24-HOUR DIAL")
-                        .font(.ui(11, .semibold))
-                        .tracking(0.6)
-                        .foregroundStyle(Color.qBrandText)
-                    Text("Reflection rhythm clock")
-                        .font(.ui(17, .semibold))
-                        .foregroundStyle(Color.qInk)
-                }
-                Spacer()
-                HStack(spacing: 4) {
-                    Icon(.sunFill, size: 11)
-                        .foregroundStyle(Color.qGreenDeep)
-                    Text("Morning peak")
-                        .font(.ui(11, .semibold))
-                        .foregroundStyle(Color.qGreenDeep)
-                }
-                .padding(.horizontal, 9)
-                .padding(.vertical, 4.5)
-                .background(Capsule().fill(Color.qMint.opacity(0.35)))
-            }
-
-            // The Dial Widget
+    private var heroDialSection: some View {
+        VStack(spacing: DS.Space.m) {
+            // Dial Widget with generous breathing room
             Circular24hClockView(selectedPeriod: $selectedPeriod)
-                .frame(width: 240, height: 240)
-                .padding(.vertical, 8)
+                .frame(width: 250, height: 250)
+                .padding(.top, DS.Space.xs)
 
-            // Dynamic dial summary
-            VStack(spacing: 2) {
+            // Dynamic Clean Caption (1 clear line)
+            VStack(spacing: 3) {
                 if let p = selectedPeriod {
                     HStack(spacing: 6) {
-                        Icon(p.icon, size: 13)
+                        Icon(p.icon, size: 14)
                             .foregroundStyle(Color.qGreen)
-                        Text("\(p.rawValue) window: \(p.label)")
+                        Text("\(p.rawValue) · \(p.hoursLabel)")
                             .font(.ui(14, .semibold))
                             .foregroundStyle(Color.qInk)
-                        Text("(\(p.percentage(in: store.myAnswers))%)")
+                        Text("\(p.percentage(in: store.myAnswers))%")
                             .font(.ui(13, .semibold))
-                            .foregroundStyle(Color.qGreenDeep)
+                            .foregroundStyle(Color.qBrandText)
                     }
                 } else {
                     HStack(spacing: 6) {
-                        Icon(.sunFill, size: 13)
+                        Icon(.sunFill, size: 14)
                             .foregroundStyle(Color.qGreen)
-                        Text("Peak hour: 8:45 AM")
-                            .font(.ui(14.5, .semibold))
+                        Text("Morning peak at 8:45 AM")
+                            .font(.ui(14, .semibold))
                             .foregroundStyle(Color.qInk)
                     }
-                    Text("52% of reflections completed between 06:00 and 12:00")
+                    Text("52% of reflections happen before noon")
                         .font(.ui(12.5))
                         .foregroundStyle(Color.qGray)
-                        .multilineTextAlignment(.center)
                 }
             }
-            .frame(minHeight: 34)
+            .frame(height: 38)
         }
-        .padding(18)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DS.Space.m)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(Color.qBlock)
@@ -177,72 +146,55 @@ struct ReflectionInsightsView: View {
         )
     }
 
-    // MARK: - Period Filter Tiles (4 clean tiles)
+    // MARK: - 2. Period Filter Segmented Bar (Unified, 1 row, clean pills)
 
-    private var periodFilterTiles: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("TIME OF DAY")
-                    .font(.ui(11, .semibold))
-                    .tracking(0.6)
-                    .foregroundStyle(Color.qGray)
-                Spacer()
-                if selectedPeriod != nil {
-                    Button("Show all") {
-                        withAnimation(.qSpring) { selectedPeriod = nil }
-                    }
-                    .font(.ui(12, .semibold))
-                    .foregroundStyle(Color.qGreen)
-                }
+    private var periodSegmentedBar: some View {
+        HStack(spacing: 6) {
+            periodPill(title: "All", pct: nil, isSelected: selectedPeriod == nil) {
+                withAnimation(.qSpring) { selectedPeriod = nil }
             }
-            .padding(.horizontal, 4)
 
-            HStack(spacing: 8) {
-                ForEach(DayPeriod.allCases) { period in
-                    let isSelected = selectedPeriod == period
-                    let pct = period.percentage(in: store.myAnswers)
-
-                    Button {
-                        withAnimation(.qSpring) {
-                            selectedPeriod = (selectedPeriod == period) ? nil : period
-                        }
-                    } label: {
-                        VStack(spacing: 5) {
-                            HStack(spacing: 4) {
-                                Icon(period.icon, size: 12)
-                                    .foregroundStyle(isSelected ? Color.qGreenDeep : (period.isPeak ? Color.qGreen : Color.qGray))
-                                Text("\(pct)%")
-                                    .font(.ui(12, .semibold))
-                                    .foregroundStyle(isSelected ? Color.qGreenDeep : Color.qInk)
-                            }
-
-                            Text(period.rawValue)
-                                .font(.ui(11.5, isSelected ? .semibold : .medium))
-                                .foregroundStyle(isSelected ? Color.qInk : Color.qGray)
-
-                            Text(period.label.components(separatedBy: " – ").first ?? "")
-                                .font(.ui(9.5))
-                                .foregroundStyle(Color.qGray4)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, 4)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(isSelected ? Color.qMint.opacity(0.40) : Color.qField)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .stroke(isSelected ? Color.qGreen.opacity(0.4) : Color.clear, lineWidth: 1)
-                        )
+            ForEach(DayPeriod.allCases) { period in
+                let isSelected = selectedPeriod == period
+                let pct = period.percentage(in: store.myAnswers)
+                periodPill(title: period.rawValue, pct: pct, isSelected: isSelected) {
+                    withAnimation(.qSpring) {
+                        selectedPeriod = (selectedPeriod == period) ? nil : period
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
     }
 
-    // MARK: - Real Answers in Selected Window
+    private func periodPill(title: String, pct: Int?, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 1) {
+                Text(title)
+                    .font(.ui(12, isSelected ? .semibold : .medium))
+                    .foregroundStyle(isSelected ? Color.qGreenDeep : Color.qInk)
+                    .lineLimit(1)
+                if let pct {
+                    Text("\(pct)%")
+                        .font(.ui(10, .medium))
+                        .foregroundStyle(isSelected ? Color.qBrandText : Color.qGray)
+                        .monospacedDigit()
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 42)
+            .background(
+                Capsule()
+                    .fill(isSelected ? Color.qMint.opacity(0.40) : Color.qField)
+            )
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? Color.qGreen.opacity(0.35) : Color.clear, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - 3. Reflection History Stream (Threads / Apple Notes style)
 
     private var filteredAnswers: [Answer] {
         let cal = Calendar.current
@@ -258,91 +210,95 @@ struct ReflectionInsightsView: View {
         }
     }
 
-    private var answersInWindowSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+    private var reflectionsStreamSection: some View {
+        VStack(alignment: .leading, spacing: DS.Space.s) {
             HStack {
-                Icon(.chatCircleTextFill, size: 14)
-                    .foregroundStyle(Color.qGreen)
-                Text(selectedPeriod.map { "\($0.rawValue) reflections" } ?? "Recent reflections")
+                Text(selectedPeriod.map { "\($0.rawValue) reflections" } ?? "Reflections")
                     .font(.ui(15, .semibold))
                     .foregroundStyle(Color.qInk)
                 Spacer()
-                Text("\(filteredAnswers.count) answers")
-                    .font(.ui(12))
+                Text("\(filteredAnswers.count)")
+                    .font(.ui(13))
                     .foregroundStyle(Color.qGray)
             }
+            .padding(.horizontal, 4)
 
-            VStack(spacing: 8) {
-                ForEach(filteredAnswers.prefix(6)) { answer in
+            VStack(spacing: 0) {
+                ForEach(Array(filteredAnswers.prefix(6).enumerated()), id: \.element.id) { index, answer in
+                    if index > 0 {
+                        Rectangle()
+                            .fill(Color.qLine)
+                            .frame(height: 1)
+                            .padding(.horizontal, DS.Space.m)
+                    }
                     reflectionRow(answer)
                 }
             }
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.qBlock)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(Color.qLine, lineWidth: 1)
+                    )
+            )
         }
     }
 
     private func reflectionRow(_ answer: Answer) -> some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(alignment: .top, spacing: DS.Space.m) {
+            // Time column (clean, no wrapping)
+            VStack(alignment: .leading, spacing: 1) {
                 Text(answer.createdAt.formatted(.dateTime.hour().minute()))
                     .font(.ui(13, .semibold))
                     .foregroundStyle(Color.qInk)
                     .monospacedDigit()
                 Text(answer.createdAt.formatted(.dateTime.month(.abbreviated).day()))
-                    .font(.ui(10.5))
+                    .font(.ui(11))
                     .foregroundStyle(Color.qGray)
             }
-            .frame(width: 58, alignment: .leading)
+            .frame(width: 62, alignment: .leading)
 
-            Rectangle()
-                .fill(Color.qLine)
-                .frame(width: 1, height: 36)
-
-            VStack(alignment: .leading, spacing: 2) {
+            // Content column
+            VStack(alignment: .leading, spacing: 3) {
                 Text(answer.questionText)
-                    .font(.ui(13, .medium))
-                    .foregroundStyle(Color.qInk2)
+                    .font(.ui(13.5, .medium))
+                    .foregroundStyle(Color.qInk)
                     .lineLimit(1)
                 Text("“\(answer.text)”")
-                    .font(.ui(12))
+                    .font(.ui(12.5))
                     .foregroundStyle(Color.qGray)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .lineSpacing(2)
             }
-            Spacer()
+
+            Spacer(minLength: 0)
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.qBlock)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.qLine, lineWidth: 0.75)
-                )
-        )
+        .padding(DS.Space.m)
     }
 }
 
-// MARK: - 24-Hour Circular Clock Component
+// MARK: - 24-Hour Circular Clock Component (Pure, Elegant, Minimal)
 
 private struct Circular24hClockView: View {
     @Binding var selectedPeriod: ReflectionInsightsView.DayPeriod?
 
-    // 24-hour mock reflection data points: (hour: 0-24, minute: 0-59, label)
-    private let dots: [(hour: Double, count: Int)] = [
-        (7.5, 3),
-        (8.75, 12),
-        (9.2, 5),
-        (12.5, 2),
-        (13.6, 4),
-        (18.2, 3),
-        (20.5, 4),
-        (23.2, 1)
+    private let dots: [(hour: Double, isPeak: Bool)] = [
+        (7.5, false),
+        (8.75, true),
+        (9.2, true),
+        (12.5, false),
+        (13.6, false),
+        (18.2, false),
+        (20.5, false),
+        (23.2, false)
     ]
 
     var body: some View {
         GeometryReader { geo in
             let size = min(geo.size.width, geo.size.height)
             let center = CGPoint(x: size / 2, y: size / 2)
-            let radius = (size - 40) / 2
+            let radius = (size - 36) / 2
 
             ZStack {
                 // Background Track
@@ -350,41 +306,41 @@ private struct Circular24hClockView: View {
                     .stroke(Color.qLine.opacity(0.85), lineWidth: 1.5)
                     .frame(width: radius * 2, height: radius * 2)
 
-                // 24 Hour Tick Marks
+                // 24 Hour Ticks
                 ForEach(0..<24) { h in
                     let angle = Angle.degrees(Double(h) * 15.0 - 90.0)
                     let isMajor = h % 6 == 0
-                    let tickLen: CGFloat = isMajor ? 8 : 4
+                    let tickLen: CGFloat = isMajor ? 7 : 3.5
 
                     Rectangle()
                         .fill(isMajor ? Color.qInk2 : Color.qGray4)
-                        .frame(width: isMajor ? 2 : 1, height: tickLen)
+                        .frame(width: isMajor ? 1.5 : 1, height: tickLen)
                         .offset(y: -radius + tickLen / 2)
                         .rotationEffect(angle)
                 }
 
-                // 4 Cardinal Time Labels
+                // 4 Time Labels
                 Text("00:00")
-                    .font(.ui(9, .bold))
+                    .font(.ui(9, .semibold))
                     .foregroundStyle(Color.qGray)
-                    .offset(y: -radius - 12)
+                    .offset(y: -radius - 11)
 
                 Text("06:00")
-                    .font(.ui(9, .bold))
+                    .font(.ui(9, .semibold))
                     .foregroundStyle(Color.qGray)
-                    .offset(x: radius + 16)
+                    .offset(x: radius + 15)
 
                 Text("12:00")
-                    .font(.ui(9, .bold))
+                    .font(.ui(9, .semibold))
                     .foregroundStyle(Color.qGray)
-                    .offset(y: radius + 12)
+                    .offset(y: radius + 11)
 
                 Text("18:00")
-                    .font(.ui(9, .bold))
+                    .font(.ui(9, .semibold))
                     .foregroundStyle(Color.qGray)
-                    .offset(x: -radius - 16)
+                    .offset(x: -radius - 15)
 
-                // Highlighted Peak Arc: 06:00 to 12:00 (90° to 180° clockwise)
+                // Peak Arc: 06:00 to 12:00 (90° to 180° clockwise)
                 Circle()
                     .trim(from: 0.25, to: 0.50)
                     .stroke(
@@ -394,26 +350,21 @@ private struct Circular24hClockView: View {
                     .frame(width: radius * 2, height: radius * 2)
                     .rotationEffect(.degrees(-90))
 
-                // Reflection Density Dots along the track
+                // Reflection Points
                 ForEach(Array(dots.enumerated()), id: \.offset) { _, dot in
                     let angle = Angle.degrees(dot.hour / 24.0 * 360.0 - 90.0)
-                    let isPeakHour = dot.hour >= 8 && dot.hour <= 9
 
-                    ZStack {
-                        Circle()
-                            .fill(isPeakHour ? Color.qGreen : Color.qMint)
-                            .frame(width: isPeakHour ? 13 : 8, height: isPeakHour ? 13 : 8)
-                            .overlay(
-                                Circle().stroke(Color.white, lineWidth: 1.5)
-                            )
-                    }
-                    .offset(x: radius * cos(angle.radians), y: radius * sin(angle.radians))
+                    Circle()
+                        .fill(dot.isPeak ? Color.qGreen : Color.qMint)
+                        .frame(width: dot.isPeak ? 11 : 7, height: dot.isPeak ? 11 : 7)
+                        .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+                        .offset(x: radius * cos(angle.radians), y: radius * sin(angle.radians))
                 }
 
-                // Dial Center Hub
+                // Clean Center Hub
                 VStack(spacing: 2) {
                     Text("PEAK")
-                        .font(.ui(9, .bold))
+                        .font(.ui(8.5, .bold))
                         .tracking(1.0)
                         .foregroundStyle(Color.qBrandText)
 
@@ -425,19 +376,8 @@ private struct Circular24hClockView: View {
                     Text("AM")
                         .font(.ui(11, .semibold))
                         .foregroundStyle(Color.qGray)
-
-                    HStack(spacing: 3) {
-                        Circle().fill(Color.qGreen).frame(width: 4, height: 4)
-                        Text("Morning")
-                            .font(.ui(10, .semibold))
-                            .foregroundStyle(Color.qGreenDeep)
-                    }
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Capsule().fill(Color.qMint.opacity(0.35)))
-                    .padding(.top, 1)
                 }
-                .frame(width: 104, height: 104)
+                .frame(width: 96, height: 96)
                 .background(
                     Circle()
                         .fill(Color.qBackground)

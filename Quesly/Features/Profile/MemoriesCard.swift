@@ -18,7 +18,7 @@ struct MemoriesCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Space.s) {
+        VStack(alignment: .leading, spacing: DS.Space.m) {
             if showsHeader { header }
             monthBar
             MonthGrid(month: month, answered: store.answeredDays) { day in
@@ -26,9 +26,15 @@ struct MemoriesCard: View {
             }
             legend
         }
-        .padding(.top, DS.Space.xxs)
-        .padding([.horizontal, .bottom], DS.Space.m)
-        .outlinedBlock()
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.qBlock)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.qLine, lineWidth: 1)
+                )
+        )
         .sheet(item: $opened) { answer in
             MemoryDetailSheet(answer: answer)
                 .presentationDetents([.medium, .large])
@@ -53,11 +59,26 @@ struct MemoriesCard: View {
         }
     }
 
+    private var answeredCountInMonth: Int {
+        let cal = Calendar.current
+        return store.answeredDays.filter { cal.isDate($0, equalTo: month, toGranularity: .month) }.count
+    }
+
     private var monthBar: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 8) {
             Text(month.formatted(.dateTime.month(.wide).year()))
-                .font(.ui(17, .semibold))
+                .font(.ui(18, .semibold))
                 .foregroundStyle(Color.qInk)
+
+            if answeredCountInMonth > 0 {
+                Text("\(answeredCountInMonth) answered")
+                    .font(.ui(12, .medium))
+                    .foregroundStyle(Color.qBrandText)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(Color.qLime.opacity(0.35)))
+            }
+
             Spacer()
             monthButton(.caretLeftBold, label: "Previous month", enabled: monthOffset > -Self.monthsBack) { monthOffset -= 1 }
             monthButton(.caretRightBold, label: "Next month", enabled: monthOffset < 0) { monthOffset += 1 }

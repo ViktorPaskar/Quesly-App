@@ -28,7 +28,12 @@ struct ProfileView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                    ProfileHeader(user: user, isMe: isMe) { withAnimation(.qSmooth) { tab = .calendar } }
+                    ProfileHeader(
+                        user: user,
+                        isMe: isMe,
+                        onStreak: { withAnimation(.qSmooth) { tab = .calendar } },
+                        onAnswers: { withAnimation(.qSmooth) { tab = .answers } }
+                    )
                         .padding(.horizontal, DS.Space.screen)
                         .padding(.top, DS.Space.xs)
                         .padding(.bottom, DS.Space.xl)
@@ -79,13 +84,9 @@ struct ProfileView: View {
     @ViewBuilder
     private var content: some View {
         if tab == .calendar {
-            VStack(spacing: DS.Space.s) {
-                QueslyStatsCard()
-                StreakCard()
+            VStack(spacing: DS.Space.m) {
                 MemoriesCard(showsHeader: false)
-                BadgesStrip()
-                    .padding(DS.Space.m)
-                    .outlinedBlock()
+                calendarArchiveSection
             }
             .padding(.horizontal, DS.Space.screen)
         } else {
@@ -105,6 +106,34 @@ struct ProfileView: View {
                 }
                 if items.isEmpty { emptyState }
             }
+        }
+    }
+
+    private var calendarArchiveSection: some View {
+        let items = store.answers(of: userId)
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                Icon(.calendar, size: 14)
+                    .foregroundStyle(Color.qGreen)
+                Text("Answers archive")
+                    .font(.ui(15, .semibold))
+                    .foregroundStyle(Color.qInk)
+                Spacer()
+                Text("\(items.count) answers")
+                    .font(.ui(13))
+                    .foregroundStyle(Color.qGray)
+            }
+            .padding(.top, 4)
+            .padding(.bottom, 12)
+
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
+                if index > 0 {
+                    Rectangle().fill(Color.qLine.opacity(0.65)).frame(height: 0.5)
+                }
+                AnswerCard(answer: answer, showsQuestion: true, showsAuthor: false, isCompact: true)
+                    .staggeredAppear(index)
+            }
+            if items.isEmpty { emptyState }
         }
     }
 
@@ -239,6 +268,8 @@ struct ProfileHeader: View {
     let isMe: Bool
     /// Tapping your streak opens the Calendar tab.
     var onStreak: () -> Void = {}
+    /// Tapping your answers count switches to the Answers tab.
+    var onAnswers: () -> Void = {}
     @State private var appeared = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -295,7 +326,7 @@ struct ProfileHeader: View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 0, alignment: .leading),
                             count: typeSize.isAccessibilitySize ? 2 : 4)
         return LazyVGrid(columns: columns, alignment: .leading, spacing: DS.Space.s) {
-            stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil)
+            stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil, action: isMe ? onAnswers : nil)
             stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)
             stat(followingCount, "Following", route: isMe ? .following : nil)
             streakStat
@@ -339,7 +370,7 @@ struct ProfileHeader: View {
     }
 
     @ViewBuilder
-    private func stat(_ value: Int, _ title: String, route: Route?) -> some View {
+    private func stat(_ value: Int, _ title: String, route: Route?, action: (() -> Void)? = nil) -> some View {
         let content = VStack(alignment: .leading, spacing: 2) {
             number(value)
             label(title)
@@ -350,6 +381,8 @@ struct ProfileHeader: View {
         .accessibilityElement(children: .combine)
         if let route {
             NavigationLink(value: route) { content }.buttonStyle(.pressable)
+        } else if let action {
+            Button(action: action) { content }.buttonStyle(.pressable)
         } else {
             content
         }
@@ -626,153 +659,5 @@ struct CountUpText: View {
             }
             .onChange(of: value) { _, new in withAnimation(.qSmooth) { shown = new } }
             .accessibilityLabel("\(value)")
-    }
-}
-
-/// Personal stats breakdown (Feature: My Quesly Stats): questions answered, active days,
-/// saved answers count, and frequent reflection themes with clean proportional bars.
-struct QueslyStatsCard: View {
-    @Environment(AppStore.self) private var store
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header
-            HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.qLime)
-                        .frame(width: 32, height: 32)
-                    Icon(.chartBarFill, size: 16)
-                        .foregroundStyle(Color.qGreen)
-                }
-                Text("Reflection stats")
-                    .font(.ui(17, .semibold))
-                    .foregroundStyle(Color.qInk)
-                Spacer()
-                Text("All time")
-                    .font(.ui(11, .semibold))
-                    .foregroundStyle(Color.qGreen)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.qGreen.opacity(0.10)))
-            }
-
-            // Vibrant metric cards (3 equal columns)
-            HStack(spacing: 10) {
-                metricCard(
-                    value: "\(store.totalQuestionsAnswered)",
-                    label: "Answered",
-                    icon: .chatCircleTextFill,
-                    tint: Color.qGreen,
-                    bg: Color(hex: 0xEDF8F3),
-                    valColor: Color.qGreenDeep
-                )
-                metricCard(
-                    value: "\(store.uniqueActiveDays)",
-                    label: "Active days",
-                    icon: .fireFill,
-                    tint: Color.qFlame,
-                    bg: Color(hex: 0xFFF3EB),
-                    valColor: Color(hex: 0xB34700)
-                )
-                metricCard(
-                    value: "\(store.totalSavedCount)",
-                    label: "Saved",
-                    icon: .bookmarkSimpleFill,
-                    tint: Color(hex: 0x4285F4),
-                    bg: Color(hex: 0xEBF3FF),
-                    valColor: Color(hex: 0x1A56B3)
-                )
-            }
-
-            Rectangle().fill(Color.qLine.opacity(0.8)).frame(height: 1)
-
-            // Top reflection themes
-            VStack(alignment: .leading, spacing: 10) {
-                Text("TOP REFLECTION TOPICS")
-                    .font(.ui(11, .semibold))
-                    .tracking(0.8)
-                    .foregroundStyle(Color.qInk2)
-
-                // Segmented proportion bar with rounded capsules
-                GeometryReader { geo in
-                    HStack(spacing: 4) {
-                        Capsule()
-                            .fill(LinearGradient(colors: [Color.qGreen, Color.qGreenDeep], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: max(8, geo.size.width * 0.45))
-                        Capsule()
-                            .fill(LinearGradient(colors: [Color.qLime, Color(hex: 0xB8E600)], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: max(8, geo.size.width * 0.30))
-                        Capsule()
-                            .fill(LinearGradient(colors: [Color(hex: 0x4285F4), Color(hex: 0x6BA4F8)], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: max(8, geo.size.width * 0.25 - 8))
-                    }
-                }
-                .frame(height: 10)
-
-                // Interactive topic chips
-                HStack(spacing: 8) {
-                    topicChip(color: Color.qGreen, bg: Color(hex: 0xEDF8F3), text: "Stories", percent: "45%")
-                    topicChip(color: Color(hex: 0x7CA600), bg: Color.qLime.opacity(0.22), text: "Wisdom", percent: "30%")
-                    topicChip(color: Color(hex: 0x4285F4), bg: Color(hex: 0xEBF3FF), text: "Daily", percent: "25%")
-                    Spacer(minLength: 0)
-                }
-                .padding(.top, 2)
-            }
-        }
-        .padding(18)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.qBlock)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.qLine, lineWidth: 1)
-                )
-        )
-    }
-
-    private func metricCard(value: String, label: String, icon: QIcon, tint: Color, bg: Color, valColor: Color) -> some View {
-        VStack(spacing: 6) {
-            ZStack {
-                Circle().fill(Color.white).frame(width: 28, height: 28)
-                Icon(icon, size: 14)
-                    .foregroundStyle(tint)
-            }
-            Text(value)
-                .font(.ui(22, .semibold))
-                .foregroundStyle(valColor)
-                .monospacedDigit()
-            Text(label)
-                .font(.ui(11, .semibold))
-                .foregroundStyle(tint)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(bg)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(tint.opacity(0.20), lineWidth: 1)
-                )
-        )
-    }
-
-    private func topicChip(color: Color, bg: Color, text: String, percent: String) -> some View {
-        HStack(spacing: 5) {
-            Circle().fill(color).frame(width: 6, height: 6)
-            Text(text)
-                .font(.ui(12, .semibold))
-                .foregroundStyle(Color.qInk)
-            Text(percent)
-                .font(.ui(11, .medium))
-                .foregroundStyle(Color.qGray)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(Capsule().fill(bg))
-        .overlay(Capsule().stroke(color.opacity(0.20), lineWidth: 0.8))
     }
 }

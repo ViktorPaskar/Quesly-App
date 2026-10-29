@@ -4,8 +4,18 @@ import SwiftUI
 struct MemoriesCard: View {
     @Environment(AppStore.self) private var store
     @State private var monthOffset = 0
-    @Binding var selectedDate: Date?
+    private var externalSelectedDate: Binding<Date?>?
+    @State private var internalSelectedDate: Date? = nil
     var showsHeader = true
+
+    init(selectedDate: Binding<Date?>? = nil, showsHeader: Bool = true) {
+        self.externalSelectedDate = selectedDate
+        self.showsHeader = showsHeader
+    }
+
+    private var activeSelectedDate: Binding<Date?> {
+        externalSelectedDate ?? $internalSelectedDate
+    }
 
     private let calendar = Calendar.current
     private static let monthsBack = 12
@@ -19,12 +29,12 @@ struct MemoriesCard: View {
         VStack(alignment: .leading, spacing: DS.Space.m) {
             if showsHeader { header }
             monthBar
-            MonthGrid(month: month, answered: store.answeredDays, selected: selectedDate) { day in
+            MonthGrid(month: month, answered: store.answeredDays, selected: activeSelectedDate.wrappedValue) { day in
                 withAnimation(.qSpring) {
-                    if let sel = selectedDate, calendar.isDate(sel, inSameDayAs: day) {
-                        selectedDate = nil
+                    if let sel = activeSelectedDate.wrappedValue, calendar.isDate(sel, inSameDayAs: day) {
+                        activeSelectedDate.wrappedValue = nil
                     } else {
-                        selectedDate = day
+                        activeSelectedDate.wrappedValue = day
                     }
                 }
             }

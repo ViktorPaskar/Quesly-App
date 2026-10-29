@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.4.app || sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
 
       - name: Build for iOS Simulator
         run: |
@@ -36,7 +36,7 @@ jobs:
       - name: Take screenshots in the simulator
         run: |
           set -x
-          DEVICE=$(xcrun simctl list devices available | grep -E "iPhone 16 \(" | head -1 | grep -oE "[0-9A-F-]{36}")
+          DEVICE=$(xcrun simctl list devices available | grep -E "iPhone 18 Pro|iPhone 18|iPhone 17 Pro|iPhone 17|iPhone 16 Pro|iPhone 16" | head -1 | grep -oE "[0-9A-F-]{36}")
           [ -z "$DEVICE" ] && DEVICE=$(xcrun simctl list devices available | grep -E "iPhone" | head -1 | grep -oE "[0-9A-F-]{36}")
           xcrun simctl boot "$DEVICE"
           xcrun simctl bootstatus "$DEVICE" -b

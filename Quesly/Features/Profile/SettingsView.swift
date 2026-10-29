@@ -11,7 +11,6 @@ struct SettingsView: View {
     @State private var confirmDelete = false
 
     var body: some View {
-        @Bindable var store = store
         ScrollView {
             VStack(spacing: DS.Space.xl) {
                 // Profile Header Card
@@ -92,7 +91,10 @@ struct SettingsView: View {
                         .font(.ui(15, .medium))
                         .foregroundStyle(Color.qInk)
                     Spacer()
-                    Toggle("", isOn: $store.remindersEnabled)
+                    Toggle("", isOn: Binding(
+                        get: { store.remindersEnabled },
+                        set: { store.remindersEnabled = $0 }
+                    ))
                         .labelsHidden()
                         .tint(Color.qGreen)
                 }
@@ -107,7 +109,10 @@ struct SettingsView: View {
                             .font(.ui(15, .medium))
                             .foregroundStyle(Color.qInk)
                         Spacer()
-                        DatePicker("", selection: $store.reminderTime, displayedComponents: .hourAndMinute)
+                        DatePicker("", selection: Binding(
+                            get: { store.reminderTime },
+                            set: { store.reminderTime = $0 }
+                        ), displayedComponents: .hourAndMinute)
                             .labelsHidden()
                             .tint(Color.qGreen)
                     }
@@ -145,7 +150,10 @@ struct SettingsView: View {
                             .foregroundStyle(Color.qGray)
                     }
                     Spacer()
-                    Toggle("", isOn: $store.isPrivateAccount)
+                    Toggle("", isOn: Binding(
+                        get: { store.isPrivateAccount },
+                        set: { store.isPrivateAccount = $0 }
+                    ))
                         .labelsHidden()
                         .tint(Color.qGreen)
                 }
@@ -292,5 +300,15 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .stroke(Color.qLine, lineWidth: 1)
             )
+    }
+}
+
+// MARK: - Bundle Helper
+
+extension Bundle {
+    var appVersion: String {
+        let v = infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let b = infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(v) (\(b))"
     }
 }

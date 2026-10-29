@@ -217,9 +217,9 @@ struct StoryViewer: View {
                     progressBars
                     header.padding(.top, DS.Space.s)
                     Spacer(minLength: DS.Space.m)
-                    StoryAnswerCard(answer: answer)
+                    storyAnswerCard
                     Spacer(minLength: DS.Space.m)
-                    ReactionBar(answer: answer)
+                    reactionDock
                 }
                 .padding(.horizontal, DS.Space.screen)
                 .padding(.bottom, DS.Space.m)
@@ -298,13 +298,10 @@ struct StoryViewer: View {
         .accessibilityElement(children: .contain)
     }
 
-/// Dimensional glassmorphic card framing the answer
-private struct StoryAnswerCard: View {
-    let answer: Answer
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Clean Question header (Sentence case, pure white with lime icon)
+    /// Dimensional glassmorphic card framing the answer
+    private var storyAnswerCard: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            // Clean Question header (Sentence case, subtle frosted pill)
             HStack(spacing: 8) {
                 QueslyMark(color: .qGreen, cutout: .qLime)
                     .frame(width: 14)
@@ -312,10 +309,13 @@ private struct StoryAnswerCard: View {
                     .background(Circle().fill(Color.qLime))
 
                 Text(answer.questionText)
-                    .font(.ui(14, .semibold))
-                    .foregroundStyle(Color.white.opacity(0.92))
+                    .font(.ui(13.5, .semibold))
+                    .foregroundStyle(Color.white.opacity(0.95))
                     .lineLimit(2)
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(Color.white.opacity(0.12)))
 
             // The Answer Text: elegant display typography with relaxed line spacing
             Text(answer.text)
@@ -327,17 +327,25 @@ private struct StoryAnswerCard: View {
 
             // Minimalist metadata
             HStack {
-                Text(RelativeTime.short(answer.createdAt))
-                    .font(.ui(12, .medium))
-                    .foregroundStyle(Color.white.opacity(0.55))
+                HStack(spacing: 4) {
+                    Icon(.sparkleFill, size: 11)
+                        .foregroundStyle(Color.qLime)
+                    Text("Daily reflection")
+                        .font(.ui(12, .medium))
+                        .foregroundStyle(Color.white.opacity(0.70))
+                }
                 Spacer()
+                Text(RelativeTime.short(answer.createdAt))
+                    .font(.ui(12))
+                    .foregroundStyle(Color.white.opacity(0.55))
             }
+            .padding(.top, 4)
         }
-        .padding(26)
+        .padding(24)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(Color.white.opacity(0.08))
+                .fill(Color.white.opacity(0.09))
                 .overlay(
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
                         .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
@@ -347,7 +355,44 @@ private struct StoryAnswerCard: View {
         .transition(.opacity)
         .accessibilityElement(children: .combine)
     }
-}
+
+    /// Sleek floating frosted reaction dock
+    private var reactionDock: some View {
+        HStack(spacing: 0) {
+            ForEach(ReactionKind.allCases) { kind in
+                let isOn = answer.myReaction == kind
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.65)) {
+                        store.react(kind, on: answer.id)
+                    }
+                } label: {
+                    ZStack {
+                        if isOn {
+                            Circle()
+                                .fill(Color.white.opacity(0.24))
+                                .frame(width: 44, height: 44)
+                                .overlay(Circle().stroke(Color.qLime, lineWidth: 1.5))
+                        }
+                        ReactionSticker(kind: kind, size: isOn ? 36 : 30)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .scaleEffect(isOn ? 1.15 : 1.0)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(kind.label)
+                .accessibilityAddTraits(isOn ? .isSelected : [])
+            }
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(Color.black.opacity(0.35))
+                .overlay(Capsule().stroke(Color.white.opacity(0.16), lineWidth: 1))
+        )
+        .sensoryFeedback(.selection, trigger: answer.myReaction)
+    }
 
     private func fill(_ i: Int) -> CGFloat {
         if i < index { return 1 }
@@ -381,54 +426,5 @@ private struct StoryAnswerCard: View {
     private func previous() {
         guard index > 0 else { return }
         withAnimation(.qSmooth) { index -= 1 }
-    }
-}
-
-/// The four positive reactions as large targets on the story.
-private struct ReactionBar: View {
-    @Environment(AppStore.self) private var store
-    let answer: Answer
-
-    var body: some View {
-        HStack(spacing: 6) {
-            ForEach(ReactionKind.allCases) { kind in
-                let isOn = answer.myReaction == kind
-                Button {
-                    withAnimation(.qSpring) { store.react(kind, on: answer.id) }
-                } label: {
-                    VStack(spacing: 3) {
-                        ReactionSticker(kind: kind, size: 28)
-                        Text(kind.label)
-                            .font(.ui(9, .semibold))
-                            .foregroundStyle(isOn ? Color.qLime : Color.white.opacity(0.85))
-                            .lineLimit(1)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.white.opacity(isOn ? 0.22 : 0.08))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(isOn ? Color.qLime : Color.white.opacity(0.12), lineWidth: isOn ? 1.5 : 0.8)
-                    )
-                    .scaleEffect(isOn ? 1.05 : 1)
-                }
-                .buttonStyle(.pressable)
-                .accessibilityLabel(kind.label)
-                .accessibilityAddTraits(isOn ? .isSelected : [])
-            }
-        }
-        .padding(8)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.black.opacity(0.28))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.white.opacity(0.14), lineWidth: 1)
-                )
-        )
-        .sensoryFeedback(.selection, trigger: answer.myReaction)
     }
 }

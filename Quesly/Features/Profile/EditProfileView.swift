@@ -233,7 +233,7 @@ struct EditProfileView: View {
             VStack(spacing: 0) {
                 // Email
                 HStack(spacing: DS.Space.s) {
-                    Icon(.envelope ?? .leafFill, size: 16)
+                    Icon(.paperPlaneTiltFill, size: 16)
                         .foregroundStyle(Color.qGreen)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Email")
@@ -245,7 +245,10 @@ struct EditProfileView: View {
                             .lineLimit(1)
                     }
                     Spacer()
-                    Button("Change") { showChangeEmail = true }
+                    Button("Change") {
+                        newEmail = store.me.email
+                        showChangeEmail = true
+                    }
                         .font(.ui(13, .semibold))
                         .foregroundStyle(Color.qBrandText)
                 }
@@ -322,7 +325,8 @@ struct EditProfileView: View {
                 Spacer()
 
                 GreenButton(title: "Update email", isEnabled: newEmail.contains("@") && newEmail.contains(".")) {
-                    store.updateEmail(newEmail)
+                    draft.email = newEmail
+                    store.updateProfile(draft)
                     showChangeEmail = false
                 }
             }

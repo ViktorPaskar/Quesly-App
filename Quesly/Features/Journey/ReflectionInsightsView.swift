@@ -253,11 +253,13 @@ struct ReflectionInsightsView: View {
                     .font(.ui(13, .semibold))
                     .foregroundStyle(Color.qInk)
                     .monospacedDigit()
+                    .lineLimit(1)
                 Text(answer.createdAt.formatted(.dateTime.month(.abbreviated).day()))
                     .font(.ui(11))
                     .foregroundStyle(Color.qGray)
+                    .lineLimit(1)
             }
-            .frame(width: 62, alignment: .leading)
+            .frame(width: 76, alignment: .leading)
 
             // Content column
             VStack(alignment: .leading, spacing: 3) {

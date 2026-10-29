@@ -1,79 +1,82 @@
-# Quesly — iOS
+# Quesly screenshots
 
-**One question a day. Millions of stories.**
+Commit: 0671cda0156fabfecc3bc6204e73e76fc0d131e6
 
-Нативное iOS-приложение на SwiftUI (iOS 17+), собранное по Figma-макетам, Core User Journey и демо-прототипу.
+### 01-welcome
+<img src="01-welcome.png" width="300">
 
-## Как запустить
+### 02-findFriends
+<img src="02-findFriends.png" width="300">
 
-1. Нужен Mac с **Xcode 16** или новее.
-2. Откройте `Quesly.xcodeproj`.
-3. Выберите симулятор iPhone (например, iPhone 16) и нажмите **Run** (⌘R).
-4. Чтобы запустить на своём iPhone: *Target Quesly → Signing & Capabilities → Team* — выберите свой Apple ID. При необходимости поменяйте Bundle ID (`app.quesly.ios`).
+### 03-notifyPrime
+<img src="03-notifyPrime.png" width="300">
 
-## Что реализовано (Core User Journey)
+### 04-question
+<img src="04-question.png" width="300">
 
-| Экран | Что делает |
-|---|---|
-| Splash | Живой градиент, «прыгающие» точки логотипа |
-| Welcome | Вместо списка преимуществ — живые карточки ответов, которые плавно проплывают вверх (при «Уменьшении движения» стоят на месте) |
-| Sign Up / Sign In | Валидация, показ пароля, согласие с условиями |
-| Find your people | Шаг онбординга: поиск и подписка на людей, приглашение друзей — лента Friends не пустая с первого дня |
-| Notification priming | Объясняем, зачем уведомления, **до** системного запроса (выше доля согласий) |
-| Daily Question | Вопрос появляется по словам, ключевые слова — лаймом; «камилла и ещё 12 483 ответили» с лицами друзей |
-| Answer | Карточка ответа, лимит 200 символов, выбор «Everyone / Friends», тряска при ошибке, конфетти после отправки |
-| Friends today | Ряд «историй» сверху ленты: кольцо у друзей, которые ответили; полноэкранный просмотр с автопрокруткой, тапами и реакциями, свайп вниз — закрыть |
-| Feed unlocked | После ответа: твоя карточка подсвечивается, остальные появляются по очереди, серия 🔥 щёлкает +1, виброотклик |
-| Feed | World / Friends, долгое нажатие на ответ — меню с превью (как в системных приложениях iOS), крупный текст ответов, баннер вопроса дня, 🔥 серия в шапке, пустые состояния с приглашением |
-| Reactions | Одна кнопка → лоток из 4 эмодзи ❤️ 🔥 😂 🥹, двойной тап = ❤️, разлетающиеся эмодзи. **Счётчики видит только автор** |
-| Follow | Кнопка «Follow» рядом с именем вместо непонятного «+» |
-| Edit / Report / Block | Редактирование ответа 5 минут после публикации; жалоба с причинами; блокировка; список заблокированных |
-| Share | Карточка для сторис 9:16 в трёх темах (Green / Lime / Light) с фирменной дугой из питч-дека |
-| Discover | Большой заголовок, который сжимается при прокрутке, системный поиск, рекомендации, приглашение (заменил вкладку Archive) |
-| Notifications | Группировка: «Anna и ещё 3 отреагировали ❤️🔥 на твой ответ» + цитата ответа, непрочитанные подсвечены, бейдж на вкладке |
-| Иконки и таб-бар | Набор UIcons «Regular Rounded» (Flaticon, премиум-подписка — указание авторства не нужно); активная вкладка — лаймовый круг с зелёной иконкой |
-| Аватары | Иллюстрации Notionists (автор Zoish, лицензия CC0) для демо-пользователей; своё фото — из галереи |
-| Виджет | «Домой» (малый, средний) и экран блокировки (прямоугольный, круглый, строка): вопрос дня; после ответа — серия 🔥 и «ответили N друзей». Обновляется в полночь |
-| Воспоминания | Календарь месяца в профиле: дни с ответом закрашены, нажатие открывает тот вопрос и ответ; листание месяцев |
-| Заморозка серии ❄️ | Пропустил день — заморозка сохраняет серию автоматически; +1 за каждые 7 дней подряд (максимум 2); заметка в ленте |
-| Profile | Вкладки Answers / Saved, статистика с серией 🔥, Follow / Following |
-| Achievements | Общий прогресс, анимированные полоски |
-| Settings, Feedback, Invite | Напоминание, приватность, выход/удаление; отзыв; приглашение |
+### 05-composer
+<img src="05-composer.png" width="300">
 
-Шрифт — **Outfit** (SIL Open Font License, лежит в `Quesly/Resources/Fonts`). Поменять шрифт можно в одном месте — `Font.quesly` в `Core/Theme.swift`.
+### 06-feed
+<img src="06-feed.png" width="300">
 
-## Структура
+### 07-feedEnd
+<img src="07-feedEnd.png" width="300">
 
-```
-Quesly/
-  App/          QueslyApp (корневой флоу), MainTabView (таббар + навигация)
-  Core/         Theme (цвета, шрифты, анимации), Models, AppStore (состояние), MockData, NotificationScheduler, DemoConfig (режим скриншотов)
-  Components/   Logo, Avatar, HexBadge, AnswerCard, Reactions (лоток эмодзи, конфетти), кнопки, табы
-  Features/     Onboarding, Question, Feed, Discover, Notifications, Profile, Share
-  Resources/    Fonts (Outfit)
-```
+### 08-tray
+<img src="08-tray.png" width="300">
 
-## Что нужно доделать до App Store
+### 09-feedError
+<img src="09-feedError.png" width="300">
 
-- **Бэкенд.** Сейчас данные — моки в `Core/MockData.swift`, вся логика собрана в `Core/AppStore.swift`: методы `signUp`, `submitAnswer`, `toggleReaction`, `toggleFollow` и т.д. нужно заменить вызовами API (Firebase / Supabase / свой сервер). AI-генерация вопроса дня — тоже на стороне сервера.
-- **Ассеты из Figma.** Логотип-вордмарк сейчас набран шрифтом Outfit Black: экспортируйте SVG из Figma в `Assets.xcassets` и подставьте в `Components/QueslyLogo.swift`. Аватары генерируются из инициалов, пока нет загрузки фото.
-- **Push-уведомления** с сервера (сейчас только локальное ежедневное напоминание).
-- **Модерация** ответов: кнопка Report уже есть в меню «…».
+### 10-offline
+<img src="10-offline.png" width="300">
 
-## Дизайн-процесс и визуальный QA
+### 11-friends
+<img src="11-friends.png" width="300">
 
-В `.claude/skills/` лежат пять навыков для Claude Code (подхватываются автоматически в новой сессии):
+### 12-otherProfile
+<img src="12-otherProfile.png" width="300">
 
-| Навык | Когда используется |
-|---|---|
-| `swiftui-expert` | Любые изменения Swift/SwiftUI-кода: архитектура, состояние, навигация, ловушки компиляции |
-| `ios-ux-ui-designer` | Аудиты, редизайн, сценарии, тексты, состояния экранов |
-| `apple-hig` | Проверка на соответствие Apple Human Interface Guidelines и доступности |
-| `design-system-architect` | Токены (цвет, шрифт, отступы, радиусы, анимации), общие компоненты, аудит «магических чисел» |
-| `visual-qa` | Проверка по реальным скриншотам после каждого изменения UI |
+### 13-share
+<img src="13-share.png" width="300">
 
-**Как проверяется вёрстка (Xcode и симулятора локально нет — пользователь на Windows):**
-1. Push → GitHub Actions (macOS, Xcode 16) собирает приложение и запускает его в симуляторе iPhone для каждого экрана из `DemoConfig`.
-2. Скриншоты публикуются в ветку [`ci-screenshots`](../../tree/ci-screenshots) (с номером коммита), там же их можно посмотреть в браузере.
-3. Скрипты `.claude/skills/visual-qa/scripts/` ждут сборку, скачивают скриншоты именно нужного коммита и собирают контрольные листы для ревью.
-4. Новый push отменяет предыдущую сборку, чтобы скриншоты всегда соответствовали последнему коммиту.
+### 14-reactions
+<img src="14-reactions.png" width="300">
+
+### 15-story
+<img src="15-story.png" width="300">
+
+### 16-discover
+<img src="16-discover.png" width="300">
+
+### 17-notifications
+<img src="17-notifications.png" width="300">
+
+### 18-profile
+<img src="18-profile.png" width="300">
+
+### 19-profileList
+<img src="19-profileList.png" width="300">
+
+### 20-memory
+<img src="20-memory.png" width="300">
+
+### 21-settings
+<img src="21-settings.png" width="300">
+
+### 22-editProfile
+<img src="22-editProfile.png" width="300">
+
+### 23-achievements
+<img src="23-achievements.png" width="300">
+
+### 24-widgets
+<img src="24-widgets.png" width="300">
+
+### xl-feed
+<img src="xl-feed.png" width="300">
+
+### xl-profile
+<img src="xl-profile.png" width="300">
+

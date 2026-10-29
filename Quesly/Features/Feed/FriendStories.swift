@@ -28,23 +28,30 @@ struct PeeksStoriesBar: View {
     }
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(alignment: .top, spacing: 14) {
-                // MARK: 1. My Peek (Always First)
-                myPeekBubble
+        VStack(spacing: 0) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: 14) {
+                    // MARK: 1. My Peek (Always First)
+                    myPeekBubble
 
-                // MARK: 2. Feed stories (Friends or World)
-                ForEach(Array(feedStories.enumerated()), id: \.element.id) { index, answer in
-                    StoryBubble(
-                        user: store.user(answer.authorId),
-                        isSeen: store.seenStoryAuthorIds.contains(answer.authorId)
-                    ) {
-                        onOpenStory(feedStories, index)
+                    // MARK: 2. Feed stories (Friends or World)
+                    ForEach(Array(feedStories.enumerated()), id: \.element.id) { index, answer in
+                        StoryBubble(
+                            user: store.user(answer.authorId),
+                            isSeen: store.seenStoryAuthorIds.contains(answer.authorId)
+                        ) {
+                            onOpenStory(feedStories, index)
+                        }
                     }
                 }
+                .padding(.horizontal, DS.Space.screen)
+                .padding(.top, 6)
+                .padding(.bottom, 10)
             }
-            .padding(.horizontal, DS.Space.screen)
-            .padding(.vertical, 6)
+
+            Rectangle()
+                .fill(Color.qLine.opacity(0.65))
+                .frame(height: 0.5)
         }
     }
 
@@ -58,8 +65,8 @@ struct PeeksStoriesBar: View {
                         onAddAnswer()
                     }
                 } label: {
-                    Avatar(user: store.me, size: 54, isSticker: true)
-                        .padding(3)
+                    Avatar(user: store.me, size: 58, isSticker: true)
+                        .padding(2.5)
                         .background {
                             if store.hasAnsweredToday {
                                 Circle().strokeBorder(
@@ -83,10 +90,10 @@ struct PeeksStoriesBar: View {
                 } label: {
                     Circle()
                         .fill(Color.qLime)
-                        .frame(width: 19, height: 19)
+                        .frame(width: 20, height: 20)
                         .overlay(
                             Image(systemName: "plus")
-                                .font(.system(size: 11, weight: .bold))
+                                .font(.system(size: 11.5, weight: .bold))
                                 .foregroundStyle(Color.qGreenDeep)
                         )
                         .overlay(Circle().stroke(Color.white, lineWidth: 2))
@@ -97,10 +104,10 @@ struct PeeksStoriesBar: View {
             }
 
             Text(store.hasAnsweredToday ? "Your Peek" : "My Peek")
-                .font(.ui(11, .medium))
+                .font(.ui(11.5))
                 .foregroundStyle(Color.qInk)
                 .lineLimit(1)
-                .frame(width: 62)
+                .frame(width: 66)
         }
     }
 }
@@ -127,8 +134,8 @@ private struct StoryBubble: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 5) {
-                Avatar(user: user, size: 54, isSticker: true)
-                    .padding(3)
+                Avatar(user: user, size: 58, isSticker: true)
+                    .padding(2.5)
                     .background {
                         if isSeen {
                             Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
@@ -145,10 +152,10 @@ private struct StoryBubble: View {
                     }
 
                 Text(user?.username.replacingOccurrences(of: "@", with: "") ?? "")
-                    .font(.ui(11, .medium))
+                    .font(.ui(11.5))
                     .foregroundStyle(isSeen ? Color.qGray : Color.qInk)
                     .lineLimit(1)
-                    .frame(width: 62)
+                    .frame(width: 66)
             }
         }
         .buttonStyle(.pressable)

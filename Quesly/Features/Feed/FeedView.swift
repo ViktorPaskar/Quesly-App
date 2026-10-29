@@ -229,35 +229,48 @@ struct FeedView: View {
                         showQuestion = true
                     }
 
-                    if let mine {
-                        AnswerCard(answer: mine, isHighlighted: highlightsMine)
-                            .outlinedBlock()
-                            .padding(.horizontal, DS.Space.s)
-                            .padding(.bottom, gap)
-                    }
-
-                    if let error = store.feedError {
-                        ErrorStateView(message: error) {
-                            Task { await store.reloadFeed() }
-                        }
-                    } else if store.isLoadingFeed && others.isEmpty {
-                        ForEach(0..<4, id: \.self) { _ in AnswerCardSkeleton() }
-                    } else {
-                        ForEach(Array(others.enumerated()), id: \.element.id) { index, answer in
-                            let isShown = index + 1 < revealCount
+                    // Seamless Threads & X continuous stream with indented hairline dividers
+                    VStack(spacing: 0) {
+                        if let mine {
                             VStack(spacing: 0) {
-                                AnswerCard(answer: answer,
-                                           opensTray: (DemoConfig.opensReactionTray || tour.openTray) && answer.id == trayTarget)
-                                    .outlinedBlock()
-                                    .padding(.horizontal, DS.Space.s)
-                                    .padding(.bottom, gap)
+                                AnswerCard(answer: mine, isHighlighted: highlightsMine)
+                                Rectangle()
+                                    .fill(Color.qLine.opacity(0.85))
+                                    .frame(height: 0.5)
+                                    .padding(.leading, 70)
                             }
-                            .zIndex(Double(index))
-                            .opacity(isShown ? 1 : 0)
-                            .offset(y: isShown ? 0 : 16)
-                            .staggeredAppear(index)
+                        }
+
+                        if let error = store.feedError {
+                            ErrorStateView(message: error) {
+                                Task { await store.reloadFeed() }
+                            }
+                        } else if store.isLoadingFeed && others.isEmpty {
+                            ForEach(0..<4, id: \.self) { _ in AnswerCardSkeleton() }
+                        } else {
+                            ForEach(Array(others.enumerated()), id: \.element.id) { index, answer in
+                                let isShown = index + 1 < revealCount
+                                VStack(spacing: 0) {
+                                    AnswerCard(
+                                        answer: answer,
+                                        opensTray: (DemoConfig.opensReactionTray || tour.openTray) && answer.id == trayTarget
+                                    )
+
+                                    if index < others.count - 1 {
+                                        Rectangle()
+                                            .fill(Color.qLine.opacity(0.85))
+                                            .frame(height: 0.5)
+                                            .padding(.leading, 70)
+                                    }
+                                }
+                                .zIndex(Double(index))
+                                .opacity(isShown ? 1 : 0)
+                                .offset(y: isShown ? 0 : 16)
+                                .staggeredAppear(index)
+                            }
                         }
                     }
+                    .background(Color.white)
 
                     if store.feedError != nil || store.isLoadingFeed {
                         EmptyView()
@@ -520,9 +533,9 @@ struct TodayQuestionBanner: View {
                     .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
             )
             .shadow(color: Color.qGreen.opacity(0.18), radius: 14, y: 6)
-            .padding(.horizontal, DS.Space.s)
-            .padding(.top, DS.Space.s)
-            .padding(.bottom, DS.Space.xs)
+            .padding(.horizontal, DS.Space.screen)
+            .padding(.top, 10)
+            .padding(.bottom, 8)
         }
         .buttonStyle(.pressable)
         .accessibilityElement(children: .combine)

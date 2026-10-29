@@ -45,14 +45,14 @@ struct AnswerCard: View {
     private var isMine: Bool { answer.authorId == store.me.id }
     private var link: URL { URL(string: "https://quesly.me/a/\(answer.id)")! }
     /// Profile rows use the profile's 20-pt margins; feed cards 16.
-    private var inset: CGFloat { isCompact ? DS.Space.screen : DS.Space.m }
+    private var inset: CGFloat { isCompact ? DS.Space.screen : DS.Space.screen }
 
     var body: some View {
         Group {
             if isCompact { compactBody } else { feedBody }
         }
         .padding(.horizontal, inset)
-        .padding(.vertical, DS.Space.m)
+        .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(isHighlighted ? Color.qAqua : Color.clear)
         // Tap anywhere on the card closes the sticker popover.
@@ -101,22 +101,22 @@ struct AnswerCard: View {
     // MARK: Layouts
 
     private var feedBody: some View {
-        HStack(alignment: .top, spacing: DS.Space.s) {
+        HStack(alignment: .top, spacing: 12) {
             avatar
             VStack(alignment: .leading, spacing: 0) {
-                nameRow.padding(.top, -2)       // cap height on the avatar's top edge
-                answerText(size: 16, lineHeight: 24).padding(.top, DS.Space.xxs)
+                nameRow.padding(.top, -1)
+                answerText(size: 15.5, lineHeight: 22).padding(.top, 4)
                 actions
                     .anchorPreference(key: ActionRowAnchor.self, value: .bounds) { $0 }
-                    .padding(.top, 6)          // 16 to the glyphs, minus the 44-pt zone's 10
-                reactionsLine.padding(.top, DS.Space.xs)
+                    .padding(.top, 10)
+                reactionsLine.padding(.top, 8)
             }
         }
     }
 
-    /// 40-pt photo with the quick-follow "+" (see `FollowableAvatar`).
+    /// 42-pt photo with the quick-follow "+" (see `FollowableAvatar`).
     private var avatar: some View {
-        NavigationLink(value: Route.profile(answer.authorId)) { FollowableAvatar(user: author, size: 40) }
+        NavigationLink(value: Route.profile(answer.authorId)) { FollowableAvatar(user: author, size: 42) }
             .buttonStyle(.plain)
             .accessibilityLabel("\(author?.username ?? "") profile")
     }
@@ -234,29 +234,37 @@ struct AnswerCard: View {
         RelativeTime.short(answer.createdAt) + (answer.isEdited ? " · edited" : "")
     }
 
-    /// 20-pt row: name 15/600 + time 15/400 ink3, inline Follow or "Your answer" pill, "…" on the right edge.
+    /// 20-pt row: name 15/600 + time 14/400 gray, inline Follow or "You" pill, "…" on the right edge.
     private var nameRow: some View {
-        HStack(spacing: DS.Space.xs) {
+        HStack(spacing: 6) {
             NavigationLink(value: Route.profile(answer.authorId)) {
-                HStack(spacing: 6) {
-                    Text(author?.username ?? "unknown").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
+                HStack(spacing: 5) {
+                    Text(author?.username ?? "unknown")
+                        .font(.ui(15, .semibold))
+                        .foregroundStyle(Color.qInk)
+
                     if !isCompact || answer.isEdited {
-                        Text(isCompact ? "edited" : timeText).font(.ui(15)).foregroundStyle(Color.qGray)
+                        Text("·")
+                            .font(.ui(14))
+                            .foregroundStyle(Color.qGray)
+                        Text(isCompact ? "edited" : timeText)
+                            .font(.ui(14))
+                            .foregroundStyle(Color.qGray)
                     }
                 }
                 .lineLimit(1)
             }
             .buttonStyle(.plain)
+
             if isMine && !isCompact {
-                Text("Your answer")
-                    .font(.ui(12, .semibold))
-                    .foregroundStyle(Color.qInk2)
-                    .padding(.horizontal, DS.Space.xs)
-                    .frame(height: 20)
-                    .background(Capsule().fill(Color.qField))
-                    .overlay(Capsule().stroke(Color.qLine, lineWidth: 0.8))
-                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                Text("You")
+                    .font(.ui(11, .semibold))
+                    .foregroundStyle(Color.qGreenDeep)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(Color(hex: 0xEDF8F3)))
             }
+
             if (answer.isHidden ?? false) {
                 HStack(spacing: 3) {
                     Image(systemName: "eye.slash")
@@ -266,9 +274,8 @@ struct AnswerCard: View {
                 }
                 .foregroundStyle(Color.qGray)
                 .padding(.horizontal, 6)
-                .frame(height: 20)
+                .padding(.vertical, 2)
                 .background(Capsule().fill(Color.qField))
-                .overlay(Capsule().stroke(Color.qLine, lineWidth: 0.8))
             } else if answer.visibility == .onlyMe {
                 HStack(spacing: 3) {
                     Icon(.lockSimpleFill, size: 10)
@@ -277,11 +284,12 @@ struct AnswerCard: View {
                 }
                 .foregroundStyle(Color.qGray)
                 .padding(.horizontal, 6)
-                .frame(height: 20)
+                .padding(.vertical, 2)
                 .background(Capsule().fill(Color.qField))
-                .overlay(Capsule().stroke(Color.qLine, lineWidth: 0.8))
             }
-            Spacer(minLength: DS.Space.xs)
+
+            Spacer(minLength: 8)
+
             if !isCompact { moreMenu }
         }
         .frame(height: 20)
@@ -363,7 +371,7 @@ struct AnswerCard: View {
 
     /// Your own answer: prominent 1-tap "Share to Peeks" pill + repost count + link share.
     private var ownActions: some View {
-        HStack(spacing: DS.Space.xs) {
+        HStack(spacing: 16) {
             Button { isSharingStory = true } label: {
                 HStack(spacing: 6) {
                     Icon(.paperPlaneTiltFill, size: 12)
@@ -375,28 +383,22 @@ struct AnswerCard: View {
                 .frame(height: 32)
                 .background(Capsule().fill(Color.qGreen))
                 .shadow(color: Color.qGreen.opacity(0.18), radius: 4, y: 1.5)
-                .frame(minHeight: DS.hitTarget)
-                .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
             .accessibilityLabel("Share answer as peek")
 
             if answer.reshares > 0 {
-                HStack(spacing: DS.Space.xxs) {
-                    Icon(.repost, size: 22)
-                    Text("\(answer.reshares)").font(.ui(15, .semibold)).monospacedDigit()
+                HStack(spacing: 4) {
+                    Icon(.repost, size: 19)
+                    Text("\(answer.reshares)").font(.ui(13.5, .medium)).monospacedDigit()
                 }
                 .foregroundStyle(Color.qGray)
-                .padding(.horizontal, DS.Space.xs)
-                .frame(height: DS.hitTarget)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Reposted \(answer.reshares) times. Only you can see this")
             }
 
             ShareLink(item: link) {
-                Icon(.shareForward, size: 22)
+                Icon(.shareForward, size: 20)
                     .foregroundStyle(Color.qGray)
-                    .frame(width: DS.hitTarget, height: DS.hitTarget)
+                    .frame(height: 32)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
@@ -404,57 +406,62 @@ struct AnswerCard: View {
 
             Spacer(minLength: 0)
         }
-        .padding(.bottom, 6)
+        .padding(.top, 2)
     }
 
     private var viewerActions: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 22) {
             reactButton
+
             zoneButton(label: answer.isResharedByMe ? "Reposted, tap to undo" : "Repost") {
                 withAnimation(.qSpring) { store.toggleReshare(answer.id) }
             } glyph: {
-                Icon(answer.isResharedByMe ? .repostActive : .repost, size: 24)
-                    .foregroundStyle(answer.isResharedByMe ? Color.qGreen : Color.qGray)
+                HStack(spacing: 5) {
+                    Icon(answer.isResharedByMe ? .repostActive : .repost, size: 20)
+                        .foregroundStyle(answer.isResharedByMe ? Color.qGreen : Color.qGray)
+                    if answer.reshares > 0 {
+                        Text("\(answer.reshares)")
+                            .font(.ui(13.5, .medium))
+                            .foregroundStyle(answer.isResharedByMe ? Color.qGreen : Color.qGray)
+                            .monospacedDigit()
+                    }
+                }
             }
             .pop(on: answer.isResharedByMe)
             .sensoryFeedback(.success, trigger: answer.isResharedByMe) { _, on in on }
+
             ShareLink(item: link) {
-                Icon(.shareForward, size: 24)
+                Icon(.shareForward, size: 20)
                     .foregroundStyle(Color.qGray)
-                    .frame(width: DS.hitTarget, height: DS.hitTarget)
+                    .frame(height: 36)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
             .accessibilityLabel("Share outside Quesly")
+
             Spacer(minLength: 0)
+
             zoneButton(label: answer.isBookmarked ? "Saved" : "Save answer") {
                 withAnimation(.qSpring) { store.toggleBookmark(answer.id) }
             } glyph: {
-                Icon(answer.isBookmarked ? .bookmarkSimpleFill : .bookmarkSimple, size: 24)
+                Icon(answer.isBookmarked ? .bookmarkSimpleFill : .bookmarkSimple, size: 20)
                     .foregroundStyle(answer.isBookmarked ? Color.qGreen : Color.qGray)
             }
             .pop(on: answer.isBookmarked)
             .sensoryFeedback(.selection, trigger: answer.isBookmarked)
         }
-        .padding(.horizontal, -10)
-        .padding(.bottom, -10)
+        .padding(.top, 2)
     }
 
-    /// Smiley, or the sticker you gave (34 pt, left edge on the text edge). While the popover is
-    /// open the smiley sits on a 44-pt gray disc.
     private var reactButton: some View {
         Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             withAnimation(.qSpring) { isTrayOpen.toggle() }
         } label: {
-            ZStack(alignment: .leading) {
-                if isTrayOpen {
-                    Circle().fill(Color.qField)
-                }
+            HStack(spacing: 5) {
                 if let mine = answer.myReaction, !isTrayOpen {
-                    ReactionSticker(kind: mine, size: 34)
+                    ReactionSticker(kind: mine, size: 22)
                         .id(mine)
-                        .padding(.leading, 10)
                         .keyframeAnimator(initialValue: 1.0, trigger: stickerPop) { view, scale in
                             view.scaleEffect(scale)
                         } keyframes: { _ in
@@ -463,12 +470,18 @@ struct AnswerCard: View {
                             SpringKeyframe(1.0, duration: 0.2)
                         }
                 } else {
-                    Icon(.smiley, size: 24)
+                    Icon(.smiley, size: 20)
                         .foregroundStyle(isTrayOpen ? Color.qInk : Color.qGray)
-                        .frame(width: DS.hitTarget, height: DS.hitTarget)
+                }
+
+                if answer.totalReactions > 0 {
+                    Text("\(answer.totalReactions)")
+                        .font(.ui(13.5, .medium))
+                        .foregroundStyle(answer.myReaction != nil ? Color.qInk : Color.qGray)
+                        .monospacedDigit()
                 }
             }
-            .frame(width: DS.hitTarget, height: DS.hitTarget, alignment: .leading)
+            .frame(height: 36)
             .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
@@ -478,7 +491,7 @@ struct AnswerCard: View {
     private func zoneButton<G: View>(label: String, action: @escaping () -> Void, @ViewBuilder glyph: () -> G) -> some View {
         Button(action: action) {
             glyph()
-                .frame(width: DS.hitTarget, height: DS.hitTarget)
+                .frame(height: 36)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
@@ -553,37 +566,37 @@ struct ReactedByLine: View {
     let line: AppStore.ReactedBy
 
     var body: some View {
-        HStack(spacing: DS.Space.xs) {
+        HStack(spacing: 6) {
             if line.names.isEmpty {
-                HStack(spacing: -8) {
+                HStack(spacing: -6) {
                     ForEach(Array(line.stickers.enumerated()), id: \.element) { index, kind in
-                        ReactionSticker(kind: kind, size: 28)
+                        ReactionSticker(kind: kind, size: 20)
                             .zIndex(Double(line.stickers.count - index))
                     }
                 }
                 Text("People reacted")
             } else {
                 HStack(spacing: -6) {
-                    ForEach(line.faces) { user in
-                        Avatar(user: user, size: 20)
-                            .overlay(Circle().stroke(Color.qBackground, lineWidth: 2))
+                    ForEach(line.faces.prefix(2)) { user in
+                        Avatar(user: user, size: 18)
+                            .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
                     }
                 }
                 if let top = line.stickers.first {
-                    ReactionSticker(kind: top, size: 26)
+                    ReactionSticker(kind: top, size: 20)
                 }
                 sentence
             }
         }
-        .font(.ui(13))
-        .foregroundStyle(Color.qInk2)
+        .font(.ui(12.5))
+        .foregroundStyle(Color.qGray)
         .lineLimit(1)
-        .frame(height: 20)
+        .frame(height: 18)
         .accessibilityElement(children: .combine)
     }
 
     private var sentence: Text {
-        func bold(_ s: String) -> Text { Text(s).font(.ui(13, .semibold)).foregroundStyle(Color.qInk) }
+        func bold(_ s: String) -> Text { Text(s).font(.ui(12.5, .semibold)).foregroundStyle(Color.qInk) }
         var t = Text("Reacted by ")
         let n = line.names
         switch (n.count, line.hasOthers) {

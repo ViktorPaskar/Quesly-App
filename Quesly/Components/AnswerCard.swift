@@ -382,7 +382,6 @@ struct AnswerCard: View {
                 .padding(.horizontal, 14)
                 .frame(height: 32)
                 .background(Capsule().fill(Color.qGreen))
-                .shadow(color: Color.qGreen.opacity(0.18), radius: 4, y: 1.5)
             }
             .buttonStyle(.pressable)
             .accessibilityLabel("Share answer as peek")

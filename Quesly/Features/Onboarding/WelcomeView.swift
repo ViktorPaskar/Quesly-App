@@ -195,7 +195,7 @@ struct WelcomeView: View {
                         .padding(.vertical, 7)
                         .background(
                             Capsule().fill(Color.white)
-                                .shadow(color: Color.black.opacity(0.10), radius: 10, y: 4)
+                                .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
                         )
                         .offset(x: -85, y: -45 + (floating ? -3 : 4))
 
@@ -211,7 +211,7 @@ struct WelcomeView: View {
                         .padding(.vertical, 7)
                         .background(
                             Capsule().fill(Color.white)
-                                .shadow(color: Color.black.opacity(0.10), radius: 8, y: 3)
+                                .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
                         )
                         .offset(x: 105, y: 25 + (floating ? 4 : -3))
                     }
@@ -292,7 +292,7 @@ struct WelcomeView: View {
                         .padding(.vertical, 8)
                         .background(
                             Capsule().fill(Color.white)
-                                .shadow(color: Color.black.opacity(0.10), radius: 10, y: 4)
+                                .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
                         )
                         .offset(x: -85, y: -40 + (floating ? -4 : 3))
 
@@ -308,7 +308,7 @@ struct WelcomeView: View {
                         .padding(.vertical, 7)
                         .background(
                             Capsule().fill(Color.white)
-                                .shadow(color: Color.black.opacity(0.10), radius: 8, y: 3)
+                                .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
                         )
                         .offset(x: 100, y: 20 + (floating ? 3 : -4))
                     }
@@ -412,7 +412,6 @@ struct WelcomeView: View {
             .frame(width: size, height: size)
             .clipShape(Circle())
             .overlay(Circle().stroke(Color.white, lineWidth: 2.5))
-            .shadow(color: Color.black.opacity(0.12), radius: 8, x: 0, y: 4)
     }
 
     private func primaryContinueButton(title: String, action: @escaping () -> Void) -> some View {

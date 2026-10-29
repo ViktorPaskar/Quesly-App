@@ -366,7 +366,6 @@ struct StoryViewer: View {
                             lineWidth: 1.2
                         )
                 )
-                .shadow(color: Color.black.opacity(0.22), radius: 24, y: 12)
         )
         .id(answer.id)
         .transition(.opacity)
@@ -452,7 +451,6 @@ private struct ReactionBar: View {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .stroke(Color.white.opacity(0.14), lineWidth: 1)
                 )
-                .shadow(color: Color.black.opacity(0.20), radius: 12, y: 6)
         )
         .sensoryFeedback(.selection, trigger: answer.myReaction)
     }

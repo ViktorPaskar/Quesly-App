@@ -126,7 +126,6 @@ struct FeedView: View {
                                 .fill(Color.qBlock)
                                 .frame(width: 38, height: 38)
                                 .overlay(Circle().stroke(Color.qLine, lineWidth: 1))
-                                .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
 
                             Icon(.bell, size: 18)
                                 .foregroundStyle(Color.qInk)
@@ -481,7 +480,6 @@ struct TodayQuestionBanner: View {
                                     if isHot {
                                         RoundedRectangle(cornerRadius: 8, style: .continuous)
                                             .fill(Color.qLime)
-                                            .shadow(color: .black.opacity(0.14), radius: 4, y: 2)
                                     }
                                 }
                                 .rotationEffect(.degrees(isHot ? -2 : 0))
@@ -518,7 +516,6 @@ struct TodayQuestionBanner: View {
                         .padding(.horizontal, 14)
                         .frame(height: 32)
                         .background(Capsule().fill(Color.qLime))
-                        .shadow(color: Color.black.opacity(0.15), radius: 4, y: 2)
                     }
                     .padding(.horizontal, 18)
                     .padding(.vertical, 12)
@@ -532,7 +529,6 @@ struct TodayQuestionBanner: View {
                 RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                     .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
             )
-            .shadow(color: Color.qGreen.opacity(0.18), radius: 14, y: 6)
             .padding(.horizontal, DS.Space.screen)
             .padding(.top, 10)
             .padding(.bottom, 8)
@@ -610,7 +606,6 @@ struct MascotCoin: View {
             .frame(width: 17)
             .frame(width: 28, height: 28)
             .background(Circle().fill(Color.qLime))
-            .shadow(color: Color.black.opacity(0.12), radius: 3, y: 1)
             .scaleEffect(!hasAnswered && !reduceMotion && breathing ? 1.06 : 1.0)
             .onAppear {
                 guard !hasAnswered, !reduceMotion else { return }

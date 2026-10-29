@@ -115,7 +115,6 @@ struct JourneyView: View {
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(Color.qBlock)
-                .shadow(color: Color.black.opacity(0.04), radius: 12, y: 4)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .stroke(Color.qLine, lineWidth: 1)
@@ -179,7 +178,6 @@ struct JourneyView: View {
             .background(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .fill(Color.qGreen)
-                    .shadow(color: Color.qGreen.opacity(0.18), radius: 12, y: 4)
             )
 
             // In Progress Section
@@ -279,7 +277,6 @@ private struct MilestoneRow: View {
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(Color.qBlock)
-                .shadow(color: Color.black.opacity(0.03), radius: 8, y: 2)
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .stroke(Color.qLine, lineWidth: 1)

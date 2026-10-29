@@ -43,7 +43,6 @@ struct Avatar: View {
                 Circle().strokeBorder(.white, lineWidth: max(2, size * 0.045))
             }
         }
-        .shadow(color: isSticker ? .black.opacity(0.10) : .clear, radius: 6, y: 2)
         .overlay(alignment: .bottomTrailing) {
             if showsBadge, let badge = user?.badge {
                 HexBadge(tier: badge)

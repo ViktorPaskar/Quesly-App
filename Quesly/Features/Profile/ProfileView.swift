@@ -462,7 +462,6 @@ struct StreakCard: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .strokeBorder(Color.qLine, lineWidth: 1.5)
         )
-        .shadow(color: Color.qGreenDeep.opacity(0.04), radius: 12, y: 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(streak) day streak. Best: \(best) days.")
     }
@@ -725,7 +724,6 @@ struct QueslyStatsCard: View {
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(Color.qBlock)
-                .shadow(color: Color.black.opacity(0.04), radius: 14, y: 4)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .stroke(Color.qLine, lineWidth: 1)
@@ -737,7 +735,6 @@ struct QueslyStatsCard: View {
         VStack(spacing: 6) {
             ZStack {
                 Circle().fill(Color.white).frame(width: 28, height: 28)
-                    .shadow(color: Color.black.opacity(0.04), radius: 3, y: 1)
                 Icon(icon, size: 14)
                     .foregroundStyle(tint)
             }

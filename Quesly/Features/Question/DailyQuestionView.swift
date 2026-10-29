@@ -149,7 +149,6 @@ struct DailyQuestionView: View {
                             if isHot {
                                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                                     .fill(Color.qLime)
-                                    .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
                             }
                         }
                         .rotationEffect(.degrees(isHot ? -2 : 0))
@@ -191,7 +190,6 @@ struct DailyQuestionView: View {
                                 if isHot {
                                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                                         .fill(Color.qLime)
-                                        .shadow(color: .black.opacity(0.10), radius: 3, y: 1)
                                 }
                             }
                             .rotationEffect(.degrees(isHot ? -2 : 0))
@@ -253,7 +251,6 @@ struct DailyQuestionView: View {
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(Color.qBlock)
-                    .shadow(color: Color.black.opacity(0.06), radius: 18, y: 8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
                             .stroke(Color.qLine, lineWidth: 1)
@@ -356,7 +353,6 @@ private struct LockedFriendsPreview: View {
         .background(
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                 .fill(Color.qBlock)
-                .shadow(color: Color.black.opacity(0.06), radius: 14, y: 6)
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                         .stroke(Color.qLine, lineWidth: 1)
@@ -371,7 +367,6 @@ private struct LockedFriendsPreview: View {
             .padding(.horizontal, 14)
             .frame(height: 32)
             .background(Capsule().fill(Color.qGreen))
-            .shadow(color: Color.qGreen.opacity(0.3), radius: 8, y: 3)
     }
 }
 

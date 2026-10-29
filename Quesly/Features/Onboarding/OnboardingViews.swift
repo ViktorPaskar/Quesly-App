@@ -143,7 +143,6 @@ private struct NotificationHeroArt: View {
                                 lineWidth: 1.2
                             )
                     )
-                    .shadow(color: Color.qGreen.opacity(0.28), radius: 18, y: 10)
 
                 // Pure bell
                 Icon(.bellRingingFill, size: 40)
@@ -159,7 +158,6 @@ private struct NotificationHeroArt: View {
                         .frame(width: 14)
                 }
                 .overlay(Circle().strokeBorder(Color.white, lineWidth: 2))
-                .shadow(color: Color.black.opacity(0.12), radius: 4, y: 2)
                 .offset(x: 6, y: -6)
             }
 
@@ -174,7 +172,6 @@ private struct NotificationHeroArt: View {
             .padding(.vertical, 6)
             .background(Capsule().fill(Color.qBlock))
             .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
-            .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
         }
         .onAppear {
             guard !reduceMotion else { return }
@@ -210,7 +207,6 @@ private struct NotificationPreview: View {
         .background(
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                 .fill(Color.qBlock)
-                .shadow(color: Color.black.opacity(0.08), radius: 18, y: 8)
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                         .stroke(Color.qLine, lineWidth: 1)

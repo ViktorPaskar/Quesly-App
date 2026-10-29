@@ -70,7 +70,6 @@ struct HexBadge: View {
                     .resizable()
                     .interpolation(.high)
                     .scaledToFit()
-                    .shadow(color: isLocked ? .clear : Color.black.opacity(0.10), radius: 4, y: 2)
             } else {
                 GeometryReader { geo in
                     let s = min(geo.size.width, geo.size.height)

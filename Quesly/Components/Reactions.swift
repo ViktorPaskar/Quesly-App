@@ -219,7 +219,6 @@ struct ReactionSticker: View {
             .resizable()
             .aspectRatio(50.0 / 36.0, contentMode: .fit)
             .frame(width: size, height: size * 0.72)
-            .shadow(color: .black.opacity(0.18), radius: 2, x: 0, y: 1)
             .accessibilityLabel(kind.label)
     }
 }

@@ -7,3 +7,5 @@ build/
 *.dSYM.zip
 *.dSYM
 /screenshots/
+/docs/design-spec/
+/docs/promo-kit/

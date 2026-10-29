@@ -199,8 +199,11 @@ enum MockData {
             [.aww: 18, .hugs: 9, .like: 5, .same: 2],
             [.deep: 7, .same: 3],
         ]
+        let hours = [8, 9, 14, 8, 20, 9, 13, 8, 21, 9, 15, 8, 19, 10, 14, 8, 23, 9, 16, 8, 20, 13]
         return answeredDaysAgo.enumerated().map { index, daysAgo in
-            let date = cal.date(byAdding: .day, value: -daysAgo, to: now) ?? now
+            let baseDate = cal.date(byAdding: .day, value: -daysAgo, to: now) ?? now
+            let hour = hours[index % hours.count]
+            let date = cal.date(bySettingHour: hour, minute: (index * 13) % 60, second: 0, of: baseDate) ?? baseDate
             let q = AppStore.question(for: date)
             return Answer(id: "h\(daysAgo)", questionId: q.id, questionText: q.text, authorId: "me",
                           text: sampleAnswers[q.id] ?? "", createdAt: date, reactions: reactions[index % reactions.count],

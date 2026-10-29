@@ -50,7 +50,7 @@ jobs:
             sleep 9
             xcrun simctl io "$DEVICE" screenshot "screenshots/$2.png"
           }
-          ALL="welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile profileList memory settings editProfile achievements widgets"
+          ALL="welcome findFriends notifyPrime question composer feed feedEnd tray feedError offline friends otherProfile share reactions story discover notifications profile profileList memory settings editProfile achievements insights widgets"
           FOCUS="$ALL"
           i=1
           for screen in $FOCUS; do

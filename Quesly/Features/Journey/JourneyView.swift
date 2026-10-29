@@ -9,7 +9,7 @@ import SwiftUI
 struct JourneyView: View {
     @Environment(AppStore.self) private var store
     @State private var openedMemory: Answer?
-    @State private var showInsightsSheet = false
+    @State private var showInsightsSheet = DemoConfig.opensInsights
 
     var body: some View {
         ScrollView {

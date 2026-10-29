@@ -49,27 +49,27 @@ struct ProfileView: View {
                         } action: { shows in
                             withAnimation(.qSmooth) { showsMiniTitle = shows }
                         }
-                    // Scroll target: the point where the tabs pin.
-                    Color.clear.frame(height: 0).id("tabs")
-
                     Section {
                         content
-                            .frame(maxWidth: .infinity, minHeight: 360, alignment: .top)
-                            .contentShape(Rectangle())
-                            .simultaneousGesture(swipe)
-                            .animation(.qSmooth, value: tab)
                     } header: {
                         UnderlineTabs(items: tabs, selection: $tab, title: \.title,
                                       indicator: 1, inactive: Color(hex: 0x999999), hairline: .qLine)
                             .background(Color.qBackground)
                     }
                 }
+                .contentShape(Rectangle())
+                .simultaneousGesture(swipe)
+                .animation(.qSmooth, value: tab)
                 .padding(.bottom, DS.Space.m)
             }
             .task {
                 guard DemoConfig.scrollsProfileToList else { return }
                 try? await Task.sleep(for: .milliseconds(500))
-                proxy.scrollTo("tabs", anchor: .top)
+                if tab == .calendar {
+                    proxy.scrollTo("calendar-card", anchor: .center)
+                } else {
+                    proxy.scrollTo("h1", anchor: .center)
+                }
             }
         }
         .background(Color.qBackground)
@@ -90,20 +90,20 @@ struct ProfileView: View {
     @ViewBuilder
     private var content: some View {
         if tab == .calendar {
-            VStack(spacing: DS.Space.l) {
-                MemoriesCard(showsHeader: false)
-                    .padding(.horizontal, DS.Space.screen)
-                    .padding(.top, DS.Space.s)
-                calendarArchiveSection
-            }
+            MemoriesCard(showsHeader: false)
+                .padding(.horizontal, DS.Space.screen)
+                .padding(.top, DS.Space.s)
+                .padding(.bottom, DS.Space.l)
+                .id("calendar-card")
+            calendarArchiveSection
         } else {
             let items = answers(for: tab)
             // On white, answers are rows split by inset hairlines (Threads), not floating cards.
-            VStack(spacing: 0) {
-                if tab == .answers && isMe {
-                    searchBar
-                }
-                ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
+            if tab == .answers && isMe {
+                searchBar
+            }
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
+                VStack(spacing: 0) {
                     if index > 0 {
                         Rectangle().fill(Color.qLine).frame(height: 1).padding(.horizontal, DS.Space.screen)
                     }
@@ -111,8 +111,9 @@ struct ProfileView: View {
                                isCompact: true)
                         .staggeredAppear(index)
                 }
-                if items.isEmpty { emptyState }
+                .id(answer.id)
             }
+            if items.isEmpty { emptyState }
         }
     }
 

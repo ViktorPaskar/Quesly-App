@@ -16,8 +16,8 @@ struct JourneyView: View {
                 // MARK: 1. Streak Hero Card (7-Day Tracker)
                 StreakCard()
 
-                // MARK: 2. Personal Reflection Stats & Topics
-                ReflectionStatsCard()
+                // MARK: 2. Personal Reflection Rhythm & Habit Dashboard
+                ReflectionRhythmCard()
 
                 // MARK: 3. "On This Day" Memory Flashback
                 onThisDayCard
@@ -288,10 +288,74 @@ private struct MilestoneRow: View {
     }
 }
 
-// MARK: - Reflection Stats & Topics Card
+// MARK: - Reflection Rhythm & Time-of-Day Habit Dashboard
 
-struct ReflectionStatsCard: View {
+struct ReflectionRhythmCard: View {
     @Environment(AppStore.self) private var store
+
+    struct Slot: Identifiable {
+        let id: String
+        let title: String
+        let hours: String
+        let icon: String
+        let percentage: Int
+        let isPeak: Bool
+    }
+
+    private var slots: [Slot] {
+        let answers = store.myAnswers
+        let cal = Calendar.current
+        var morning = 0, afternoon = 0, evening = 0, night = 0
+
+        for a in answers {
+            let h = cal.component(.hour, from: a.createdAt)
+            switch h {
+            case 6..<12: morning += 1
+            case 12..<18: afternoon += 1
+            case 18..<23: evening += 1
+            default: night += 1
+            }
+        }
+
+        let total = morning + afternoon + evening + night
+        let mPct = total > 0 ? Int(round(Double(morning) / Double(total) * 100)) : 54
+        let aPct = total > 0 ? Int(round(Double(afternoon) / Double(total) * 100)) : 24
+        let ePct = total > 0 ? Int(round(Double(evening) / Double(total) * 100)) : 17
+        let nPct = total > 0 ? max(0, 100 - (mPct + aPct + ePct)) : 5
+
+        let maxVal = max(mPct, aPct, ePct, nPct)
+
+        return [
+            Slot(id: "morning", title: "Morning", hours: "06–12h", icon: "🌅", percentage: mPct, isPeak: mPct == maxVal),
+            Slot(id: "afternoon", title: "Midday", hours: "12–18h", icon: "☀️", percentage: aPct, isPeak: aPct == maxVal && aPct > mPct),
+            Slot(id: "evening", title: "Evening", hours: "18–23h", icon: "🌆", percentage: ePct, isPeak: ePct == maxVal && ePct > mPct),
+            Slot(id: "night", title: "Night", hours: "23–06h", icon: "🌙", percentage: nPct, isPeak: nPct == maxVal && nPct > mPct)
+        ]
+    }
+
+    private var peakSlot: Slot {
+        slots.first(where: \.isPeak) ?? slots[0]
+    }
+
+    private var archetypeInfo: (title: String, insight: String, time: String) {
+        switch peakSlot.id {
+        case "afternoon":
+            return ("Midday Pause", "You reflect best during your afternoon break.", "1:40 PM")
+        case "evening":
+            return ("Dusk Philosopher", "Evenings are when your reflections run deepest.", "8:15 PM")
+        case "night":
+            return ("Night Owl", "Quiet midnight hours bring your most candid thoughts.", "11:30 PM")
+        default:
+            return ("Early Thinker", "Your thoughts are clearest with your morning coffee.", "8:45 AM")
+        }
+    }
+
+    private var avgWordCount: Int {
+        let answers = store.myAnswers
+        guard !answers.isEmpty else { return 42 }
+        let totalWords = answers.reduce(0) { $0 + $1.text.split(whereSeparator: \.isWhitespace).count }
+        return max(18, totalWords / answers.count)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -305,76 +369,89 @@ struct ReflectionStatsCard: View {
                         .foregroundStyle(Color.qGreen)
                 }
 
-                Text("REFLECTION STATS")
+                Text("REFLECTION RHYTHM")
                     .font(.ui(11, .semibold))
                     .tracking(0.6)
                     .foregroundStyle(Color.qBrandText)
 
                 Spacer()
-            }
 
-            // 3 Metric Cards Row
-            HStack(spacing: 10) {
-                metricCard(
-                    value: "\(store.totalQuestionsAnswered)",
-                    label: "Answered",
-                    icon: .chatCircleTextFill,
-                    tint: Color.qGreen,
-                    bg: Color(hex: 0xEDF8F3),
-                    valColor: Color.qGreenDeep
-                )
-                metricCard(
-                    value: "\(store.uniqueActiveDays)",
-                    label: "Active days",
-                    icon: .fireFill,
-                    tint: Color.qFlame,
-                    bg: Color(hex: 0xFFF3EB),
-                    valColor: Color(hex: 0xB34700)
-                )
-                metricCard(
-                    value: "\(store.totalSavedCount)",
-                    label: "Saved",
-                    icon: .bookmarkSimpleFill,
-                    tint: Color(hex: 0x4285F4),
-                    bg: Color(hex: 0xEBF3FF),
-                    valColor: Color(hex: 0x1A56B3)
+                // Archetype Pill
+                HStack(spacing: 4) {
+                    Text(peakSlot.icon)
+                        .font(.system(size: 11))
+                    Text(archetypeInfo.title)
+                        .font(.ui(11, .semibold))
+                        .foregroundStyle(Color.qGreenDeep)
+                }
+                .padding(.horizontal, 9)
+                .padding(.vertical, 4.5)
+                .background(
+                    Capsule()
+                        .fill(Color.qLime.opacity(0.30))
                 )
             }
 
-            Rectangle().fill(Color.qLine.opacity(0.8)).frame(height: 1)
+            // Hero insight
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("Peak time:")
+                        .font(.ui(13.5, .medium))
+                        .foregroundStyle(Color.qGray)
+                    Text(archetypeInfo.time)
+                        .font(.ui(22, .semibold))
+                        .foregroundStyle(Color.qInk)
+                        .monospacedDigit()
+                }
 
-            // Top reflection themes
-            VStack(alignment: .leading, spacing: 10) {
-                Text("TOP REFLECTION TOPICS")
-                    .font(.ui(11, .semibold))
-                    .tracking(0.8)
+                Text(archetypeInfo.insight)
+                    .font(.ui(13.5))
                     .foregroundStyle(Color.qInk2)
+                    .lineLimit(2)
+            }
 
-                // Segmented proportion bar with rounded capsules
-                GeometryReader { geo in
-                    HStack(spacing: 4) {
-                        Capsule()
-                            .fill(LinearGradient(colors: [Color.qGreen, Color.qGreenDeep], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: max(8, geo.size.width * 0.45))
-                        Capsule()
-                            .fill(LinearGradient(colors: [Color.qLime, Color(hex: 0xB8E600)], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: max(8, geo.size.width * 0.30))
-                        Capsule()
-                            .fill(LinearGradient(colors: [Color(hex: 0x4285F4), Color(hex: 0x6BA4F8)], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: max(8, geo.size.width * 0.25 - 8))
+            // Time-of-day Distribution Chart
+            VStack(spacing: 8) {
+                HStack(alignment: .bottom, spacing: 10) {
+                    ForEach(slots) { slot in
+                        barColumn(slot)
                     }
                 }
-                .frame(height: 10)
-
-                // Interactive topic chips
-                HStack(spacing: 8) {
-                    topicChip(color: Color.qGreen, bg: Color(hex: 0xEDF8F3), text: "Stories", percent: "45%")
-                    topicChip(color: Color(hex: 0x7CA600), bg: Color.qLime.opacity(0.22), text: "Wisdom", percent: "30%")
-                    topicChip(color: Color(hex: 0x4285F4), bg: Color(hex: 0xEBF3FF), text: "Daily", percent: "25%")
-                    Spacer(minLength: 0)
-                }
-                .padding(.top, 2)
+                .frame(height: 100)
+                .padding(.horizontal, 8)
+                .padding(.top, 6)
             }
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.qField.opacity(0.7))
+            )
+
+            // Micro-metrics Footer
+            HStack(spacing: 0) {
+                metricColumn(
+                    value: "94%",
+                    title: "Consistency",
+                    subtitle: "on-time rhythm"
+                )
+
+                Rectangle().fill(Color.qLine).frame(width: 1, height: 28)
+
+                metricColumn(
+                    value: "\(avgWordCount) w",
+                    title: "Avg. Depth",
+                    subtitle: "words per answer"
+                )
+
+                Rectangle().fill(Color.qLine).frame(width: 1, height: 28)
+
+                metricColumn(
+                    value: "\(store.totalQuestionsAnswered)",
+                    title: "Answered",
+                    subtitle: "total reflections"
+                )
+            }
+            .padding(.top, 2)
         }
         .padding(18)
         .background(
@@ -387,48 +464,60 @@ struct ReflectionStatsCard: View {
         )
     }
 
-    private func metricCard(value: String, label: String, icon: QIcon, tint: Color, bg: Color, valColor: Color) -> some View {
-        VStack(spacing: 6) {
-            ZStack {
-                Circle().fill(Color.white).frame(width: 28, height: 28)
-                Icon(icon, size: 14)
-                    .foregroundStyle(tint)
-            }
-            Text(value)
-                .font(.ui(22, .semibold))
-                .foregroundStyle(valColor)
+    private func barColumn(_ slot: Slot) -> some View {
+        let barMaxHeight: CGFloat = 58
+        let barHeight = max(8, barMaxHeight * CGFloat(slot.percentage) / 100.0)
+
+        return VStack(spacing: 5) {
+            // Percentage label
+            Text("\(slot.percentage)%")
+                .font(.ui(11, slot.isPeak ? .bold : .medium))
+                .foregroundStyle(slot.isPeak ? Color.qGreenDeep : Color.qGray)
                 .monospacedDigit()
-            Text(label)
-                .font(.ui(11, .semibold))
-                .foregroundStyle(tint)
-                .lineLimit(1)
+
+            // Vertical capsule bar
+            ZStack(alignment: .bottom) {
+                Capsule()
+                    .fill(Color.qLine.opacity(0.6))
+                    .frame(width: 32, height: barMaxHeight)
+
+                Capsule()
+                    .fill(
+                        slot.isPeak
+                            ? LinearGradient(colors: [Color.qGreen, Color.qGreenDeep], startPoint: .top, endPoint: .bottom)
+                            : LinearGradient(colors: [Color.qGray4, Color.qGray4], startPoint: .top, endPoint: .bottom)
+                    )
+                    .frame(width: 32, height: barHeight)
+            }
+
+            // Slot icon & hours
+            HStack(spacing: 2) {
+                Text(slot.icon)
+                    .font(.system(size: 10))
+                Text(slot.hours)
+                    .font(.ui(10.5, slot.isPeak ? .semibold : .medium))
+                    .foregroundStyle(slot.isPeak ? Color.qInk : Color.qGray)
+            }
+            .padding(.top, 2)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(bg)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(tint.opacity(0.20), lineWidth: 1)
-                )
-        )
     }
 
-    private func topicChip(color: Color, bg: Color, text: String, percent: String) -> some View {
-        HStack(spacing: 5) {
-            Circle().fill(color).frame(width: 6, height: 6)
-            Text(text)
-                .font(.ui(12, .semibold))
+    private func metricColumn(value: String, title: String, subtitle: String) -> some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(.ui(16, .semibold))
                 .foregroundStyle(Color.qInk)
-            Text(percent)
-                .font(.ui(11, .medium))
+                .monospacedDigit()
+            Text(title)
+                .font(.ui(11.5, .medium))
+                .foregroundStyle(Color.qInk2)
+            Text(subtitle)
+                .font(.ui(10))
                 .foregroundStyle(Color.qGray)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(Capsule().fill(bg))
-        .overlay(Capsule().stroke(color.opacity(0.20), lineWidth: 0.8))
+        .frame(maxWidth: .infinity)
     }
 }
+
+typealias ReflectionStatsCard = ReflectionRhythmCard

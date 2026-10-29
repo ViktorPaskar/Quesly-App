@@ -54,7 +54,6 @@ struct ProfileView: View {
 
                     Section {
                         content
-                            .padding(.top, tab == .calendar ? DS.Space.m : 0)
                             .frame(maxWidth: .infinity, minHeight: 360, alignment: .top)
                             .contentShape(Rectangle())
                             .simultaneousGesture(swipe)
@@ -91,11 +90,12 @@ struct ProfileView: View {
     @ViewBuilder
     private var content: some View {
         if tab == .calendar {
-            VStack(spacing: DS.Space.m) {
+            VStack(spacing: DS.Space.l) {
                 MemoriesCard(showsHeader: false)
+                    .padding(.horizontal, DS.Space.screen)
+                    .padding(.top, DS.Space.s)
                 calendarArchiveSection
             }
-            .padding(.horizontal, DS.Space.screen)
         } else {
             let items = answers(for: tab)
             // On white, answers are rows split by inset hairlines (Threads), not floating cards.
@@ -130,14 +130,16 @@ struct ProfileView: View {
                     .font(.ui(13))
                     .foregroundStyle(Color.qGray)
             }
+            .padding(.horizontal, DS.Space.screen)
             .padding(.top, 4)
             .padding(.bottom, 12)
 
             ForEach(Array(items.enumerated()), id: \.element.id) { index, answer in
                 if index > 0 {
-                    Rectangle().fill(Color.qLine.opacity(0.65)).frame(height: 0.5)
+                    Rectangle().fill(Color.qLine).frame(height: 1).padding(.horizontal, DS.Space.screen)
                 }
-                AnswerCard(answer: answer, showsQuestion: true, showsAuthor: false, isCompact: true)
+                AnswerCard(answer: answer, showsQuestion: true, showsAuthor: answer.authorId != userId,
+                           isCompact: true)
                     .staggeredAppear(index)
             }
             if items.isEmpty { emptyState }

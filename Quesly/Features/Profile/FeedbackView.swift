@@ -71,7 +71,7 @@ struct FeedbackView: View {
             .padding(20)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.qCanvas)
+        .background(Color.qBackground)
         .queslyBackHeader("Feedback")
         .alert("Thank you! 💚", isPresented: $sent) {
             Button("Done") { dismiss() }

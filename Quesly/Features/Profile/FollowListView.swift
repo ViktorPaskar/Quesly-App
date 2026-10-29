@@ -33,7 +33,7 @@ struct FollowListView: View {
             }
             .scrollDismissesKeyboard(.immediately)
         }
-        .background(Color.qCanvas)
+        .background(Color.qBackground)
         .queslyBackHeader(kind == .following ? "Following" : "Followers")
         .onAppear {
             if people.isEmpty {

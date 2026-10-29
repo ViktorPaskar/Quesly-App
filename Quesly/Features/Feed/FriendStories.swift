@@ -103,7 +103,7 @@ struct PeeksStoriesBar: View {
                 .accessibilityLabel("Add Peek")
             }
 
-            Text(store.hasAnsweredToday ? "Your Peek" : "My Peek")
+            Text("Your Peek")
                 .font(.ui(11.5))
                 .foregroundStyle(Color.qInk)
                 .lineLimit(1)

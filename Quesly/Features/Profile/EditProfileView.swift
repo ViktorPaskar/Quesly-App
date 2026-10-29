@@ -51,7 +51,7 @@ struct EditProfileView: View {
             .padding(.bottom, 100)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.qCanvas)
+        .background(Color.qBackground)
         .queslyBackHeader("Edit profile")
         .onAppear {
             guard !loaded else { return }
@@ -308,7 +308,7 @@ struct EditProfileView: View {
                 }
             }
             .padding(DS.Space.screen)
-            .background(Color.qCanvas)
+            .background(Color.qBackground)
             .navigationTitle("Change email")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -351,7 +351,7 @@ struct EditProfileView: View {
                 }
             }
             .padding(DS.Space.screen)
-            .background(Color.qCanvas)
+            .background(Color.qBackground)
             .navigationTitle("Change password")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -9,6 +9,7 @@ enum NotificationFilter: String, CaseIterable, Identifiable {
 
 struct NotificationsView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
     @State private var filter: NotificationFilter = .all
     @State private var reactionAnswer: Answer?
     @State private var memoryAnswer: Answer?
@@ -31,19 +32,19 @@ struct NotificationsView: View {
                 if groups.isEmpty {
                     EmptyStateView(icon: .bellRingingFill, title: "All caught up",
                                    message: "Reactions, new followers and milestones will show up here.")
+                        .padding(.top, 40)
                 } else {
                     let today = groups.filter { Calendar.current.isDateInToday($0.date) }
                     let earlier = groups.filter { !Calendar.current.isDateInToday($0.date) }
-                    VStack(alignment: .leading, spacing: DS.Space.s) {
+                    VStack(alignment: .leading, spacing: 16) {
                         section("Today", today)
                         section("Earlier", earlier)
                     }
-                    .padding(.horizontal, DS.Space.m)
-                    .padding(.bottom, DS.Space.l)
+                    .padding(.bottom, DS.Space.xl)
                 }
             }
         }
-        .background(Color.qCanvas)
+        .background(Color.qBackground)
         .toolbar(.hidden, for: .navigationBar)
         .onDisappear { store.markNotificationsSeen() }
         .sheet(item: $reactionAnswer) { answer in
@@ -61,10 +62,26 @@ struct NotificationsView: View {
 
     private var headerBar: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Notifications")
-                .font(.display(28, .semibold))
-                .tracking(-0.4)
-                .foregroundStyle(Color.qInk)
+            HStack {
+                Text("Notifications")
+                    .font(.display(28, .semibold))
+                    .tracking(-0.4)
+                    .foregroundStyle(Color.qInk)
+
+                Spacer()
+
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(Color.qGray)
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(Color.qField))
+                }
+                .buttonStyle(.pressable)
+                .accessibilityLabel("Close notifications")
+            }
 
             HStack(spacing: 8) {
                 ForEach(NotificationFilter.allCases) { item in
@@ -98,27 +115,36 @@ struct NotificationsView: View {
     @ViewBuilder
     private func section(_ title: String, _ items: [NotificationGroup]) -> some View {
         if !items.isEmpty {
-            Text(title)
-                .font(.ui(15, .semibold))
-                .foregroundStyle(Color.qGray)
-                .padding(.horizontal, DS.Space.xs)
-                .padding(.top, DS.Space.s)
-            VStack(spacing: 0) {
-                ForEach(Array(items.enumerated()), id: \.element.id) { index, group in
-                    if index > 0 { Rectangle().fill(Color.qLine).frame(height: 1).padding(.leading, 70) }
-                    row(group)
-                        .padding(.horizontal, DS.Space.m)
-                        .padding(.vertical, 13)
-                        .overlay(alignment: .leading) {
-                            if group.date > store.notificationsSeenAt {
-                                Circle().fill(Color.qGreen).frame(width: 7, height: 7).padding(.leading, 5)
-                                    .accessibilityLabel("Unread")
-                            }
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title)
+                    .font(.ui(13, .semibold))
+                    .tracking(0.4)
+                    .foregroundStyle(Color.qGray)
+                    .padding(.horizontal, DS.Space.screen)
+                    .padding(.top, DS.Space.s)
+                    .padding(.bottom, 6)
+
+                VStack(spacing: 0) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, group in
+                        if index > 0 {
+                            Rectangle()
+                                .fill(Color.qLine.opacity(0.65))
+                                .frame(height: 0.5)
+                                .padding(.leading, 70)
                         }
-                        .staggeredAppear(index)
+                        row(group)
+                            .padding(.horizontal, DS.Space.screen)
+                            .padding(.vertical, 12)
+                            .overlay(alignment: .leading) {
+                                if group.date > store.notificationsSeenAt {
+                                    Circle().fill(Color.qGreen).frame(width: 7, height: 7).padding(.leading, 6)
+                                        .accessibilityLabel("Unread")
+                                }
+                            }
+                            .staggeredAppear(index)
+                    }
                 }
             }
-            .outlinedBlock()
         }
     }
 

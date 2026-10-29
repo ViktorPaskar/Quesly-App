@@ -53,7 +53,7 @@ struct MainTabView: View {
                 stack(.feed) { FeedView(onDiscover: { select(.discover) }) }
                 stack(.discover) { DiscoverView() }
                 stack(.journey) { JourneyView() }
-                stack(.profile) { ProfileView(userId: store.me.id, isTabRoot: true) }
+                stack(.profile) { ProfileView(userId: store.me.id, isTabRoot: true, onNavigateToJourney: { select(.journey) }) }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 tabBar

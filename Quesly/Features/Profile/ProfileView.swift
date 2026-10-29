@@ -14,6 +14,7 @@ struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
     let userId: String
     var isTabRoot = false
+    var onNavigateToJourney: (() -> Void)? = nil
     @State private var confirmBlock = false
     @State private var tab: ProfileTab = DemoConfig.initialProfileTab
     @State private var searchText = ""
@@ -31,7 +32,13 @@ struct ProfileView: View {
                     ProfileHeader(
                         user: user,
                         isMe: isMe,
-                        onStreak: { withAnimation(.qSmooth) { tab = .calendar } },
+                        onStreak: {
+                            if let onNavigateToJourney {
+                                onNavigateToJourney()
+                            } else {
+                                withAnimation(.qSmooth) { tab = .calendar }
+                            }
+                        },
                         onAnswers: { withAnimation(.qSmooth) { tab = .answers } }
                     )
                         .padding(.horizontal, DS.Space.screen)

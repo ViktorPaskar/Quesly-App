@@ -18,6 +18,7 @@ struct ProfileView: View {
     @State private var confirmBlock = false
     @State private var tab: ProfileTab = DemoConfig.initialProfileTab
     @State private var searchText = ""
+    @State private var selectedCalendarDate: Date? = .now
     /// Mini avatar + @nick in the top bar once the name scrolls away.
     @State private var showsMiniTitle = false
 
@@ -35,7 +36,7 @@ struct ProfileView: View {
                         onStreak: {
                             if let onNavigateToJourney {
                                 onNavigateToJourney()
-                            } else {
+                            } else if isMe {
                                 withAnimation(.qSmooth) { tab = .calendar }
                             }
                         },
@@ -65,9 +66,7 @@ struct ProfileView: View {
             .task {
                 guard DemoConfig.scrollsProfileToList else { return }
                 try? await Task.sleep(for: .milliseconds(500))
-                if tab == .calendar {
-                    proxy.scrollTo("calendar-card", anchor: .center)
-                } else {
+                if tab != .calendar {
                     proxy.scrollTo("h1", anchor: .center)
                 }
             }
@@ -90,12 +89,21 @@ struct ProfileView: View {
     @ViewBuilder
     private var content: some View {
         if tab == .calendar {
-            MemoriesCard(showsHeader: false)
-                .padding(.horizontal, DS.Space.screen)
-                .padding(.top, DS.Space.s)
-                .padding(.bottom, DS.Space.l)
-                .id("calendar-card")
-            calendarArchiveSection
+            VStack(spacing: DS.Space.m) {
+                MemoriesCard(selectedDate: $selectedCalendarDate, showsHeader: false)
+                    .id("calendar-card")
+
+                if let date = selectedCalendarDate ?? store.myAnswers.first?.createdAt,
+                   let answer = store.myAnswer(on: date) ?? store.myAnswers.first {
+                    DayReflectionCard(answer: answer) {
+                        withAnimation(.qSmooth) { selectedCalendarDate = nil }
+                    }
+                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                }
+            }
+            .padding(.horizontal, DS.Space.screen)
+            .padding(.top, DS.Space.s)
+            .padding(.bottom, DS.Space.l)
         } else {
             let items = answers(for: tab)
             // On white, answers are rows split by inset hairlines (Threads), not floating cards.

@@ -1,12 +1,10 @@
 import SwiftUI
 
-/// Profile "Memories": your streak plus the month as a calendar. Answered days are filled —
-/// tap one to reread that day's question and answer.
+/// Profile "Memories": calendar of answers with interactive inspection of any day's response.
 struct MemoriesCard: View {
     @Environment(AppStore.self) private var store
     @State private var monthOffset = 0
-    @State private var opened: Answer?
-    /// Off inside the profile Calendar tab, where the streak card above already says it.
+    @Binding var selectedDate: Date?
     var showsHeader = true
 
     private let calendar = Calendar.current
@@ -21,10 +19,15 @@ struct MemoriesCard: View {
         VStack(alignment: .leading, spacing: DS.Space.m) {
             if showsHeader { header }
             monthBar
-            MonthGrid(month: month, answered: store.answeredDays) { day in
-                opened = store.myAnswer(on: day)
+            MonthGrid(month: month, answered: store.answeredDays, selected: selectedDate) { day in
+                withAnimation(.qSpring) {
+                    if let sel = selectedDate, calendar.isDate(sel, inSameDayAs: day) {
+                        selectedDate = nil
+                    } else {
+                        selectedDate = day
+                    }
+                }
             }
-            legend
         }
         .padding(18)
         .background(
@@ -35,11 +38,6 @@ struct MemoriesCard: View {
                         .stroke(Color.qLine, lineWidth: 1)
                 )
         )
-        .sheet(item: $opened) { answer in
-            MemoryDetailSheet(answer: answer)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-        }
     }
 
     // MARK: Parts
@@ -67,19 +65,20 @@ struct MemoriesCard: View {
     private var monthBar: some View {
         HStack(spacing: 8) {
             Text(month.formatted(.dateTime.month(.wide).year()))
-                .font(.ui(18, .semibold))
+                .font(.ui(17, .semibold))
                 .foregroundStyle(Color.qInk)
+                .lineLimit(1)
 
             if answeredCountInMonth > 0 {
                 Text("\(answeredCountInMonth) answered")
-                    .font(.ui(12, .medium))
+                    .font(.ui(12, .semibold))
                     .foregroundStyle(Color.qBrandText)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
-                    .background(Capsule().fill(Color.qLime.opacity(0.35)))
+                    .background(Capsule().fill(Color.qMint.opacity(0.35)))
             }
 
-            Spacer()
+            Spacer(minLength: 0)
             monthButton(.caretLeftBold, label: "Previous month", enabled: monthOffset > -Self.monthsBack) { monthOffset -= 1 }
             monthButton(.caretRightBold, label: "Next month", enabled: monthOffset < 0) { monthOffset += 1 }
         }
@@ -90,31 +89,103 @@ struct MemoriesCard: View {
         Button { withAnimation(.qSmooth) { action() } } label: {
             Icon(icon, size: DS.Icon.inline)
                 .foregroundStyle(enabled ? Color.qGreen : Color.qGray4)
-                .frame(width: DS.hitTarget, height: 36)
+                .frame(width: 32, height: 32)
                 .contentShape(Rectangle())
         }
         .disabled(!enabled)
         .accessibilityLabel(label)
     }
+}
 
-    private func key<Dot: View>(_ title: String, @ViewBuilder dot: () -> Dot) -> some View {
-        HStack(spacing: DS.Space.xxs) {
-            dot().frame(width: 10, height: 10)
-            Text(title)
-        }
-    }
+// MARK: - Selected Day Answer Preview Card
 
-    private var legend: some View {
-        HStack(spacing: DS.Space.m) {
-            key("Answered") { RoundedRectangle(cornerRadius: 3, style: .continuous).fill(Color.qGreen) }
-            key("Today") { RoundedRectangle(cornerRadius: 3, style: .continuous).fill(Color.qLime) }
-            key("Unanswered") { RoundedRectangle(cornerRadius: 3, style: .continuous).fill(Color.qField) }
-            Spacer(minLength: 0)
+struct DayReflectionCard: View {
+    let answer: Answer
+    var onDismiss: (() -> Void)? = nil
+    @State private var isSharing = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 8) {
+                IconChip(icon: .calendar, tint: .qGreen, fill: Color.qMint.opacity(0.35))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(answer.createdAt.formatted(.dateTime.month(.abbreviated).day().year()))
+                        .font(.ui(11, .semibold))
+                        .foregroundStyle(Color.qBrandText)
+                    Text("Daily Reflection")
+                        .font(.ui(14, .semibold))
+                        .foregroundStyle(Color.qInk)
+                }
+
+                Spacer()
+
+                if let onDismiss {
+                    Button(action: onDismiss) {
+                        Icon(.xCircleFill, size: 16)
+                            .foregroundStyle(Color.qGray)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(answer.questionText)
+                    .font(.ui(13, .semibold))
+                    .foregroundStyle(Color.qInk2)
+                    .lineLimit(2)
+
+                Text("“\(answer.text)”")
+                    .font(.display(16, .regular))
+                    .foregroundStyle(Color.qInk)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.qField)
+            )
+
+            HStack {
+                if answer.totalReactions > 0 {
+                    HStack(spacing: 4) {
+                        Icon(.heartFill, size: 12)
+                            .foregroundStyle(Color.qPink)
+                        Text("\(answer.totalReactions)")
+                            .font(.ui(12, .semibold))
+                            .foregroundStyle(Color.qGray)
+                    }
+                }
+
+                Spacer()
+
+                Button { isSharing = true } label: {
+                    HStack(spacing: 4) {
+                        Icon(.paperPlaneTiltFill, size: 11)
+                        Text("Share to Peeks")
+                            .font(.ui(12.5, .semibold))
+                    }
+                    .foregroundStyle(Color.qGreen)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(Color.qMint.opacity(0.28)))
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .font(.ui(12))
-        .foregroundStyle(Color.qInk2)
-        .padding(.top, DS.Space.s)
-        .accessibilityHidden(true)
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.qBlock)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.qLine, lineWidth: 1)
+                )
+        )
+        .sheet(isPresented: $isSharing) {
+            ShareStorySheet(answer: answer).presentationDetents([.large])
+        }
     }
 }
 
@@ -123,6 +194,7 @@ struct MemoriesCard: View {
 private struct MonthGrid: View {
     let month: Date
     let answered: Set<Date>
+    let selected: Date?
     let onOpen: (Date) -> Void
 
     private let calendar = Calendar.current
@@ -133,7 +205,6 @@ private struct MonthGrid: View {
         return range.compactMap { calendar.date(byAdding: .day, value: $0 - 1, to: month) }
     }
 
-    /// Empty cells before the 1st, respecting the locale's first weekday.
     private var leadingBlanks: Int {
         (calendar.component(.weekday, from: month) - calendar.firstWeekday + 7) % 7
     }
@@ -158,6 +229,7 @@ private struct MonthGrid: View {
                 DayCell(day: day,
                         state: state(for: day, today: today),
                         isToday: day == today,
+                        isSelected: selected.map { calendar.isDate($0, inSameDayAs: day) } ?? false,
                         onOpen: { onOpen(day) })
             }
         }
@@ -177,6 +249,7 @@ private struct DayCell: View {
     let day: Date
     let state: Kind
     let isToday: Bool
+    let isSelected: Bool
     let onOpen: () -> Void
 
     private var number: String { day.formatted(.dateTime.day()) }
@@ -202,16 +275,16 @@ private struct DayCell: View {
         return ZStack {
             switch state {
             case .answered:
-                shape.fill(isToday ? Color.qLime : Color.qGreen)
+                shape.fill(isSelected ? Color.qGreenDeep : (isToday ? Color.qLime : Color.qGreen))
                 if isToday {
                     shape.strokeBorder(Color.qGreen.opacity(0.28), lineWidth: 1)
                 }
                 VStack(spacing: 2) {
                     Text(number)
                         .font(.ui(13, .semibold))
-                        .foregroundStyle(isToday ? Color.qGreen : .white)
+                        .foregroundStyle(isToday && !isSelected ? Color.qGreen : .white)
                     Circle()
-                        .fill(isToday ? Color.qGreen : Color.qLime)
+                        .fill(isToday && !isSelected ? Color.qGreen : Color.qLime)
                         .frame(width: 4, height: 4)
                 }
             case .missed:
@@ -227,6 +300,13 @@ private struct DayCell: View {
             }
         }
         .frame(width: 36, height: 36)
+        .overlay(
+            isSelected
+                ? RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Color.qGreen, lineWidth: 2)
+                    .frame(width: 42, height: 42)
+                : nil
+        )
     }
 
     private var accessibilityText: String {

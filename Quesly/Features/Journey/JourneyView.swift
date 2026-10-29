@@ -1,11 +1,11 @@
 import SwiftUI
 
 /// 3rd Bottom Tab: Journey ("Путь").
-/// Dedicated hub for daily habits, streak, reflection stats, memories, and personal milestones.
-/// - Streak Hero Card (7-day circles tracker, personal best — without streak freezes)
-/// - Reflection Stats & Topics Card (Answered, Active Days, Saved + Proportion Topics)
-/// - "On This Day" Memory Card (flashback to previous answers)
-/// - Quiet Milestones & Achievements (progress bars, unlocked badges)
+/// Dedicated hub for daily ritual, streak, reflection rhythm, and quiet milestones.
+/// - 1. Streak Hero Card (7-day circles tracker, personal best, month total)
+/// - 2. Reflection Rhythm Card (clean, restrained time-of-day habit card without generic AI slop)
+/// - 3. "On This Day" Memory Flashback (reread previous reflections)
+/// - 4. Milestones Hub (all unlocked, in-progress, and locked achievements)
 struct JourneyView: View {
     @Environment(AppStore.self) private var store
     @State private var openedMemory: Answer?
@@ -17,7 +17,7 @@ struct JourneyView: View {
                 // MARK: 1. Streak Hero Card (7-Day Tracker)
                 StreakCard()
 
-                // MARK: 2. Personal Reflection Rhythm & Habit Dashboard
+                // MARK: 2. Personal Reflection Rhythm
                 Button {
                     showInsightsSheet = true
                 } label: {
@@ -55,13 +55,7 @@ struct JourneyView: View {
     private var onThisDayCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: 0xEDF8F3))
-                        .frame(width: 32, height: 32)
-                    Icon(.sparkleFill, size: 14)
-                        .foregroundStyle(Color.qGreen)
-                }
+                IconChip(icon: .sparkleFill, tint: .qGreen, fill: Color.qMint.opacity(0.35))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("ON THIS DAY")
@@ -142,6 +136,7 @@ struct JourneyView: View {
         let items = store.achievements
         let inProgress = items.filter { !$0.isUnlocked && $0.progress > 0 }
         let unlocked = items.filter { $0.isUnlocked }
+        let locked = items.filter { !$0.isUnlocked && $0.progress == 0 }
         let totalUnlocked = unlocked.count
         let totalCount = items.count
 
@@ -203,11 +198,20 @@ struct JourneyView: View {
                         .foregroundStyle(Color.qGray)
                         .padding(.leading, 4)
 
-                    VStack(spacing: 8) {
-                        ForEach(inProgress) { ach in
+                    VStack(spacing: 0) {
+                        ForEach(Array(inProgress.enumerated()), id: \.element.id) { index, ach in
+                            if index > 0 { divider }
                             MilestoneRow(achievement: ach)
                         }
                     }
+                    .background(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(Color.qBlock)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .stroke(Color.qLine, lineWidth: 1)
+                            )
+                    )
                 }
             }
 
@@ -220,14 +224,56 @@ struct JourneyView: View {
                         .foregroundStyle(Color.qGray)
                         .padding(.leading, 4)
 
-                    VStack(spacing: 8) {
-                        ForEach(unlocked) { ach in
+                    VStack(spacing: 0) {
+                        ForEach(Array(unlocked.enumerated()), id: \.element.id) { index, ach in
+                            if index > 0 { divider }
                             MilestoneRow(achievement: ach)
                         }
                     }
+                    .background(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(Color.qBlock)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .stroke(Color.qLine, lineWidth: 1)
+                            )
+                    )
+                }
+            }
+
+            // Locked Section
+            if !locked.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("LOCKED (\(locked.count))")
+                        .font(.ui(11, .semibold))
+                        .tracking(0.6)
+                        .foregroundStyle(Color.qGray)
+                        .padding(.leading, 4)
+
+                    VStack(spacing: 0) {
+                        ForEach(Array(locked.enumerated()), id: \.element.id) { index, ach in
+                            if index > 0 { divider }
+                            MilestoneRow(achievement: ach)
+                        }
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(Color.qBlock)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .stroke(Color.qLine, lineWidth: 1)
+                            )
+                    )
                 }
             }
         }
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(Color.qLine)
+            .frame(height: 1)
+            .padding(.leading, 72)
     }
 }
 
@@ -256,7 +302,10 @@ private struct MilestoneRow: View {
                         .foregroundStyle(Color.qGreen)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Capsule().fill(Color(hex: 0xEDF8F3)))
+                        .background(Capsule().fill(Color.qMint.opacity(0.35)))
+                    } else if achievement.progress == 0 {
+                        Icon(.lockSimpleFill, size: 11)
+                            .foregroundStyle(Color.qGray4)
                     }
                 }
 
@@ -288,18 +337,10 @@ private struct MilestoneRow: View {
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.qBlock)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(Color.qLine, lineWidth: 1)
-                )
-        )
     }
 }
 
-// MARK: - Reflection Rhythm & Time-of-Day Habit Dashboard
+// MARK: - Reflection Rhythm & Time-of-Day Habit Card (Clean, Restrained, No Emojis)
 
 struct ReflectionRhythmCard: View {
     @Environment(AppStore.self) private var store
@@ -308,7 +349,7 @@ struct ReflectionRhythmCard: View {
         let id: String
         let title: String
         let hours: String
-        let icon: String
+        let icon: QIcon
         let percentage: Int
         let isPeak: Bool
     }
@@ -337,10 +378,10 @@ struct ReflectionRhythmCard: View {
         let maxVal = max(mPct, aPct, ePct, nPct)
 
         return [
-            Slot(id: "morning", title: "Morning", hours: "06–12h", icon: "🌅", percentage: mPct, isPeak: mPct == maxVal),
-            Slot(id: "afternoon", title: "Midday", hours: "12–18h", icon: "☀️", percentage: aPct, isPeak: aPct == maxVal && aPct > mPct),
-            Slot(id: "evening", title: "Evening", hours: "18–23h", icon: "🌆", percentage: ePct, isPeak: ePct == maxVal && ePct > mPct),
-            Slot(id: "night", title: "Night", hours: "23–06h", icon: "🌙", percentage: nPct, isPeak: nPct == maxVal && nPct > mPct)
+            Slot(id: "morning", title: "Morning", hours: "06–12h", icon: .sunFill, percentage: mPct, isPeak: mPct == maxVal),
+            Slot(id: "afternoon", title: "Afternoon", hours: "12–18h", icon: .sparkleFill, percentage: aPct, isPeak: aPct == maxVal && aPct > mPct),
+            Slot(id: "evening", title: "Evening", hours: "18–23h", icon: .leafFill, percentage: ePct, isPeak: ePct == maxVal && ePct > mPct),
+            Slot(id: "night", title: "Night", hours: "23–06h", icon: .timer, percentage: nPct, isPeak: nPct == maxVal && nPct > mPct)
         ]
     }
 
@@ -348,123 +389,85 @@ struct ReflectionRhythmCard: View {
         slots.first(where: \.isPeak) ?? slots[0]
     }
 
-    private var archetypeInfo: (title: String, insight: String, time: String) {
-        switch peakSlot.id {
-        case "afternoon":
-            return ("Midday Pause", "You reflect best during your afternoon break.", "1:40 PM")
-        case "evening":
-            return ("Dusk Philosopher", "Evenings are when your reflections run deepest.", "8:15 PM")
-        case "night":
-            return ("Night Owl", "Quiet midnight hours bring your most candid thoughts.", "11:30 PM")
-        default:
-            return ("Early Thinker", "Your thoughts are clearest with your morning coffee.", "8:45 AM")
-        }
-    }
-
-    private var avgWordCount: Int {
-        let answers = store.myAnswers
-        guard !answers.isEmpty else { return 42 }
-        let totalWords = answers.reduce(0) { $0 + $1.text.split(whereSeparator: \.isWhitespace).count }
-        return max(18, totalWords / answers.count)
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Header
             HStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: 0xEDF8F3))
-                        .frame(width: 30, height: 30)
-                    Icon(.chartBarFill, size: 14)
-                        .foregroundStyle(Color.qGreen)
-                }
+                IconChip(icon: .clock, tint: .qGreen, fill: Color.qMint.opacity(0.35))
 
-                Text("REFLECTION RHYTHM")
-                    .font(.ui(11, .semibold))
-                    .tracking(0.6)
-                    .foregroundStyle(Color.qBrandText)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("REFLECTION RHYTHM")
+                        .font(.ui(11, .semibold))
+                        .tracking(0.6)
+                        .foregroundStyle(Color.qBrandText)
+                    Text("Daily peak & habit pace")
+                        .font(.ui(13.5, .medium))
+                        .foregroundStyle(Color.qGray)
+                }
 
                 Spacer()
 
-                // Archetype Pill & drilldown indicator
-                HStack(spacing: 6) {
-                    HStack(spacing: 4) {
-                        Text(peakSlot.icon)
-                            .font(.system(size: 11))
-                        Text(archetypeInfo.title)
-                            .font(.ui(11, .semibold))
-                            .foregroundStyle(Color.qGreenDeep)
-                    }
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 4.5)
-                    .background(
-                        Capsule()
-                            .fill(Color.qLime.opacity(0.30))
-                    )
-
-                    Icon(.caretRightBold, size: 12)
-                        .foregroundStyle(Color.qGray4)
+                HStack(spacing: 4) {
+                    Text("Details")
+                        .font(.ui(12, .semibold))
+                        .foregroundStyle(Color.qGreen)
+                    Icon(.caretRightBold, size: 10)
+                        .foregroundStyle(Color.qGreen)
                 }
+                .padding(.horizontal, 9)
+                .padding(.vertical, 4.5)
+                .background(Capsule().fill(Color.qMint.opacity(0.28)))
             }
 
-            // Hero insight
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text("Peak time:")
-                        .font(.ui(13.5, .medium))
+            // Hero Peak Time + Subtitle
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Most active at")
+                        .font(.ui(12))
                         .foregroundStyle(Color.qGray)
-                    Text(archetypeInfo.time)
+                    Text("8:45 AM")
                         .font(.ui(22, .semibold))
                         .foregroundStyle(Color.qInk)
                         .monospacedDigit()
                 }
 
-                Text(archetypeInfo.insight)
-                    .font(.ui(13.5))
-                    .foregroundStyle(Color.qInk2)
-                    .lineLimit(2)
-            }
+                Spacer()
 
-            // Time-of-day Distribution Chart
-            VStack(spacing: 8) {
+                // Proportional Distribution Bars (Clean, Restrained)
                 HStack(alignment: .bottom, spacing: 10) {
                     ForEach(slots) { slot in
                         barColumn(slot)
                     }
                 }
-                .frame(height: 100)
-                .padding(.horizontal, 8)
-                .padding(.top, 6)
             }
-            .padding(.vertical, 10)
+            .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.qField.opacity(0.7))
+                    .fill(Color.qField)
             )
 
-            // Micro-metrics Footer
+            // Micro-metrics Footer (Clean 3-column stats)
             HStack(spacing: 0) {
+                metricColumn(
+                    value: "\(peakSlot.percentage)%",
+                    title: "\(peakSlot.title) peak",
+                    subtitle: peakSlot.hours
+                )
+
+                Rectangle().fill(Color.qLine).frame(width: 1, height: 26)
+
                 metricColumn(
                     value: "94%",
                     title: "Consistency",
                     subtitle: "on-time rhythm"
                 )
 
-                Rectangle().fill(Color.qLine).frame(width: 1, height: 28)
-
-                metricColumn(
-                    value: "\(avgWordCount) w",
-                    title: "Avg. Depth",
-                    subtitle: "words per answer"
-                )
-
-                Rectangle().fill(Color.qLine).frame(width: 1, height: 28)
+                Rectangle().fill(Color.qLine).frame(width: 1, height: 26)
 
                 metricColumn(
                     value: "\(store.totalQuestionsAnswered)",
-                    title: "Answered",
-                    subtitle: "total reflections"
+                    title: "Total reflections",
+                    subtitle: "answered so far"
                 )
             }
             .padding(.top, 2)
@@ -481,51 +484,42 @@ struct ReflectionRhythmCard: View {
     }
 
     private func barColumn(_ slot: Slot) -> some View {
-        let barMaxHeight: CGFloat = 62
+        let barMaxHeight: CGFloat = 50
         let maxPct = CGFloat(max(slots.map(\.percentage).max() ?? 100, 1))
         let normalized = CGFloat(slot.percentage) / maxPct
-        let barHeight = slot.percentage == 0 ? 8 : max(12, barMaxHeight * (0.18 + 0.74 * normalized))
+        let barHeight = slot.percentage == 0 ? 6 : max(10, barMaxHeight * (0.2 + 0.75 * normalized))
 
-        return VStack(spacing: 6) {
-            // Percentage label
+        return VStack(spacing: 4) {
             Text("\(slot.percentage)%")
-                .font(.ui(11.5, slot.isPeak ? .bold : .semibold))
-                .foregroundStyle(slot.isPeak ? Color.qGreenDeep : Color.qInk2)
+                .font(.ui(10, slot.isPeak ? .bold : .medium))
+                .foregroundStyle(slot.isPeak ? Color.qGreenDeep : Color.qGray)
                 .monospacedDigit()
 
-            // Vertical bar inside rounded track
             ZStack(alignment: .bottom) {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.qLine.opacity(0.55))
-                    .frame(width: 30, height: barMaxHeight)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.qLine.opacity(0.65))
+                    .frame(width: 24, height: barMaxHeight)
 
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(
                         slot.isPeak
                             ? LinearGradient(colors: [Color.qGreen, Color.qGreenDeep], startPoint: .top, endPoint: .bottom)
-                            : LinearGradient(colors: [Color.qGreen.opacity(0.32), Color.qGreen.opacity(0.22)], startPoint: .top, endPoint: .bottom)
+                            : LinearGradient(colors: [Color.qMint, Color.qMint.opacity(0.8)], startPoint: .top, endPoint: .bottom)
                     )
-                    .frame(width: 30, height: barHeight)
+                    .frame(width: 24, height: barHeight)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
-            // Slot icon & hours
-            HStack(spacing: 2) {
-                Text(slot.icon)
-                    .font(.system(size: 10))
-                Text(slot.hours)
-                    .font(.ui(10.5, slot.isPeak ? .semibold : .medium))
-                    .foregroundStyle(slot.isPeak ? Color.qInk : Color.qGray)
-            }
-            .padding(.top, 2)
+            Icon(slot.icon, size: 10)
+                .foregroundStyle(slot.isPeak ? Color.qGreen : Color.qGray)
+                .padding(.top, 1)
         }
-        .frame(maxWidth: .infinity)
     }
 
     private func metricColumn(value: String, title: String, subtitle: String) -> some View {
         VStack(spacing: 2) {
             Text(value)
-                .font(.ui(16, .semibold))
+                .font(.ui(15, .semibold))
                 .foregroundStyle(Color.qInk)
                 .monospacedDigit()
             Text(title)

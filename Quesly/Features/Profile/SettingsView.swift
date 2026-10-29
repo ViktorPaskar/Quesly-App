@@ -23,7 +23,6 @@ struct SettingsView: View {
             }
 
             Section("Activity") {
-                row("Achievements", .medalFill, tint: Color(hex: 0xE2A72E), route: .achievements)
                 row("Invite friends", .paperPlaneTiltFill, tint: Color(hex: 0xE84FA5), route: .invite)
             }
 

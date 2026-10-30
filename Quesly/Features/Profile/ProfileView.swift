@@ -338,6 +338,7 @@ struct ProfileHeader: View {
     // MARK: Stats
 
     /// Four equal columns with hairline dividers: Answers · Friends · Followers · Following.
+    /// Left-aligned numbers and labels for a strict vertical anchor matching the profile layout.
     private var stats: some View {
         HStack(spacing: 0) {
             stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil, action: isMe ? onAnswers : nil)
@@ -345,14 +346,17 @@ struct ProfileHeader: View {
             statDivider
 
             stat(isMe ? store.friendsCount : 12, "Friends", route: isMe ? .friends : nil)
+                .padding(.leading, DS.Space.s)
 
             statDivider
 
             stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)
+                .padding(.leading, DS.Space.s)
 
             statDivider
 
             stat(followingCount, "Following", route: isMe ? .following : nil)
+                .padding(.leading, DS.Space.s)
         }
         .padding(.vertical, 2)
     }
@@ -361,7 +365,6 @@ struct ProfileHeader: View {
         Rectangle()
             .fill(Color.qLine.opacity(0.85))
             .frame(width: 1, height: 26)
-            .padding(.horizontal, 4)
     }
 
     private func number(_ value: Int, color: Color = .qInk) -> some View {
@@ -378,12 +381,12 @@ struct ProfileHeader: View {
 
     @ViewBuilder
     private func stat(_ value: Int, _ title: String, route: Route?, action: (() -> Void)? = nil) -> some View {
-        let content = VStack(alignment: .center, spacing: 2) {
+        let content = VStack(alignment: .leading, spacing: 2) {
             number(value)
             label(title)
         }
         .lineLimit(1)
-        .frame(maxWidth: .infinity, minHeight: DS.hitTarget, alignment: .center)
+        .frame(maxWidth: .infinity, minHeight: DS.hitTarget, alignment: .leading)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         if let route {

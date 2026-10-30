@@ -64,7 +64,7 @@ struct JourneyView: View {
                             ZStack {
                                 Circle().fill(Color.qPastelSky)
                                     .frame(width: 32, height: 32)
-                                Icon(.chatCircleDotsFill, size: 14)
+                                Icon(.chatCircleTextFill, size: 14)
                                     .foregroundStyle(Color(hex: 0x0284C7))
                             }
                             Spacer()

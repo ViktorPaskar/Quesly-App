@@ -203,9 +203,14 @@ final class AppStore {
 
     var hasAnsweredToday: Bool { todaysAnswer != nil }
 
-    func submitAnswer(_ text: String, visibility: AnswerVisibility? = nil) {
+    @discardableResult
+    func submitAnswer(_ text: String, visibility: AnswerVisibility? = nil) -> Bool {
         let trimmed = Self.clean(text)
-        guard !trimmed.isEmpty, !hasAnsweredToday else { return }
+        guard !trimmed.isEmpty, !hasAnsweredToday else { return false }
+        
+        let moderation = ContentModeration.validate(trimmed)
+        guard moderation.isPermitted else { return false }
+
         let answer = Answer(
             id: UUID().uuidString,
             questionId: todayQuestion.id,
@@ -223,16 +228,23 @@ final class AppStore {
                                    message: "Your new answer was posted!", date: .now), at: 0)
         persist()
         NotificationScheduler.reschedule(store: self)
+        return true
     }
 
     /// Edits are allowed for a few minutes after posting (typos happen).
-    func editAnswer(_ id: String, text: String) {
+    @discardableResult
+    func editAnswer(_ id: String, text: String) -> Bool {
         let trimmed = Self.clean(text)
         guard !trimmed.isEmpty, let i = myAnswers.firstIndex(where: { $0.id == id }),
-              myAnswers[i].isEditable() else { return }
+              myAnswers[i].isEditable() else { return false }
+        
+        let moderation = ContentModeration.validate(trimmed)
+        guard moderation.isPermitted else { return false }
+
         myAnswers[i].text = trimmed
         myAnswers[i].isEdited = true
         persist()
+        return true
     }
 
     private static func clean(_ text: String) -> String {

@@ -619,6 +619,7 @@ struct EditAnswerSheet: View {
     @Environment(\.dismiss) private var dismiss
     let answer: Answer
     @State private var text = ""
+    @State private var moderationError: String? = nil
 
     var body: some View {
         NavigationStack {
@@ -632,8 +633,23 @@ struct EditAnswerSheet: View {
                     .padding(12)
                     .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qField))
                     .onChange(of: text) { _, new in
+                        if moderationError != nil { moderationError = nil }
                         if new.count > AppStore.maxAnswerLength { text = String(new.prefix(AppStore.maxAnswerLength)) }
                     }
+
+                if let moderationError {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.qFlame)
+                        Text(moderationError)
+                            .font(.ui(12.5))
+                            .foregroundStyle(Color.qFlame)
+                    }
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.qFlameSoft))
+                }
+
                 HStack {
                     TimelineView(.periodic(from: .now, by: 1)) { ctx in
                         let left = max(0, Int(Answer.editWindow - ctx.date.timeIntervalSince(answer.createdAt)))
@@ -648,6 +664,14 @@ struct EditAnswerSheet: View {
                 }
                 GreenButton(title: "Save changes", isEnabled: !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                             && answer.isEditable()) {
+                    let check = ContentModeration.validate(text)
+                    guard check.isPermitted else {
+                        withAnimation(.qSpring) {
+                            moderationError = check.userMessage
+                        }
+                        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                        return
+                    }
                     store.editAnswer(answer.id, text: text)
                     dismiss()
                 }

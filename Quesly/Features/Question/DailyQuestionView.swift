@@ -14,6 +14,7 @@ struct DailyQuestionView: View {
     @State private var visibility: AnswerVisibility = .everyone
     @State private var revealed = 0
     @State private var shake = 0
+    @State private var moderationError: String? = nil
     @FocusState private var editorFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -215,6 +216,9 @@ struct DailyQuestionView: View {
                         .scrollContentBackground(.hidden)
                         .focused($editorFocused)
                         .onChange(of: text) { _, newValue in
+                            if moderationError != nil {
+                                withAnimation(.qSmooth) { moderationError = nil }
+                            }
                             if newValue.count > AppStore.maxAnswerLength {
                                 text = String(newValue.prefix(AppStore.maxAnswerLength))
                                 shake += 1
@@ -225,6 +229,24 @@ struct DailyQuestionView: View {
                 .frame(minHeight: 140, maxHeight: 180)
 
                 Rectangle().fill(Color.qLine).frame(height: 1)
+
+                if let moderationError {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.qFlame)
+                        Text(moderationError)
+                            .font(.ui(12.5))
+                            .foregroundStyle(Color.qFlame)
+                            .lineSpacing(2)
+                    }
+                    .padding(10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Color.qFlameSoft)
+                    )
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
 
                 HStack(spacing: 8) {
                     CharacterRing(progress: Double(text.count) / Double(AppStore.maxAnswerLength))
@@ -269,6 +291,17 @@ struct DailyQuestionView: View {
 
     private func submit() {
         guard canSubmit else { shake += 1; return }
+        
+        let check = ContentModeration.validate(text)
+        guard check.isPermitted else {
+            withAnimation(.qSpring) {
+                moderationError = check.userMessage
+                shake += 1
+            }
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            return
+        }
+
         editorFocused = false
         store.submitAnswer(text, visibility: visibility)
         onSubmitted()

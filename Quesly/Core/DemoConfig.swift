@@ -7,7 +7,7 @@ enum DemoConfig {
     enum Screen: String {
         case welcome, findFriends, notifyPrime, question, composer
         case feed, feedEnd, feedError, offline, tray, friends, otherProfile, share, reactions, story
-        case discover, notifications, profile, profileList, profileReposts, profileSaved, memory, streakFirst, streakRestart, menu, settings, editProfile, achievements, insights
+        case discover, notifications, journey, profile, profileList, profileReposts, profileSaved, memory, streakFirst, streakRestart, menu, settings, editProfile, achievements, insights
         case widgets
         /// Auto-playing walkthrough recorded to video by CI: question → answer → feed → react → story → tabs → settings.
         case tour
@@ -56,7 +56,7 @@ enum DemoConfig {
         switch screen {
         case .discover: return .discover
         case .notifications: return .feed
-        case .achievements, .insights: return .journey
+        case .journey, .achievements, .insights: return .journey
         case .profile, .profileList, .profileReposts, .profileSaved, .memory, .streakFirst, .streakRestart, .menu, .settings, .editProfile: return .profile
         default: return .feed
         }

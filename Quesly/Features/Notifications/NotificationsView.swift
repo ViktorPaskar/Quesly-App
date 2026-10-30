@@ -44,7 +44,7 @@ struct NotificationsView: View {
                 }
             }
         }
-        .background(Color.qBackground)
+        .pastelCanvas()
         .toolbar(.hidden, for: .navigationBar)
         .onDisappear { store.markNotificationsSeen() }
         .sheet(item: $reactionAnswer) { answer in

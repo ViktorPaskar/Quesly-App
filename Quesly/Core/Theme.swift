@@ -268,17 +268,17 @@ extension View {
             .background(
                 shape
                     .fill(fill)
-                    .shadow(color: Color.black.opacity(0.035), radius: shadowRadius, x: 0, y: 4)
+                    .shadow(color: Color.black.opacity(0.04), radius: shadowRadius, x: 0, y: 5)
             )
             .overlay(
                 shape
                     .strokeBorder(
                         LinearGradient(
-                            colors: [Color.white.opacity(0.85), Color.qLine.opacity(0.5)],
+                            colors: [Color.white.opacity(0.95), Color.qLine.opacity(0.6)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
-                        lineWidth: 1
+                        lineWidth: 1.2
                     )
             )
     }
@@ -291,19 +291,57 @@ extension View {
                 shape
                     .fill(.ultraThinMaterial)
                     .overlay(shape.fill(tint))
-                    .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 3)
+                    .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 4)
             )
             .overlay(
                 shape
                     .strokeBorder(
                         LinearGradient(
-                            colors: [Color.white.opacity(0.7), Color.qLine.opacity(0.35)],
+                            colors: [Color.white.opacity(0.85), Color.qLine.opacity(0.4)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
-                        lineWidth: 1
+                        lineWidth: 1.2
                     )
             )
+    }
+
+    /// Ambient soft pastel gradient mesh canvas for SaaS / EdTech dashboards.
+    func pastelCanvas() -> some View {
+        self.background(PastelCanvasBackground())
+    }
+}
+
+/// Ambient soft pastel gradient mesh background that elevates cards and creates glassmorphism.
+struct PastelCanvasBackground: View {
+    var body: some View {
+        ZStack {
+            Color.qBackground.ignoresSafeArea()
+
+            GeometryReader { geo in
+                // Top-left soft mint aura
+                Circle()
+                    .fill(Color.qPastelMint.opacity(0.60))
+                    .frame(width: geo.size.width * 0.95, height: geo.size.width * 0.95)
+                    .blur(radius: 75)
+                    .offset(x: -geo.size.width * 0.25, y: -geo.size.height * 0.08)
+
+                // Top-right soft warm peach aura
+                Circle()
+                    .fill(Color.qPastelPeach.opacity(0.55))
+                    .frame(width: geo.size.width * 0.85, height: geo.size.width * 0.85)
+                    .blur(radius: 70)
+                    .offset(x: geo.size.width * 0.40, y: geo.size.height * 0.06)
+
+                // Mid-bottom soft lavender aura
+                Circle()
+                    .fill(Color.qPastelLavender.opacity(0.50))
+                    .frame(width: geo.size.width * 0.9, height: geo.size.width * 0.9)
+                    .blur(radius: 80)
+                    .offset(x: -geo.size.width * 0.15, y: geo.size.height * 0.5)
+            }
+            .allowsHitTesting(false)
+        }
     }
 
     /// Fades a list item in, staggered by `index`. Skipped entirely under Reduce Motion.

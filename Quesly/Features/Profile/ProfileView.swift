@@ -55,7 +55,7 @@ struct ProfileView: View {
                     } header: {
                         UnderlineTabs(items: tabs, selection: $tab, title: \.title,
                                       indicator: 1, inactive: Color(hex: 0x999999), hairline: .qLine)
-                            .background(Color.qBackground)
+                            .background(.ultraThinMaterial)
                     }
                 }
                 .contentShape(Rectangle())
@@ -71,7 +71,7 @@ struct ProfileView: View {
                 }
             }
         }
-        .background(Color.qBackground)
+        .pastelCanvas()
         .safeAreaInset(edge: .top, spacing: 0) { topBar(user) }
         .toolbar(.hidden, for: .navigationBar)
         .confirmationDialog("Block @\(user?.username ?? "")?", isPresented: $confirmBlock, titleVisibility: .visible) {

@@ -56,13 +56,13 @@ struct JourneyView: View {
                         }
                     }
                     .padding(16)
-                    .bentoCard(radius: 20, fill: Color.white)
+                    .bentoCard(radius: 20, fill: Color.qPastelMint.opacity(0.85))
 
                     // Right Bento: Total Reflections
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             ZStack {
-                                Circle().fill(Color.qPastelSky)
+                                Circle().fill(Color.white)
                                     .frame(width: 32, height: 32)
                                 Icon(.chatCircleTextFill, size: 14)
                                     .foregroundStyle(Color(hex: 0x0284C7))
@@ -74,7 +74,7 @@ struct JourneyView: View {
                                 .foregroundStyle(Color(hex: 0x0284C7))
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 3)
-                                .background(Capsule().fill(Color.qPastelSky))
+                                .background(Capsule().fill(Color.white))
                         }
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -87,7 +87,7 @@ struct JourneyView: View {
                         }
                     }
                     .padding(16)
-                    .bentoCard(radius: 20, fill: Color.white)
+                    .bentoCard(radius: 20, fill: Color.qPastelSky.opacity(0.80))
                 }
 
                 // MARK: 3. "On This Day" Memory Flashback
@@ -100,7 +100,7 @@ struct JourneyView: View {
             .padding(.top, DS.Space.s)
             .padding(.bottom, 90) // comfortable clearance above floating bottom bar
         }
-        .background(Color.qBackground)
+        .pastelCanvas()
         .navigationTitle("Journey")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $openedMemory) { answer in
@@ -246,12 +246,12 @@ struct JourneyView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.qField)
+                        .fill(Color.white.opacity(0.85))
                 )
             }
         }
         .padding(18)
-        .bentoCard(radius: 22, fill: Color.white)
+        .bentoCard(radius: 22, fill: Color.qPastelPeach.opacity(0.75))
     }
 
     // MARK: - Milestones Section

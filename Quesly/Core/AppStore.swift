@@ -249,7 +249,12 @@ final class AppStore {
         persist()
     }
 
-    /// World: everyone's answers. Friends: your answer pinned on top, then people you follow.
+    // MARK: Daily 100 Anti-Doomscroll Architecture
+
+    /// The finite cap for World feed reflections each day. Friends feed is unlimited.
+    static let worldDailyLimit = 100
+
+    /// World: up to 100 answers, personal and stable per user and day. Friends: unlimited.
     func feed(_ scope: FeedScope) -> [Answer] {
         var others = todayAnswers.filter {
             !blockedIds.contains($0.authorId)
@@ -259,15 +264,32 @@ final class AppStore {
         }
         switch scope {
         case .friends:
+            // Unlimited: all reflections from followed friends
             others = others.filter { followingIds.contains($0.authorId) }
+            if let mine = todaysAnswer, mine.visibility != .onlyMe, !(mine.isHidden ?? false) {
+                return [mine] + others
+            }
+            return others
+
         case .world:
-            // Posting to World means agreeing to be seen; Friends-only and Private answers never appear there.
+            // World: public answers capped at the Daily 100 with deterministic stable seed
             others = others.filter { $0.visibility == .everyone }
+            return seededDaily100(from: others, seed: "\(me.id)-\(todayQuestion.id)")
         }
-        if scope == .friends, let mine = todaysAnswer, mine.visibility != .onlyMe, !(mine.isHidden ?? false) {
-            return [mine] + others
+    }
+
+    /// Personalised Daily 100 selection: deterministic shuffle per user and question,
+    /// so the feed is unique across users, fair to new authors, but rock-stable during the day.
+    private func seededDaily100(from pool: [Answer], seed: String) -> [Answer] {
+        guard pool.count > Self.worldDailyLimit else { return pool }
+        var result = pool
+        var hash = abs(seed.hashValue)
+        for i in stride(from: result.count - 1, through: 1, by: -1) {
+            hash = (hash &* 1664525 &+ 1013904223) & 0x7FFFFFFF
+            let j = hash % (i + 1)
+            result.swapAt(i, j)
         }
-        return others
+        return Array(result.prefix(Self.worldDailyLimit))
     }
 
     // MARK: Friends today (stories row)

@@ -293,10 +293,8 @@ struct FeedView: View {
                             }
                         }
                     } else if !others.isEmpty {
-                        CaughtUpFooter(count: others.count, scope: scope) {
-                            withAnimation(.qSmooth) { proxy.scrollTo("top", anchor: .top) }
-                        }
-                        .id("end")
+                        CaughtUpFooter(count: others.count, scope: scope)
+                            .id("end")
                     }
                 }
                 .padding(.bottom, DS.Space.s)
@@ -355,11 +353,10 @@ struct FeedView: View {
     }
 }
 
-/// The end of a finite feed — Quesly's answer to infinite scrolling.
+/// The end of a finite feed — Quesly's calm, anti-doomscroll closing.
 struct CaughtUpFooter: View {
     let count: Int
     let scope: FeedScope
-    var onBackToTop: () -> Void
 
     var body: some View {
         VStack(spacing: DS.Space.s) {
@@ -367,13 +364,31 @@ struct CaughtUpFooter: View {
                 .foregroundStyle(Color.qGreen)
                 .frame(width: 56, height: 56)
                 .background(Circle().fill(Color.qGreen.opacity(0.10)))
-            Text("You're all caught up")
-                .font(.display(22, .semibold))
-                .foregroundStyle(Color.qInk)
-            Text("You've read all \(count) \(scope == .friends ? "answers from friends" : "answers") for today.")
-                .font(.ui(15))
-                .foregroundStyle(Color.qGray)
-                .multilineTextAlignment(.center)
+
+            if scope == .world {
+                Text("You’ve explored today’s Daily 100")
+                    .font(.display(22, .semibold))
+                    .foregroundStyle(Color.qInk)
+                    .multilineTextAlignment(.center)
+
+                Text("Come back tomorrow for a new question, or catch up with your friends.")
+                    .font(.ui(15))
+                    .foregroundStyle(Color.qGray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, DS.Space.s)
+            } else {
+                Text("You're all caught up")
+                    .font(.display(22, .semibold))
+                    .foregroundStyle(Color.qInk)
+                    .multilineTextAlignment(.center)
+
+                Text("You've read all answers from your friends today.")
+                    .font(.ui(15))
+                    .foregroundStyle(Color.qGray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, DS.Space.s)
+            }
+
             TimelineView(.periodic(from: .now, by: 60)) { ctx in
                 Label {
                     Text("Next question in **\(AppStore.timeLeftString(now: ctx.date))**")
@@ -386,15 +401,11 @@ struct CaughtUpFooter: View {
                 .frame(height: 36)
                 .background(Capsule().fill(Color.qField))
             }
-            .padding(.top, DS.Space.xxs)
-            Button("Back to top", action: onBackToTop)
-                .font(.ui(15, .semibold))
-                .foregroundStyle(Color.qBrandText)
-                .frame(minHeight: DS.hitTarget)
+            .padding(.top, DS.Space.xs)
         }
         .padding(.horizontal, DS.Space.xxl)
         .padding(.top, DS.Space.xxl)
-        .padding(.bottom, DS.Space.xl)
+        .padding(.bottom, DS.Space.xxxl)
         .frame(maxWidth: .infinity)
     }
 }

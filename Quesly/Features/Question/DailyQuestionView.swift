@@ -182,7 +182,7 @@ struct DailyQuestionView: View {
             .offset(y: revealed > 0 || reduceMotion ? 0 : 12)
             .animation(.qSmooth, value: revealed)
 
-            AnsweredTodayProof(count: store.totalAnswersToday, friends: store.friendsAnsweredToday)
+            AnsweredTodayProof(count: store.answeredTodayCount, friends: store.friendsAnsweredToday)
                 .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

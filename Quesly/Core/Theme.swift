@@ -59,6 +59,7 @@ extension Color {
     // Brand (official palette: 053424, 08563B, D4FF00, FF8FC0, 9BD9B5, FF4F3D)
     /// #053424 — Brand dark obsidian pine green: deepest contrast, dark mode base, dark accents.
     static let qGreenDeep = Color(hex: 0x053424)
+    static let qObsidian = Color(hex: 0x053424)
     /// #08563B — Brand emerald green: primary buttons, active states, key brand markers.
     static let qGreen = Color(hex: 0x08563B)
     static let qGreenLight = Color(hex: 0x5BA21E)

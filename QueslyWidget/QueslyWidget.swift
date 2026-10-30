@@ -41,7 +41,11 @@ struct QuestionWidgetEntryView: View {
         content
             .containerBackground(for: .widget) {
                 if family == .systemSmall || family == .systemMedium {
-                    WidgetPalette.green
+                    LinearGradient(
+                        colors: [WidgetPalette.obsidian, WidgetPalette.green],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
                 } else {
                     Color.clear
                 }

@@ -272,8 +272,9 @@ final class AppStore {
             return others
 
         case .world:
-            // World: public answers capped at the Daily 100 with deterministic stable seed
-            others = others.filter { $0.visibility == .everyone }
+            // World: discovery of new reflections worldwide (excluding followed friends and own answer),
+            // capped at the Daily 100 with deterministic stable seed
+            others = others.filter { $0.visibility == .everyone && !followingIds.contains($0.authorId) && $0.authorId != me.id }
             return seededDaily100(from: others, seed: "\(me.id)-\(todayQuestion.id)")
         }
     }

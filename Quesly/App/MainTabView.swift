@@ -151,12 +151,12 @@ struct MainTabView: View {
                     ZStack {
                         if active {
                             Capsule()
-                                .fill(t == .journey ? Color.qFlame : Color.qGreenDeep)
+                                .fill(Color.qGreenDeep)
                                 .frame(width: 58, height: 42)
                                 .matchedGeometryEffect(id: "tabBubble", in: ns)
                         }
                         Icon(active ? t.activeIcon : t.icon, size: 22, weight: active ? .semibold : .regular)
-                            .foregroundStyle(active ? (t == .journey ? Color.white : Color.qLime) : Color.qInk2)
+                            .foregroundStyle(active ? Color.qLime : Color.qInk2)
                             .pop(on: active)
                     }
                     .frame(maxWidth: .infinity)

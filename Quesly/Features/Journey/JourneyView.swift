@@ -422,9 +422,10 @@ struct ReflectionRhythmCard: View {
         let id: String
         let title: String
         let hours: String
-        let icon: QIcon
+        let systemIcon: String
         let percentage: Int
         let isPeak: Bool
+        let colors: [Color]
     }
 
     private var slots: [Slot] {
@@ -451,10 +452,42 @@ struct ReflectionRhythmCard: View {
         let maxVal = max(mPct, aPct, ePct, nPct)
 
         return [
-            Slot(id: "morning", title: "Morning", hours: "06–12h", icon: .sunFill, percentage: mPct, isPeak: mPct == maxVal),
-            Slot(id: "afternoon", title: "Afternoon", hours: "12–18h", icon: .sparkleFill, percentage: aPct, isPeak: aPct == maxVal && aPct > mPct),
-            Slot(id: "evening", title: "Evening", hours: "18–23h", icon: .leafFill, percentage: ePct, isPeak: ePct == maxVal && ePct > mPct),
-            Slot(id: "night", title: "Night", hours: "23–06h", icon: .timer, percentage: nPct, isPeak: nPct == maxVal && nPct > mPct)
+            Slot(
+                id: "morning",
+                title: "Morning",
+                hours: "06–12h",
+                systemIcon: "sunrise.fill",
+                percentage: mPct,
+                isPeak: mPct == maxVal,
+                colors: [Color(hex: 0xF59E0B), Color(hex: 0xD97706)]
+            ),
+            Slot(
+                id: "afternoon",
+                title: "Afternoon",
+                hours: "12–18h",
+                systemIcon: "cloud.sun.fill",
+                percentage: aPct,
+                isPeak: aPct == maxVal && aPct > mPct,
+                colors: [Color.qGreen, Color.qGreenDeep]
+            ),
+            Slot(
+                id: "evening",
+                title: "Evening",
+                hours: "18–23h",
+                systemIcon: "sunset.fill",
+                percentage: ePct,
+                isPeak: ePct == maxVal && ePct > mPct,
+                colors: [Color.qPink, Color(hex: 0xE06C9F)]
+            ),
+            Slot(
+                id: "night",
+                title: "Night",
+                hours: "23–06h",
+                systemIcon: "moon.stars.fill",
+                percentage: nPct,
+                isPeak: nPct == maxVal && nPct > mPct,
+                colors: [Color(hex: 0x6366F1), Color.qObsidian]
+            )
         ]
     }
 
@@ -575,16 +608,20 @@ struct ReflectionRhythmCard: View {
 
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(
-                        slot.isPeak
-                            ? LinearGradient(colors: [Color.qGreen, Color.qGreenDeep], startPoint: .top, endPoint: .bottom)
-                            : LinearGradient(colors: [Color.qMint, Color.qMint.opacity(0.8)], startPoint: .top, endPoint: .bottom)
+                        LinearGradient(
+                            colors: slot.colors,
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .opacity(slot.isPeak ? 1.0 : 0.65)
                     )
                     .frame(width: 24, height: barHeight)
             }
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
-            Icon(slot.icon, size: 10)
-                .foregroundStyle(slot.isPeak ? Color.qGreen : Color.qGray)
+            Image(systemName: slot.systemIcon)
+                .font(.system(size: 11, weight: slot.isPeak ? .semibold : .regular))
+                .foregroundStyle(slot.isPeak ? slot.colors[0] : Color.qGray)
                 .padding(.top, 1)
         }
     }

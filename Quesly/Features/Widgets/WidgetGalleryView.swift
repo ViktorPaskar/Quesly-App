@@ -55,6 +55,27 @@ struct WidgetGalleryView: View {
         content()
             .padding(DS.Space.m)
             .frame(width: width, height: 161)
-            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(WidgetPalette.green))
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [WidgetPalette.obsidian, WidgetPalette.green],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    Circle()
+                        .fill(WidgetPalette.lime.opacity(0.06))
+                        .frame(width: 90, height: 90)
+                        .blur(radius: 20)
+                        .offset(x: width / 3, y: -30)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+                )
+            )
     }
 }

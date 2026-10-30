@@ -148,17 +148,7 @@ struct EditProfileView: View {
 
                 // Username Row
                 formRow(title: "Username") {
-                    HStack(spacing: 2) {
-                        Text("@")
-                            .font(.ui(15, .semibold))
-                            .foregroundStyle(Color.qGray)
-                        TextField("username", text: $draft.username)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .font(.ui(15))
-                            .foregroundStyle(Color.qInk)
-                            .multilineTextAlignment(.trailing)
-                    }
+                    handleField(placeholder: "username", text: $draft.username)
                 }
 
                 divider
@@ -176,19 +166,6 @@ struct EditProfileView: View {
                 // Location Row
                 formRow(title: "Location") {
                     TextField("Add location", text: Binding(get: { draft.location }, set: { draft.location = $0 }))
-                        .font(.ui(15))
-                        .foregroundStyle(Color.qInk)
-                        .multilineTextAlignment(.trailing)
-                }
-
-                divider
-
-                // Website Row
-                formRow(title: "Website") {
-                    TextField("Add link or URL", text: $draft.website)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
                         .font(.ui(15))
                         .foregroundStyle(Color.qInk)
                         .multilineTextAlignment(.trailing)
@@ -235,68 +212,28 @@ struct EditProfileView: View {
             VStack(spacing: 0) {
                 // Instagram
                 formRow(icon: .instagram, iconTint: Color(hex: 0xE1306C), title: "Instagram") {
-                    HStack(spacing: 2) {
-                        Text("@")
-                            .font(.ui(14, .semibold))
-                            .foregroundStyle(Color.qGray)
-                        TextField("instagram_handle", text: $draft.instagram)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .font(.ui(15))
-                            .foregroundStyle(Color.qInk)
-                            .multilineTextAlignment(.trailing)
-                    }
+                    handleField(placeholder: "instagram_handle", text: $draft.instagram)
                 }
 
                 divider
 
                 // TikTok
                 formRow(icon: .tiktok, iconTint: Color.qInk, title: "TikTok") {
-                    HStack(spacing: 2) {
-                        Text("@")
-                            .font(.ui(14, .semibold))
-                            .foregroundStyle(Color.qGray)
-                        TextField("tiktok_handle", text: $draft.tiktok)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .font(.ui(15))
-                            .foregroundStyle(Color.qInk)
-                            .multilineTextAlignment(.trailing)
-                    }
+                    handleField(placeholder: "tiktok_handle", text: $draft.tiktok)
                 }
 
                 divider
 
                 // Threads
                 formRow(icon: .threads, iconTint: Color.qInk, title: "Threads") {
-                    HStack(spacing: 2) {
-                        Text("@")
-                            .font(.ui(14, .semibold))
-                            .foregroundStyle(Color.qGray)
-                        TextField("threads_handle", text: $draft.threads)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .font(.ui(15))
-                            .foregroundStyle(Color.qInk)
-                            .multilineTextAlignment(.trailing)
-                    }
+                    handleField(placeholder: "threads_handle", text: $draft.threads)
                 }
 
                 divider
 
                 // Twitter / X
                 formRow(icon: .xTwitter, iconTint: Color.qInk, title: "X (Twitter)") {
-                    HStack(spacing: 2) {
-                        Text("@")
-                            .font(.ui(14, .semibold))
-                            .foregroundStyle(Color.qGray)
-                        TextField("twitter_handle", text: $draft.twitter)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .font(.ui(15))
-                            .foregroundStyle(Color.qInk)
-                            .multilineTextAlignment(.trailing)
-                    }
+                    handleField(placeholder: "twitter_handle", text: $draft.twitter)
                 }
             }
             .background(cardBackground)
@@ -368,6 +305,22 @@ struct EditProfileView: View {
         }
         .padding(.horizontal, DS.Space.m)
         .frame(minHeight: 52)
+    }
+
+    private func handleField(placeholder: String, text: Binding<String>) -> some View {
+        HStack(spacing: 2) {
+            Spacer(minLength: 8)
+            Text("@")
+                .font(.ui(15))
+                .foregroundStyle(Color.qGray)
+            TextField(placeholder, text: text)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .font(.ui(15))
+                .foregroundStyle(Color.qInk)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: true, vertical: false)
+        }
     }
 
     private func sectionHeader(_ text: String) -> some View {

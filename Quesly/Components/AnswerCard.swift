@@ -483,13 +483,6 @@ struct AnswerCard: View {
                     Icon(.smiley, size: 20)
                         .foregroundStyle(isTrayOpen ? Color.qInk : Color.qGray)
                 }
-
-                if answer.totalReactions > 0 {
-                    Text("\(answer.totalReactions)")
-                        .font(.ui(13.5, .medium))
-                        .foregroundStyle(answer.myReaction != nil ? Color.qInk : Color.qGray)
-                        .monospacedDigit()
-                }
             }
             .frame(height: 36)
             .contentShape(Rectangle())

@@ -22,8 +22,8 @@ struct PeeksStoriesBar: View {
         if scope == .friends {
             return store.friendStories.filter { $0.authorId != store.me.id }
         } else {
-            // World scope: community answers for today (excluding my own)
-            return store.todayAnswers.filter { $0.authorId != store.me.id }
+            // World scope: community answers for today (excluding followed friends & my own for pure discovery)
+            return store.todayAnswers.filter { $0.authorId != store.me.id && !store.followingIds.contains($0.authorId) }
         }
     }
 
@@ -71,11 +71,11 @@ struct PeeksStoriesBar: View {
                             if store.hasAnsweredToday {
                                 Circle().strokeBorder(
                                     LinearGradient(
-                                        colors: [Color.qFlame, Color.qPink, Color.qLime],
+                                        colors: [Color.qGreen, Color.qGreenDeep],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     ),
-                                    lineWidth: 2.2
+                                    style: StrokeStyle(lineWidth: 2.2, lineCap: .round, dash: [8, 3.5])
                                 )
                             } else {
                                 Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
@@ -142,11 +142,11 @@ private struct StoryBubble: View {
                         } else {
                             Circle().strokeBorder(
                                 LinearGradient(
-                                    colors: [Color.qFlame, Color.qPink, Color.qLime],
+                                    colors: [Color.qGreen, Color.qGreenDeep],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),
-                                lineWidth: 2.2
+                                style: StrokeStyle(lineWidth: 2.2, lineCap: .round, dash: [8, 3.5])
                             )
                         }
                     }

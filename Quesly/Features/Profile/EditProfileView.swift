@@ -40,6 +40,12 @@ struct EditProfileView: View {
                 // Public Profile Information (Clean Grouped Card)
                 profileCard
 
+                // Social Links
+                socialCard
+
+                // Private Details
+                privateInfoCard
+
                 // Account & Security Section
                 accountCard
 
@@ -122,82 +128,218 @@ struct EditProfileView: View {
         }
     }
 
-    // MARK: - Profile Information (Revolut / Threads Grouped Card)
+    // MARK: - Profile Information (Public Info)
 
     private var profileCard: some View {
-        VStack(spacing: 0) {
-            // Name Row
-            formRow(title: "Name") {
-                TextField("Your name", text: Binding(get: { draft.name ?? "" }, set: { draft.name = $0 }))
-                    .textContentType(.name)
-                    .font(.ui(15))
-                    .foregroundStyle(Color.qInk)
-                    .multilineTextAlignment(.trailing)
-            }
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
+            sectionHeader("PUBLIC INFORMATION")
 
-            divider
+            VStack(spacing: 0) {
+                // Name Row
+                formRow(title: "Name") {
+                    TextField("Your name", text: Binding(get: { draft.name ?? "" }, set: { draft.name = $0 }))
+                        .textContentType(.name)
+                        .font(.ui(15))
+                        .foregroundStyle(Color.qInk)
+                        .multilineTextAlignment(.trailing)
+                }
 
-            // Username Row
-            formRow(title: "Username") {
-                HStack(spacing: 2) {
-                    Text("@")
-                        .font(.ui(15, .semibold))
-                        .foregroundStyle(Color.qGray)
-                    TextField("username", text: $draft.username)
+                divider
+
+                // Username Row
+                formRow(title: "Username") {
+                    HStack(spacing: 2) {
+                        Text("@")
+                            .font(.ui(15, .semibold))
+                            .foregroundStyle(Color.qGray)
+                        TextField("username", text: $draft.username)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .font(.ui(15))
+                            .foregroundStyle(Color.qInk)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
+
+                divider
+
+                // Pronouns Row
+                formRow(title: "Pronouns") {
+                    TextField("she/her, they/them", text: $draft.pronouns)
+                        .font(.ui(15))
+                        .foregroundStyle(Color.qInk)
+                        .multilineTextAlignment(.trailing)
+                }
+
+                divider
+
+                // Location Row
+                formRow(title: "Location") {
+                    TextField("Add location", text: Binding(get: { draft.location }, set: { draft.location = $0 }))
+                        .font(.ui(15))
+                        .foregroundStyle(Color.qInk)
+                        .multilineTextAlignment(.trailing)
+                }
+
+                divider
+
+                // Website Row
+                formRow(title: "Website") {
+                    TextField("Add link or URL", text: $draft.website)
+                        .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .font(.ui(15))
                         .foregroundStyle(Color.qInk)
                         .multilineTextAlignment(.trailing)
                 }
-            }
 
-            divider
+                divider
 
-            // Location Row
-            formRow(title: "Location") {
-                TextField("Add location", text: Binding(get: { draft.location ?? "" }, set: { draft.location = $0 }))
-                    .font(.ui(15))
-                    .foregroundStyle(Color.qInk)
-                    .multilineTextAlignment(.trailing)
-            }
+                // Bio Row (Expanded clean area)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("About")
+                            .font(.ui(15, .medium))
+                            .foregroundStyle(Color.qInk)
+                        Spacer()
+                        Text("\(draft.bio.count)/\(AppUser.bioLimit)")
+                            .font(.ui(12))
+                            .foregroundStyle(draft.bio.count >= AppUser.bioLimit ? Color.qFlame : Color.qGray)
+                            .monospacedDigit()
+                    }
 
-            divider
-
-            // Bio Row (Expanded clean area)
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("About")
-                        .font(.ui(15, .medium))
+                    TextField("Write a short bio…", text: $draft.bio, axis: .vertical)
+                        .font(.ui(14))
                         .foregroundStyle(Color.qInk)
-                    Spacer()
-                    Text("\(draft.bio.count)/\(AppUser.bioLimit)")
-                        .font(.ui(12))
-                        .foregroundStyle(draft.bio.count >= AppUser.bioLimit ? Color.qFlame : Color.qGray)
-                        .monospacedDigit()
+                        .lineLimit(3...5)
+                        .lineSpacing(3)
+                        .onChange(of: draft.bio) { _, text in
+                            if text.count > AppUser.bioLimit {
+                                draft.bio = String(text.prefix(AppUser.bioLimit))
+                            }
+                        }
+                }
+                .padding(DS.Space.m)
+            }
+            .background(cardBackground)
+        }
+    }
+
+    // MARK: - Social Media Handles
+
+    private var socialCard: some View {
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
+            sectionHeader("SOCIAL PROFILES")
+
+            VStack(spacing: 0) {
+                // Instagram
+                formRow(title: "Instagram") {
+                    HStack(spacing: 2) {
+                        Text("@")
+                            .font(.ui(14, .semibold))
+                            .foregroundStyle(Color.qGray)
+                        TextField("instagram_handle", text: $draft.instagram)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .font(.ui(15))
+                            .foregroundStyle(Color.qInk)
+                            .multilineTextAlignment(.trailing)
+                    }
                 }
 
-                TextField("Write a short bio…", text: $draft.bio, axis: .vertical)
-                    .font(.ui(14))
-                    .foregroundStyle(Color.qInk)
-                    .lineLimit(3...5)
-                    .lineSpacing(3)
-                    .onChange(of: draft.bio) { _, text in
-                        if text.count > AppUser.bioLimit {
-                            draft.bio = String(text.prefix(AppUser.bioLimit))
-                        }
+                divider
+
+                // TikTok
+                formRow(title: "TikTok") {
+                    HStack(spacing: 2) {
+                        Text("@")
+                            .font(.ui(14, .semibold))
+                            .foregroundStyle(Color.qGray)
+                        TextField("tiktok_handle", text: $draft.tiktok)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .font(.ui(15))
+                            .foregroundStyle(Color.qInk)
+                            .multilineTextAlignment(.trailing)
                     }
+                }
+
+                divider
+
+                // Threads
+                formRow(title: "Threads") {
+                    HStack(spacing: 2) {
+                        Text("@")
+                            .font(.ui(14, .semibold))
+                            .foregroundStyle(Color.qGray)
+                        TextField("threads_handle", text: $draft.threads)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .font(.ui(15))
+                            .foregroundStyle(Color.qInk)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
+
+                divider
+
+                // Twitter / X
+                formRow(title: "X (Twitter)") {
+                    HStack(spacing: 2) {
+                        Text("@")
+                            .font(.ui(14, .semibold))
+                            .foregroundStyle(Color.qGray)
+                        TextField("twitter_handle", text: $draft.twitter)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .font(.ui(15))
+                            .foregroundStyle(Color.qInk)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
             }
-            .padding(DS.Space.m)
+            .background(cardBackground)
         }
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.qBlock)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(Color.qLine, lineWidth: 1)
-                )
-        )
+    }
+
+    // MARK: - Private Information
+
+    private var privateInfoCard: some View {
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
+            HStack {
+                sectionHeader("PRIVATE INFORMATION")
+                Spacer()
+                HStack(spacing: 4) {
+                    Icon(.lockSimpleFill, size: 10)
+                    Text("Only visible to you")
+                }
+                .font(.ui(11))
+                .foregroundStyle(Color.qGray)
+                .padding(.trailing, 4)
+            }
+
+            VStack(spacing: 0) {
+                // Birthday
+                formRow(title: "Birthday") {
+                    TextField("Month Day, Year", text: $draft.birthday)
+                        .font(.ui(15))
+                        .foregroundStyle(Color.qInk)
+                        .multilineTextAlignment(.trailing)
+                }
+
+                divider
+
+                // Gender
+                formRow(title: "Gender") {
+                    TextField("Female, Male, Non-binary…", text: $draft.gender)
+                        .font(.ui(15))
+                        .foregroundStyle(Color.qInk)
+                        .multilineTextAlignment(.trailing)
+                }
+            }
+            .background(cardBackground)
+        }
     }
 
     private func formRow<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -211,6 +353,23 @@ struct EditProfileView: View {
         }
         .padding(.horizontal, DS.Space.m)
         .frame(minHeight: 52)
+    }
+
+    private func sectionHeader(_ text: String) -> some View {
+        Text(text)
+            .font(.ui(11, .semibold))
+            .tracking(0.6)
+            .foregroundStyle(Color.qGray)
+            .padding(.leading, 4)
+    }
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(Color.qBlock)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(Color.qLine, lineWidth: 1)
+            )
     }
 
     private var divider: some View {

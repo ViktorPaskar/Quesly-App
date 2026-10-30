@@ -10,11 +10,20 @@ struct SettingsView: View {
     @State private var confirmSignOut = false
     @State private var confirmDelete = false
 
+    // App Preferences & Social state
+    @State private var syncContacts = true
+    @State private var streakAlerts = true
+    @State private var showInDiscover = true
+    @State private var showCopiedAlert = false
+
     var body: some View {
         ScrollView {
             VStack(spacing: DS.Space.xl) {
                 // Profile Header Card
                 profileCard
+
+                // Connected Accounts & Social Sharing
+                socialSection
 
                 // Preferences & Rituals
                 preferencesSection
@@ -41,6 +50,18 @@ struct SettingsView: View {
                             isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete account", role: .destructive) { store.deleteAccount() }
         }
+        .overlay(alignment: .top) {
+            if showCopiedAlert {
+                Text("Profile link copied to clipboard")
+                    .font(.ui(13, .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(Capsule().fill(Color.qInk))
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.top, 10)
+            }
+        }
     }
 
     // MARK: - Profile Header Card
@@ -65,23 +86,99 @@ struct SettingsView: View {
                     .foregroundStyle(Color.qGray4)
             }
             .padding(DS.Space.m)
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.qBlock)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(Color.qLine, lineWidth: 1)
-                    )
-            )
+            .background(cardBackground)
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Connected Accounts & Social Sharing
+
+    private var socialSection: some View {
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
+            sectionHeader("CONNECTED ACCOUNTS & SOCIAL")
+
+            VStack(spacing: 0) {
+                // Instagram
+                settingsRow(
+                    icon: .cameraFill,
+                    tint: Color(hex: 0xE1306C),
+                    title: "Instagram",
+                    detail: "@\(store.me.instagram.isEmpty ? "lilly.laurent" : store.me.instagram)"
+                )
+
+                divider
+
+                // TikTok
+                settingsRow(
+                    icon: .sparkleFill,
+                    tint: Color.qInk,
+                    title: "TikTok",
+                    detail: "@\(store.me.tiktok.isEmpty ? "lilly" : store.me.tiktok)"
+                )
+
+                divider
+
+                // Threads
+                settingsRow(
+                    icon: .chatCircleTextFill,
+                    tint: Color.qInk,
+                    title: "Threads",
+                    detail: "@\(store.me.threads.isEmpty ? "lilly.laurent" : store.me.threads)"
+                )
+
+                divider
+
+                // Contacts Sync Toggle
+                HStack(spacing: DS.Space.s) {
+                    iconSquare(.userPlusFill, tint: Color.qGreen)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Find contacts")
+                            .font(.ui(15, .medium))
+                            .foregroundStyle(Color.qInk)
+                        Text("Discover friends from address book")
+                            .font(.ui(11.5))
+                            .foregroundStyle(Color.qGray)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $syncContacts)
+                        .labelsHidden()
+                        .tint(Color.qGreen)
+                }
+                .padding(DS.Space.m)
+
+                divider
+
+                // Share profile link
+                Button {
+                    UIPasteboard.general.string = "https://quesly.me/@\(store.me.username)"
+                    withAnimation(.qSpring) { showCopiedAlert = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        withAnimation { showCopiedAlert = false }
+                    }
+                } label: {
+                    HStack(spacing: DS.Space.s) {
+                        iconSquare(.link, tint: Color.qGreen)
+                        Text("Share profile link")
+                            .font(.ui(15, .medium))
+                            .foregroundStyle(Color.qInk)
+                        Spacer()
+                        Text("Copy link")
+                            .font(.ui(13, .semibold))
+                            .foregroundStyle(Color.qBrandText)
+                    }
+                    .padding(DS.Space.m)
+                }
+                .buttonStyle(.plain)
+            }
+            .background(cardBackground)
+        }
     }
 
     // MARK: - Preferences & Rituals
 
     private var preferencesSection: some View {
         VStack(alignment: .leading, spacing: DS.Space.xs) {
-            sectionHeader("DAILY RITUAL")
+            sectionHeader("DAILY RITUAL & ALERTS")
 
             VStack(spacing: 0) {
                 // Daily reminder toggle
@@ -121,6 +218,26 @@ struct SettingsView: View {
 
                 divider
 
+                // Streak alerts toggle
+                HStack(spacing: DS.Space.s) {
+                    iconSquare(.fireFill, tint: Color.qFlame)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Streak protection")
+                            .font(.ui(15, .medium))
+                            .foregroundStyle(Color.qInk)
+                        Text("Alert when streak is about to expire")
+                            .font(.ui(11.5))
+                            .foregroundStyle(Color.qGray)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $streakAlerts)
+                        .labelsHidden()
+                        .tint(Color.qGreen)
+                }
+                .padding(DS.Space.m)
+
+                divider
+
                 // Invite friends
                 NavigationLink(value: Route.invite) {
                     settingsRow(icon: .paperPlaneTiltFill, tint: Color.qGreen, title: "Invite friends")
@@ -154,6 +271,26 @@ struct SettingsView: View {
                         get: { store.isPrivateAccount },
                         set: { store.isPrivateAccount = $0 }
                     ))
+                        .labelsHidden()
+                        .tint(Color.qGreen)
+                }
+                .padding(DS.Space.m)
+
+                divider
+
+                // Discover feed visibility
+                HStack(spacing: DS.Space.s) {
+                    iconSquare(.eye, tint: Color.qGreen)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Show in Discover")
+                            .font(.ui(15, .medium))
+                            .foregroundStyle(Color.qInk)
+                        Text("Recommend your answers to public")
+                            .font(.ui(11.5))
+                            .foregroundStyle(Color.qGray)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $showInDiscover)
                         .labelsHidden()
                         .tint(Color.qGreen)
                 }

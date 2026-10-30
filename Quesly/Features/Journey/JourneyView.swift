@@ -10,6 +10,7 @@ struct JourneyView: View {
     @Environment(AppStore.self) private var store
     @State private var openedMemory: Answer?
     @State private var showInsightsSheet = DemoConfig.opensInsights
+    @State private var showNewUserCapsule = false
 
     var body: some View {
         ScrollView {
@@ -50,74 +51,146 @@ struct JourneyView: View {
         }
     }
 
-    // MARK: - On This Day Flashback Card
+    // MARK: - On This Day / Time Capsule Card (Editorial & Empty-State aware)
 
     private var onThisDayCard: some View {
         VStack(alignment: .leading, spacing: 14) {
+            // Header with interactive state preview
             HStack(spacing: 8) {
-                IconChip(icon: .sparkleFill, tint: .qGreen, fill: Color.qMint.opacity(0.35))
+                IconChip(
+                    icon: showNewUserCapsule ? .hourglassMediumFill : .sparkleFill,
+                    tint: showNewUserCapsule ? Color(hex: 0xF59E0B) : .qGreen,
+                    fill: (showNewUserCapsule ? Color(hex: 0xF59E0B) : Color.qGreen).opacity(0.12)
+                )
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("ON THIS DAY")
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(showNewUserCapsule ? "TIME CAPSULE" : "ON THIS DAY")
                         .font(.ui(11, .semibold))
                         .tracking(0.6)
-                        .foregroundStyle(Color.qBrandText)
-                    Text("1 year ago")
-                        .font(.ui(14, .semibold))
+                        .foregroundStyle(showNewUserCapsule ? Color(hex: 0xD97706) : Color.qBrandText)
+                    Text(showNewUserCapsule ? "Brewing memories" : "1 year ago today")
+                        .font(.ui(13.5, .semibold))
                         .foregroundStyle(Color.qInk)
                 }
 
-                Spacer()
+                Spacer(minLength: 0)
 
-                Text(Date.now.formatted(.dateTime.month(.abbreviated).day()))
-                    .font(.ui(12, .medium))
-                    .foregroundStyle(Color.qGray)
+                // Toggle between Flashback and New User Capsule
+                Button {
+                    withAnimation(.qSpring) { showNewUserCapsule.toggle() }
+                } label: {
+                    HStack(spacing: 4) {
+                        Icon(showNewUserCapsule ? .sparkleFill : .hourglassMediumFill, size: 10)
+                        Text(showNewUserCapsule ? "View flashback" : "New user view")
+                            .font(.ui(11, .semibold))
+                    }
+                    .foregroundStyle(Color.qGreen)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.qField))
-            }
-
-            // Memory Quote
-            let sampleAnswer = store.myAnswers.first ?? MockData.myHistory().first ?? Answer(
-                id: "sample",
-                questionId: "q-kindness",
-                questionText: "What is a small kindness you never forgot?",
-                authorId: store.me.id,
-                text: "A stranger held the train door for me when I was running late with heavy bags.",
-                createdAt: .now
-            )
-            VStack(alignment: .leading, spacing: 8) {
-                Text(sampleAnswer.questionText)
-                    .font(.ui(13, .semibold))
-                    .foregroundStyle(Color.qInk2)
-                    .lineLimit(2)
-
-                Text("“\(sampleAnswer.text)”")
-                    .font(.display(16, .regular))
-                    .foregroundStyle(Color.qInk)
-                    .lineSpacing(3)
-                    .lineLimit(4)
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.qField)
-            )
-
-            // Button to open memory details
-            Button {
-                openedMemory = sampleAnswer
-            } label: {
-                HStack(spacing: 6) {
-                    Text("Read full reflection")
-                        .font(.ui(13, .semibold))
-                    Icon(.arrowRightBold, size: 11)
+                    .background(Capsule().fill(Color.qMint.opacity(0.35)))
                 }
-                .foregroundStyle(Color.qGreen)
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            .padding(.top, 2)
+
+            if showNewUserCapsule {
+                // MARK: State A: New user state (no 1-month or 1-year history yet)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Your personal time capsule is in the making")
+                        .font(.ui(14, .semibold))
+                        .foregroundStyle(Color.qInk)
+
+                    Text("Every reflection you write today is quietly sealed and will resurface here next month and next year.")
+                        .font(.ui(12.5))
+                        .foregroundStyle(Color.qGray)
+                        .lineSpacing(2.5)
+
+                    // Capsule Progress Indicator
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text("9 of 30 reflections saved")
+                                .font(.ui(11.5, .semibold))
+                                .foregroundStyle(Color.qBrandText)
+                            Spacer()
+                            Text("21 days left")
+                                .font(.ui(11.5))
+                                .foregroundStyle(Color.qGray)
+                        }
+
+                        GeometryReader { g in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Color.qLine)
+                                Capsule()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.qLime, Color.qGreen],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(width: max(8, g.size.width * 0.30))
+                            }
+                        }
+                        .frame(height: 6)
+                    }
+                    .padding(.top, 4)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.qField)
+                )
+            } else {
+                // MARK: State B: Populated 1-year memory flashback
+                let sampleAnswer = store.myAnswers.first ?? MockData.myHistory().first ?? Answer(
+                    id: "sample",
+                    questionId: "q-kindness",
+                    questionText: "What is a small kindness you never forgot?",
+                    authorId: store.me.id,
+                    text: "A stranger held the train door for me when I was running late with heavy bags.",
+                    createdAt: .now
+                )
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(sampleAnswer.questionText)
+                        .font(.ui(13.5, .semibold))
+                        .foregroundStyle(Color.qInk)
+                        .lineLimit(2)
+
+                    HStack(alignment: .top, spacing: 10) {
+                        Rectangle()
+                            .fill(Color.qGreen)
+                            .frame(width: 3)
+                            .clipShape(Capsule())
+
+                        Text("“\(sampleAnswer.text)”")
+                            .font(.display(15, .regular))
+                            .foregroundStyle(Color.qInk)
+                            .lineSpacing(3)
+                            .lineLimit(3)
+                    }
+
+                    // Button to open memory details
+                    Button {
+                        openedMemory = sampleAnswer
+                    } label: {
+                        HStack(spacing: 5) {
+                            Text("Read full reflection")
+                                .font(.ui(12.5, .semibold))
+                            Icon(.arrowRightBold, size: 10)
+                        }
+                        .foregroundStyle(Color.qGreen)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 2)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.qField)
+                )
+            }
         }
         .padding(18)
         .background(

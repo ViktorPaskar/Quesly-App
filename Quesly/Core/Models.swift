@@ -20,6 +20,16 @@ struct AppUser: Identifiable, Codable, Hashable {
     var following: Int = 0
     var streak: Int = 0
 
+    // Extended Profile & Social details
+    var website: String = ""
+    var pronouns: String = ""
+    var instagram: String = ""
+    var tiktok: String = ""
+    var threads: String = ""
+    var twitter: String = ""
+    var birthday: String = "Oct 14, 1998"
+    var gender: String = "Female"
+
     var displayName: String {
         guard let name, !name.trimmingCharacters(in: .whitespaces).isEmpty else { return username }
         return name

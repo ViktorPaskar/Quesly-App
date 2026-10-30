@@ -280,114 +280,149 @@ struct ReflectionInsightsView: View {
     }
 }
 
-// MARK: - 24-Hour Circular Clock Component (Pure, Elegant, Minimal)
+// MARK: - 24-Hour Circular Clock Component (Clear, Colorful, Intuitive)
 
 private struct Circular24hClockView: View {
     @Binding var selectedPeriod: ReflectionInsightsView.DayPeriod?
 
-    private let dots: [(hour: Double, isPeak: Bool)] = [
-        (7.5, false),
-        (8.75, true),
-        (9.2, true),
-        (12.5, false),
-        (13.6, false),
-        (18.2, false),
-        (20.5, false),
-        (23.2, false)
+    private struct DotData {
+        let hour: Double
+        let isPeak: Bool
+        let color: Color
+    }
+
+    private let dots: [DotData] = [
+        DotData(hour: 7.5, isPeak: false, color: Color(hex: 0xF59E0B)),
+        DotData(hour: 8.75, isPeak: true, color: Color.qGreen),
+        DotData(hour: 9.2, isPeak: true, color: Color(hex: 0x10B981)),
+        DotData(hour: 12.5, isPeak: false, color: Color(hex: 0x0EA5E9)),
+        DotData(hour: 13.6, isPeak: false, color: Color(hex: 0x0EA5E9)),
+        DotData(hour: 18.2, isPeak: false, color: Color(hex: 0xF43F5E)),
+        DotData(hour: 20.5, isPeak: false, color: Color(hex: 0xF43F5E)),
+        DotData(hour: 23.2, isPeak: false, color: Color(hex: 0x6366F1))
     ]
 
     var body: some View {
         GeometryReader { geo in
             let size = min(geo.size.width, geo.size.height)
             let center = CGPoint(x: size / 2, y: size / 2)
-            let radius = (size - 36) / 2
+            let radius = (size - 44) / 2
 
             ZStack {
-                // Background Track
+                // Diurnal Daylight Quadrants (4 soft distinct colored tracks)
+                // Night quadrant: 23:00 to 06:00 (-105° to 0°)
                 Circle()
-                    .stroke(Color.qLine.opacity(0.85), lineWidth: 1.5)
+                    .trim(from: 23.0 / 24.0, to: 1.0)
+                    .stroke(Color(hex: 0x6366F1).opacity(0.18), style: StrokeStyle(lineWidth: 6, lineCap: .round))
                     .frame(width: radius * 2, height: radius * 2)
+                    .rotationEffect(.degrees(-90))
 
-                // 24 Hour Ticks
-                ForEach(0..<24) { h in
-                    let angle = Angle.degrees(Double(h) * 15.0 - 90.0)
-                    let isMajor = h % 6 == 0
-                    let tickLen: CGFloat = isMajor ? 7 : 3.5
+                Circle()
+                    .trim(from: 0.0, to: 6.0 / 24.0)
+                    .stroke(Color(hex: 0x6366F1).opacity(0.18), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: radius * 2, height: radius * 2)
+                    .rotationEffect(.degrees(-90))
 
-                    Rectangle()
-                        .fill(isMajor ? Color.qInk2 : Color.qGray4)
-                        .frame(width: isMajor ? 1.5 : 1, height: tickLen)
-                        .offset(y: -radius + tickLen / 2)
-                        .rotationEffect(angle)
-                }
+                // Morning quadrant: 06:00 to 12:00 (0° to 90°)
+                Circle()
+                    .trim(from: 6.0 / 24.0, to: 12.0 / 24.0)
+                    .stroke(Color(hex: 0xF59E0B).opacity(0.20), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: radius * 2, height: radius * 2)
+                    .rotationEffect(.degrees(-90))
 
-                // 4 Time Labels
-                Text("00:00")
-                    .font(.ui(9, .semibold))
-                    .foregroundStyle(Color.qGray)
-                    .offset(y: -radius - 11)
+                // Afternoon quadrant: 12:00 to 18:00 (90° to 180°)
+                Circle()
+                    .trim(from: 12.0 / 24.0, to: 18.0 / 24.0)
+                    .stroke(Color(hex: 0x0EA5E9).opacity(0.20), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: radius * 2, height: radius * 2)
+                    .rotationEffect(.degrees(-90))
 
-                Text("06:00")
-                    .font(.ui(9, .semibold))
-                    .foregroundStyle(Color.qGray)
-                    .offset(x: radius + 15)
+                // Evening quadrant: 18:00 to 23:00 (180° to 255°)
+                Circle()
+                    .trim(from: 18.0 / 24.0, to: 23.0 / 24.0)
+                    .stroke(Color(hex: 0xF43F5E).opacity(0.20), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: radius * 2, height: radius * 2)
+                    .rotationEffect(.degrees(-90))
 
-                Text("12:00")
-                    .font(.ui(9, .semibold))
-                    .foregroundStyle(Color.qGray)
-                    .offset(y: radius + 11)
-
-                Text("18:00")
-                    .font(.ui(9, .semibold))
-                    .foregroundStyle(Color.qGray)
-                    .offset(x: -radius - 15)
-
-                // Peak Arc: 06:00 to 12:00 (90° to 180° clockwise)
+                // Peak Active Arc: 06:00 to 12:00 Glowing Sunrise Gradient
                 Circle()
                     .trim(from: 0.25, to: 0.50)
                     .stroke(
-                        LinearGradient(colors: [Color.qLime, Color.qGreen], startPoint: .top, endPoint: .bottom),
-                        style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                        LinearGradient(
+                            colors: [Color(hex: 0xF59E0B), Color.qLime, Color.qGreen],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        style: StrokeStyle(lineWidth: 7.5, lineCap: .round)
                     )
                     .frame(width: radius * 2, height: radius * 2)
                     .rotationEffect(.degrees(-90))
 
-                // Reflection Points
+                // Clear Human-Friendly Cardinal Labels
+                Text("12 AM")
+                    .font(.ui(11.5, .bold))
+                    .foregroundStyle(Color(hex: 0x6366F1))
+                    .offset(y: -radius - 13)
+
+                Text("6 AM")
+                    .font(.ui(11.5, .bold))
+                    .foregroundStyle(Color(hex: 0xD97706))
+                    .offset(x: radius + 20)
+
+                Text("12 PM")
+                    .font(.ui(11.5, .bold))
+                    .foregroundStyle(Color(hex: 0x0284C7))
+                    .offset(y: radius + 13)
+
+                Text("6 PM")
+                    .font(.ui(11.5, .bold))
+                    .foregroundStyle(Color(hex: 0xE11D48))
+                    .offset(x: -radius - 20)
+
+                // Reflection Points with Diurnal Colors
                 ForEach(Array(dots.enumerated()), id: \.offset) { _, dot in
                     let angle = Angle.degrees(dot.hour / 24.0 * 360.0 - 90.0)
 
                     Circle()
-                        .fill(dot.isPeak ? Color.qGreen : Color.qMint)
-                        .frame(width: dot.isPeak ? 11 : 7, height: dot.isPeak ? 11 : 7)
-                        .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+                        .fill(dot.color)
+                        .frame(width: dot.isPeak ? 12 : 8, height: dot.isPeak ? 12 : 8)
+                        .overlay(Circle().stroke(Color.white, lineWidth: 1.8))
+                        .shadow(color: dot.color.opacity(0.4), radius: 3)
                         .offset(x: radius * cos(angle.radians), y: radius * sin(angle.radians))
                 }
 
-                // Clean Center Hub
-                VStack(spacing: 2) {
-                    Text("PEAK")
-                        .font(.ui(8.5, .bold))
-                        .tracking(1.0)
+                // Generous, Clear Center Focal Hub
+                VStack(spacing: 3) {
+                    Text("PEAK HOUR")
+                        .font(.ui(9, .bold))
+                        .tracking(1.2)
                         .foregroundStyle(Color.qBrandText)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(Color.qMint.opacity(0.35)))
 
-                    Text("8:45")
-                        .font(.ui(26, .bold))
-                        .foregroundStyle(Color.qInk)
-                        .monospacedDigit()
-
-                    Text("AM")
-                        .font(.ui(11, .semibold))
-                        .foregroundStyle(Color.qGray)
+                    HStack(alignment: .firstTextBaseline, spacing: 3) {
+                        Text("8:45")
+                            .font(.display(30, .bold))
+                            .foregroundStyle(Color.qInk)
+                            .monospacedDigit()
+                        Text("AM")
+                            .font(.ui(13, .bold))
+                            .foregroundStyle(Color.qBrandText)
+                    }
                 }
-                .frame(width: 96, height: 96)
+                .frame(width: 104, height: 104)
                 .background(
                     Circle()
-                        .fill(Color.qBackground)
-                        .shadow(color: Color.black.opacity(0.04), radius: 6)
+                        .fill(Color.white)
+                        .shadow(color: Color.black.opacity(0.06), radius: 10, y: 3)
                 )
             }
             .frame(width: size, height: size)
             .position(x: center.x, y: center.y)
+        }
+    }
+}
         }
     }
 }

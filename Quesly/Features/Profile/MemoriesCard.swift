@@ -79,15 +79,6 @@ struct MemoriesCard: View {
                 .foregroundStyle(Color.qInk)
                 .lineLimit(1)
 
-            if answeredCountInMonth > 0 {
-                Text("\(answeredCountInMonth) answered")
-                    .font(.ui(12, .semibold))
-                    .foregroundStyle(Color.qBrandText)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(Color.qMint.opacity(0.35)))
-            }
-
             Spacer(minLength: 0)
             monthButton(.caretLeftBold, label: "Previous month", enabled: monthOffset > -Self.monthsBack) { monthOffset -= 1 }
             monthButton(.caretRightBold, label: "Next month", enabled: monthOffset < 0) { monthOffset += 1 }

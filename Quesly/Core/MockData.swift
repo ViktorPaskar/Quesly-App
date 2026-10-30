@@ -19,7 +19,15 @@ enum MockData {
         badge: .gold,
         followers: 255,
         following: 487,
-        streak: 3
+        streak: 3,
+        website: "quesly.me/lilly",
+        pronouns: "she/her",
+        instagram: "lilly.laurent",
+        tiktok: "lillylaurent",
+        threads: "lilly.laurent",
+        twitter: "lillylaurent",
+        birthday: "Oct 14, 1998",
+        gender: "Female"
     )
 
     static let users: [AppUser] = [

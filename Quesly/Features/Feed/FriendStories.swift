@@ -175,6 +175,7 @@ struct StoryViewer: View {
     @State private var index: Int
     @State private var progress: Double = 0
     @State private var dragY: CGFloat = 0
+    @State private var showShareSheet = false
 
     private static let duration: Double = 6
 
@@ -197,13 +198,6 @@ struct StoryViewer: View {
                     endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
-
-                // Ambient Quesly watermark
-                QueslyMark(color: Color.white.opacity(0.04))
-                    .frame(width: 340)
-                    .offset(x: 110, y: -40)
-                    .blur(radius: 1)
-                    .accessibilityHidden(true)
 
                 // Soft ambient lime glow
                 Circle()
@@ -228,6 +222,9 @@ struct StoryViewer: View {
             .onTapGesture { location in
                 if location.x < geo.size.width * 0.3 { previous() } else { next() }
             }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareStorySheet(answer: answer).presentationDetents([.large])
         }
         .offset(y: max(0, dragY))
         .simultaneousGesture(
@@ -264,24 +261,11 @@ struct StoryViewer: View {
     private var header: some View {
         HStack(spacing: DS.Space.s) {
             Avatar(user: author, size: 38)
-                .overlay(Circle().stroke(Color.qLime, lineWidth: 1.8))
+                .overlay(Circle().stroke(Color.white.opacity(0.8), lineWidth: 1.5))
             VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(author?.username ?? "")
-                        .font(.ui(15, .semibold))
-                        .foregroundStyle(.white)
-                    // Peeks badge
-                    HStack(spacing: 4) {
-                        Circle().fill(Color.qLime).frame(width: 5, height: 5)
-                        Text("PEEK")
-                            .font(.ui(10, .semibold))
-                            .tracking(0.8)
-                            .foregroundStyle(Color.qLime)
-                    }
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 2)
-                    .background(Capsule().fill(Color.white.opacity(0.12)))
-                }
+                Text(author?.username ?? "")
+                    .font(.ui(15, .semibold))
+                    .foregroundStyle(.white)
                 Text(RelativeTime.short(answer.createdAt))
                     .font(.ui(12))
                     .foregroundStyle(.white.opacity(0.72))
@@ -298,97 +282,141 @@ struct StoryViewer: View {
         .accessibilityElement(children: .contain)
     }
 
-    /// Dimensional glassmorphic card framing the answer
+    /// Pure, authentic Answer Card matching the Feed card design
     private var storyAnswerCard: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            // Clean Question header (Sentence case, subtle frosted pill)
+        VStack(alignment: .leading, spacing: 14) {
+            // Feed Question Header
             HStack(spacing: 8) {
                 QueslyMark(color: .qGreen, cutout: .qLime)
-                    .frame(width: 14)
-                    .frame(width: 22, height: 22)
+                    .frame(width: 13)
+                    .frame(width: 20, height: 20)
                     .background(Circle().fill(Color.qLime))
 
-                Text(answer.questionText)
-                    .font(.ui(13.5, .semibold))
-                    .foregroundStyle(Color.white.opacity(0.95))
-                    .lineLimit(2)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Capsule().fill(Color.white.opacity(0.12)))
+                Text("TODAY'S QUESTION")
+                    .font(.ui(11, .semibold))
+                    .tracking(0.6)
+                    .foregroundStyle(Color.qBrandText)
 
-            // The Answer Text: elegant display typography with relaxed line spacing
+                Spacer(minLength: 0)
+
+                HStack(spacing: 4) {
+                    Icon(.sparkleFill, size: 10)
+                        .foregroundStyle(Color.qGreen)
+                    Text("Daily reflection")
+                        .font(.ui(11, .medium))
+                        .foregroundStyle(Color.qGray)
+                }
+            }
+
+            // Question Headline
+            Text(answer.questionText)
+                .font(.ui(15, .semibold))
+                .foregroundStyle(Color.qInk)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Rectangle()
+                .fill(Color.qLine)
+                .frame(height: 1)
+
+            // The Answer Text: deep ink, generous and expressive display font
             Text(answer.text)
                 .font(.display(24, .regular))
-                .foregroundStyle(Color.white)
-                .lineSpacing(5)
+                .foregroundStyle(Color.qInk)
+                .lineSpacing(4.5)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.vertical, 2)
+                .padding(.vertical, 4)
 
-            // Minimalist metadata
-            HStack {
-                HStack(spacing: 4) {
-                    Icon(.sparkleFill, size: 11)
-                        .foregroundStyle(Color.qLime)
-                    Text("Daily reflection")
-                        .font(.ui(12, .medium))
-                        .foregroundStyle(Color.white.opacity(0.70))
-                }
-                Spacer()
+            // Card Footer: Author identity & relative timestamp
+            HStack(spacing: 8) {
+                Avatar(user: author, size: 24)
+                Text(author?.displayName ?? author?.username ?? "")
+                    .font(.ui(13, .semibold))
+                    .foregroundStyle(Color.qInk)
+
+                Spacer(minLength: 0)
+
                 Text(RelativeTime.short(answer.createdAt))
-                    .font(.ui(12))
-                    .foregroundStyle(Color.white.opacity(0.55))
+                    .font(.ui(11.5))
+                    .foregroundStyle(Color.qGray)
             }
-            .padding(.top, 4)
+            .padding(.top, 2)
         }
-        .padding(24)
+        .padding(22)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(Color.white.opacity(0.09))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
-                )
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.white)
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(Color.qLine, lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.18), radius: 24, y: 10)
         .id(answer.id)
         .transition(.opacity)
         .accessibilityElement(children: .combine)
     }
 
-    /// Sleek floating frosted reaction dock
+    /// Symmetrical reaction slider dock with large center reaction & share button
     private var reactionDock: some View {
-        HStack(spacing: 0) {
-            ForEach(ReactionKind.allCases) { kind in
-                let isOn = answer.myReaction == kind
-                Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.65)) {
-                        store.react(kind, on: answer.id)
-                    }
-                } label: {
-                    ZStack {
-                        if isOn {
-                            Circle()
-                                .fill(Color.white.opacity(0.24))
-                                .frame(width: 44, height: 44)
-                                .overlay(Circle().stroke(Color.qLime, lineWidth: 1.5))
+        HStack(spacing: 8) {
+            // Symmetrical Share Button on the left
+            Button {
+                showShareSheet = true
+            } label: {
+                Circle()
+                    .fill(Color.white.opacity(0.18))
+                    .frame(width: 42, height: 42)
+                    .overlay(
+                        Icon(.shareForward, size: 16)
+                            .foregroundStyle(Color.white)
+                    )
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Share to other apps")
+
+            // Symmetrical Slider Reactions (Left: Small/Medium, Center: Large Hero, Right: Medium/Small)
+            let reactions = ReactionKind.allCases
+            // reactions are: same, aww, like, deep, cool, hugs
+            HStack(spacing: 6) {
+                ForEach(Array(reactions.enumerated()), id: \.element) { index, kind in
+                    let isHero = (kind == .like) || (answer.myReaction == kind)
+                    let distance = abs(index - 2) // distance from center (index 2 = like)
+                    let scale: CGFloat = isHero ? 1.25 : (distance == 1 ? 0.95 : 0.82)
+                    let stickerSize: CGFloat = isHero ? 38 : (distance == 1 ? 30 : 25)
+                    let isSelected = answer.myReaction == kind
+
+                    Button {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
+                            store.react(kind, on: answer.id)
                         }
-                        ReactionSticker(kind: kind, size: isOn ? 36 : 30)
+                    } label: {
+                        ZStack {
+                            if isSelected || isHero {
+                                Circle()
+                                    .fill(isSelected ? Color.qLime.opacity(0.3) : Color.white.opacity(0.16))
+                                    .frame(width: 44, height: 44)
+                                    .overlay(
+                                        Circle().stroke(isSelected ? Color.qLime : Color.white.opacity(0.2), lineWidth: 1.5)
+                                    )
+                            }
+                            ReactionSticker(kind: kind, size: stickerSize)
+                        }
+                        .frame(width: 44, height: 48)
+                        .scaleEffect(scale)
                     }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .scaleEffect(isOn ? 1.15 : 1.0)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(kind.label)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(kind.label)
-                .accessibilityAddTraits(isOn ? .isSelected : [])
             }
         }
-        .padding(.horizontal, 6)
+        .padding(.horizontal, 10)
         .padding(.vertical, 4)
         .background(
             Capsule()
-                .fill(Color.black.opacity(0.35))
+                .fill(Color.black.opacity(0.38))
                 .overlay(Capsule().stroke(Color.white.opacity(0.16), lineWidth: 1))
         )
         .sensoryFeedback(.selection, trigger: answer.myReaction)

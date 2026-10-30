@@ -506,8 +506,25 @@ struct StreakCard: View {
         }
         .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.white)
+            ZStack(alignment: .topTrailing) {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color.white)
+
+                // Ambient blurred warm flame glow in the top-right corner
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.qFlame.opacity(0.32), Color.qFlame.opacity(0.12), Color.clear],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 75
+                        )
+                    )
+                    .frame(width: 150, height: 150)
+                    .blur(radius: 20)
+                    .offset(x: 30, y: -30)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)

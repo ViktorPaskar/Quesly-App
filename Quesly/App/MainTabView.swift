@@ -47,6 +47,10 @@ struct MainTabView: View {
     @State private var demoShare = DemoConfig.opensShareSheet
     @State private var demoReactions = DemoConfig.opensReactionsSheet
 
+    private var isDetailActive: Bool {
+        !(paths[tab]?.isEmpty ?? true)
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             ZStack {
@@ -56,7 +60,10 @@ struct MainTabView: View {
                 stack(.profile) { ProfileView(userId: store.me.id, isTabRoot: true, onNavigateToJourney: { select(.journey) }) }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                tabBar
+                if !isDetailActive {
+                    tabBar
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
         }
         .ignoresSafeArea(.keyboard)
@@ -172,9 +179,9 @@ struct MainTabView: View {
             Capsule()
                 .strokeBorder(Color.qLine, lineWidth: 1)
         )
-        .padding(.horizontal, 28)
-        .padding(.top, 4)
-        .padding(.bottom, 4)
+        .padding(.horizontal, DS.Space.screen)
+        .padding(.top, 2)
+        .padding(.bottom, -8)
         .animation(.qSpring, value: tab)
         .sensoryFeedback(.selection, trigger: tab)
     }

@@ -36,14 +36,32 @@ struct FindFriendsView: View {
                     if query.isEmpty {
                         InviteCard(username: store.me.username)
                             .padding(.horizontal, DS.Space.screen)
-                            .padding(.bottom, 10)
-                        SectionLabel("Suggested for you").padding(.horizontal, DS.Space.screen)
-                    }
-                    ForEach(Array(shown.enumerated()), id: \.element.id) { index, user in
-                        PersonRow(user: user)
+                            .padding(.bottom, 12)
+                        SectionLabel("Suggested for you")
                             .padding(.horizontal, DS.Space.screen)
-                            .staggeredAppear(index)
+                            .padding(.bottom, 6)
                     }
+
+                    VStack(spacing: 0) {
+                        ForEach(Array(shown.enumerated()), id: \.element.id) { index, user in
+                            if index > 0 {
+                                Rectangle().fill(Color.qLine.opacity(0.65)).frame(height: 0.5)
+                            }
+                            PersonRow(user: user)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 14)
+                                .staggeredAppear(index)
+                        }
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                            .fill(Color.qBlock)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                            .strokeBorder(Color.qLine.opacity(0.65), lineWidth: 0.5)
+                    )
+                    .padding(.horizontal, DS.Space.screen)
                 }
                 .padding(.bottom, 16)
             }
@@ -74,27 +92,27 @@ struct NotificationPrimingView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, DS.Space.screen)
                     .padding(.top, 20)
-                Spacer()
+                Spacer(minLength: 12)
 
                 NotificationHeroArt()
 
-                Text("Never miss\ntoday's question")
-                    .font(.display(30, .medium))
+                Text("Never miss a question —\nor a friend's answer")
+                    .font(.display(28, .medium))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Color.qInk)
-                    .padding(.top, 28)
-                Text("We'll send one gentle reminder a day, when the new question drops. No spam, promise.")
-                    .font(.ui(16))
+                    .padding(.top, 20)
+                Text("Get notified when the daily question drops at 9:00 AM, and the moment your friends share their honest thoughts.")
+                    .font(.ui(15))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Color.qGray)
-                    .padding(.horizontal, 36)
-                    .padding(.top, 12)
+                    .padding(.horizontal, 28)
+                    .padding(.top, 8)
 
                 NotificationPreview()
                     .padding(.horizontal, DS.Space.screen)
-                    .padding(.top, 32)
+                    .padding(.top, 24)
 
-                Spacer()
+                Spacer(minLength: 16)
                 VStack(spacing: 8) {
                     LimeButton(title: "Turn on notifications") {
                         withAnimation(.qSmooth) { store.finishNotificationPriming(enable: true) }
@@ -120,10 +138,10 @@ private struct NotificationHeroArt: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 12) {
             ZStack(alignment: .topTrailing) {
                 // Central branded squircle tile
-                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(
                         LinearGradient(
                             colors: [Color.qGreen, Color.qGreenDeep],
@@ -131,12 +149,12 @@ private struct NotificationHeroArt: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 88, height: 88)
+                    .frame(width: 80, height: 80)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
                             .strokeBorder(
                                 LinearGradient(
-                                    colors: [Color.white.opacity(0.32), Color.white.opacity(0.08)],
+                                    colors: [Color.white.opacity(0.35), Color.white.opacity(0.08)],
                                     startPoint: .top,
                                     endPoint: .bottom
                                 ),
@@ -145,31 +163,31 @@ private struct NotificationHeroArt: View {
                     )
 
                 // Pure bell
-                Icon(.bellRingingFill, size: 40)
+                Icon(.bellRingingFill, size: 36)
                     .foregroundStyle(.white)
-                    .frame(width: 88, height: 88)
+                    .frame(width: 80, height: 80)
                     .scaleEffect(pulsed && !reduceMotion ? 1.05 : 1.0)
 
-                // Quesly mini-coin anchored to top-right
+                // Quesly mini-coin anchored to top-right (base 11.svg: lime bubble with dark green eyes)
                 ZStack {
                     Circle().fill(Color.qLime)
                         .frame(width: 26, height: 26)
-                    QueslyMark(color: .qGreen, cutout: .qLime)
+                    QueslyMark(color: .qLime, cutout: .qGreenDeep)
                         .frame(width: 14)
                 }
                 .overlay(Circle().strokeBorder(Color.white, lineWidth: 2))
                 .offset(x: 6, y: -6)
             }
 
-            // Clean floating time pill
+            // Clean floating time & friend alert badge
             HStack(spacing: 6) {
                 Circle().fill(Color.qLime).frame(width: 6, height: 6)
-                Text("Daily at 9:00 AM")
+                Text("Daily drop at 9:00 AM · Friend alerts")
                     .font(.ui(12, .semibold))
                     .foregroundStyle(Color.qInk)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            .padding(.vertical, 5)
             .background(Capsule().fill(Color.qBlock))
             .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
         }
@@ -182,39 +200,99 @@ private struct NotificationHeroArt: View {
     }
 }
 
-/// Fake lock-screen notification shown on the priming screen.
+/// Realistic lock-screen notification preview showing both key notifications:
+/// 1) Daily Question drop, and 2) Friend answering the question!
 private struct NotificationPreview: View {
     @State private var shown = false
 
     var body: some View {
-        HStack(spacing: 12) {
-            QueslyMark(color: .qLime, cutout: .qGreen)
-                .frame(width: 26)
-                .frame(width: 38, height: 38)
-                .background(RoundedRectangle(cornerRadius: DS.Radius.s, style: .continuous).fill(Color.qGreen))
-            VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Text("QUESLY").font(.ui(12, .semibold)).foregroundStyle(Color.qGray)
-                    Spacer()
-                    Text("now").font(.ui(12)).foregroundStyle(Color.qGray)
+        VStack(spacing: 8) {
+            // Notification 1: Daily Question Drop
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.qLime)
+                        .frame(width: 38, height: 38)
+                    QueslyMark(color: .qLime, cutout: .qGreenDeep)
+                        .frame(width: 22)
                 }
-                Text("Today's question is here ✨").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
-                Text("What tiny moment made your week better?").font(.ui(14)).foregroundStyle(Color.qInk2)
-                    .lineLimit(1)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text("QUESLY").font(.ui(11, .bold)).foregroundStyle(Color.qGray)
+                        Spacer()
+                        Text("9:00 AM").font(.ui(11)).foregroundStyle(Color.qGray)
+                    }
+                    Text("Today's question is here ✨")
+                        .font(.ui(14, .semibold))
+                        .foregroundStyle(Color.qInk)
+                    Text("What meal feels like home to you?")
+                        .font(.ui(13))
+                        .foregroundStyle(Color.qInk2)
+                        .lineLimit(1)
+                }
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                    .fill(Color.qBlock)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                            .stroke(Color.qLine, lineWidth: 1)
+                    )
+                    .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 3)
+            )
+
+            // Notification 2: Friend Answered
+            HStack(spacing: 12) {
+                ZStack(alignment: .bottomTrailing) {
+                    Circle()
+                        .fill(Color.qSage.opacity(0.4))
+                        .frame(width: 38, height: 38)
+                        .overlay(
+                            Text("CB")
+                                .font(.ui(13, .bold))
+                                .foregroundStyle(Color.qGreenDeep)
+                        )
+                    Circle()
+                        .fill(Color.qLime)
+                        .frame(width: 14, height: 14)
+                        .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text("QUESLY").font(.ui(11, .bold)).foregroundStyle(Color.qGray)
+                        Spacer()
+                        Text("now").font(.ui(11)).foregroundStyle(Color.qGray)
+                    }
+                    Text("camille_b answered ✨")
+                        .font(.ui(14, .semibold))
+                        .foregroundStyle(Color.qInk)
+                    Text("“My mom's crêpes on Sunday mornings 🥞”")
+                        .font(.ui(13))
+                        .foregroundStyle(Color.qInk2)
+                        .lineLimit(1)
+                }
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                    .fill(Color.qBlock)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                            .stroke(Color.qLine, lineWidth: 1)
+                    )
+                    .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 3)
+            )
+        }
+        .offset(y: shown ? 0 : -16)
+        .opacity(shown ? 1 : 0)
+        .onAppear {
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.3)) {
+                shown = true
             }
         }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                .fill(Color.qBlock)
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                        .stroke(Color.qLine, lineWidth: 1)
-                )
-        )
-        .offset(y: shown ? 0 : -20)
-        .opacity(shown ? 1 : 0)
-        .onAppear { withAnimation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.4)) { shown = true } }
         .accessibilityHidden(true)
     }
 }
@@ -347,7 +425,8 @@ struct InviteCard: View {
             }
             .buttonStyle(.pressable)
         }
-        .padding(12)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
                 .fill(Color.qBlock)

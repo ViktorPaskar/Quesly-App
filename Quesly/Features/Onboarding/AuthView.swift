@@ -37,7 +37,7 @@ struct AuthView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    QueslyLogo(height: 24, markColor: .qGreen, textColor: .qInk, background: .qLime)
+                    QueslyLogo(height: 26, markColor: .qLime, textColor: .qInk, background: .qGreenDeep)
                         .padding(.top, 8)
 
                     VStack(alignment: .leading, spacing: 8) {

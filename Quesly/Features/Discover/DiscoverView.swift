@@ -28,17 +28,17 @@ struct DiscoverView: View {
                                 }
                                 PersonRow(user: user)
                                     .padding(.vertical, 8)
+                                    .padding(.horizontal, 14)
                                     .staggeredAppear(index)
                             }
                         }
-                        .padding(.horizontal, DS.Space.screen)
                         .background(
-                            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .fill(Color.white)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                        .stroke(Color.qLine, lineWidth: 1)
-                                )
+                            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                                .fill(Color.qBlock)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                                .strokeBorder(Color.qLine.opacity(0.65), lineWidth: 0.5)
                         )
 
                         if !store.followingUsers.isEmpty {
@@ -87,16 +87,16 @@ struct DiscoverView: View {
                                 }
                                 PersonRow(user: user)
                                     .padding(.vertical, 8)
+                                    .padding(.horizontal, 14)
                             }
                         }
-                        .padding(.horizontal, DS.Space.screen)
                         .background(
-                            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .fill(Color.white)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                        .stroke(Color.qLine, lineWidth: 1)
-                                )
+                            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                                .fill(Color.qBlock)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
+                                .strokeBorder(Color.qLine.opacity(0.65), lineWidth: 0.5)
                         )
                         .padding(.top, 12)
                     }

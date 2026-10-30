@@ -27,6 +27,14 @@ struct DailyQuestionView: View {
         ZStack {
             Color.qBackground.ignoresSafeArea()
 
+            // Subtle ambient lime glow at top to remove bleak void feel
+            Circle()
+                .fill(Color.qLime.opacity(0.12))
+                .frame(width: 340, height: 340)
+                .blur(radius: 70)
+                .offset(y: -160)
+                .allowsHitTesting(false)
+
             VStack(spacing: 0) {
                 header
 
@@ -110,13 +118,8 @@ struct DailyQuestionView: View {
 
     private var header: some View {
         ZStack {
-            Image("brand-wordmark")
-                .renderingMode(.template)
-                .resizable()
-                .aspectRatio(1900.0 / 602.0, contentMode: .fit)
-                .frame(height: 24)
-                .foregroundStyle(Color.qInk)
-                .accessibilityLabel("Quesly")
+            // Master base logo on screens before Feed (11.svg: lime badge with dark green eyes + black text)
+            QueslyLogo(height: 26, markColor: .qLime, textColor: .qInk, background: .qGreenDeep)
 
             HStack {
                 Spacer()
@@ -139,17 +142,30 @@ struct DailyQuestionView: View {
         .padding(.top, 16)
     }
 
-    /// Editorial, left-aligned question: the day's progress line, then the question with tactile sticker.
+    /// Editorial, left-aligned question: tactile sticker, rich display typography, and friend proof.
     private var questionText: some View {
         let highlighted = question.keyWords
 
-        return VStack(alignment: .leading, spacing: DS.Space.m) {
-            WrappingHStack(spacing: 8, lineSpacing: 6, centered: false) {
+        return VStack(alignment: .leading, spacing: 14) {
+            // Branded question pill kicker
+            HStack(spacing: 6) {
+                Icon(.sparkleFill, size: 12)
+                    .foregroundStyle(Color.qGreen)
+                Text("QUESTION OF THE DAY")
+                    .font(.ui(11.5, .bold))
+                    .tracking(0.8)
+                    .foregroundStyle(Color.qBrandText)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(Color.qLime.opacity(0.35)))
+
+            WrappingHStack(spacing: 8, lineSpacing: 8, centered: false) {
                 ForEach(Array(words.enumerated()), id: \.offset) { _, word in
                     let clean = word.uppercased().filter(\.isLetter)
                     let isHot = highlighted.contains(clean)
                     Text(word)
-                        .font(.display(30, .regular))
+                        .font(.display(32, .regular))
                         .foregroundStyle(isHot ? Color.qGreen : Color.qInk)
                         .padding(.horizontal, isHot ? 8 : 0)
                         .padding(.vertical, isHot ? 2 : 0)
@@ -165,24 +181,34 @@ struct DailyQuestionView: View {
             .opacity(revealed > 0 || reduceMotion ? 1 : 0)
             .offset(y: revealed > 0 || reduceMotion ? 0 : 12)
             .animation(.qSmooth, value: revealed)
+
+            AnsweredTodayProof(count: store.totalAnswersToday, friends: store.friendsAnsweredToday)
+                .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, DS.Space.xl)
         .transition(.asymmetric(insertion: .opacity, removal: .scale(scale: 0.95).combined(with: .opacity)))
     }
 
-    /// Writing happens inside a focused, tactile journal card.
+    /// Writing happens inside an elevated, tactile journal card.
     private var composer: some View {
         let highlighted = question.keyWords
 
         return VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 6) {
-                    Circle().fill(Color.qGreen).frame(width: 7, height: 7)
+                    Circle().fill(Color.qLime).frame(width: 8, height: 8)
                     Text("TODAY'S QUESTION")
-                        .font(.ui(11, .semibold))
+                        .font(.ui(11.5, .bold))
                         .tracking(0.8)
                         .foregroundStyle(Color.qBrandText)
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Icon(.clock, size: 12, weight: .semibold)
+                        Text("\(AppStore.timeLeftString()) left")
+                            .font(.ui(12, .semibold))
+                    }
+                    .foregroundStyle(Color.qGray)
                 }
 
                 WrappingHStack(spacing: 6, lineSpacing: 4, centered: false) {
@@ -268,7 +294,7 @@ struct DailyQuestionView: View {
                         HStack(spacing: 4) {
                             Icon(.checkBold, size: 12)
                             Text("Draft saved")
-                                .font(.ui(12))
+                                .font(.ui(12, .semibold))
                         }
                         .foregroundStyle(Color.qBrandText)
                         .transition(.opacity)
@@ -279,11 +305,12 @@ struct DailyQuestionView: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color.qBlock)
+                    .fill(Color.white)
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(Color.qLine, lineWidth: 1)
+                            .stroke(Color.qLine, lineWidth: 1.2)
                     )
+                    .shadow(color: Color.black.opacity(0.05), radius: 16, x: 0, y: 6)
             )
         }
         .padding(.horizontal, DS.Space.xl)
@@ -379,24 +406,34 @@ private struct LockedFriendsPreview: View {
 
     private func card(_ answer: Answer, user: AppUser?) -> some View {
         HStack(alignment: .top, spacing: DS.Space.s) {
-            Avatar(user: user, size: 36)
-            VStack(alignment: .leading, spacing: 8) {
-                Text(user?.username ?? "")
-                    .font(.ui(14, .semibold))
-                    .foregroundStyle(Color.qInk)
-                Capsule().fill(Color.qLine).frame(height: 10)
-                Capsule().fill(Color.qLine).frame(width: 140, height: 10)
+            Avatar(user: user, size: 38)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text(user?.username ?? "friend")
+                        .font(.ui(14, .semibold))
+                        .foregroundStyle(Color.qInk)
+                    Spacer()
+                    Text("Answered")
+                        .font(.ui(11, .medium))
+                        .foregroundStyle(Color.qGray)
+                }
+                HStack(spacing: 6) {
+                    Capsule().fill(Color.qLine).frame(width: 80, height: 8)
+                    Capsule().fill(Color.qLine.opacity(0.6)).frame(width: 60, height: 8)
+                }
+                Capsule().fill(Color.qLine.opacity(0.8)).frame(width: 140, height: 8)
             }
         }
-        .padding(DS.Space.m)
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                .fill(Color.qBlock)
+                .fill(Color.white)
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous)
-                        .stroke(Color.qLine, lineWidth: 1)
+                        .stroke(Color.qLine, lineWidth: 1.2)
                 )
+                .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
         )
     }
 
@@ -404,9 +441,10 @@ private struct LockedFriendsPreview: View {
         IconLabel("Answer to unlock", icon: .lockSimpleFill, size: DS.Icon.caption)
             .font(.ui(13, .semibold))
             .foregroundStyle(.white)
-            .padding(.horizontal, 14)
-            .frame(height: 32)
+            .padding(.horizontal, 16)
+            .frame(height: 34)
             .background(Capsule().fill(Color.qGreen))
+            .shadow(color: Color.qGreen.opacity(0.25), radius: 8, x: 0, y: 3)
     }
 }
 

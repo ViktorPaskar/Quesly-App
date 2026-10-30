@@ -183,10 +183,10 @@ struct WelcomeView: View {
                     ZStack {
                         // Daily at 9 AM Prompt pill
                         HStack(spacing: 7) {
-                            QueslyMark(color: .qGreen, cutout: .qLime)
+                            QueslyMark(color: .qLime, cutout: .qGreenDeep)
                                 .frame(width: 14)
                                 .frame(width: 22, height: 22)
-                                .background(Circle().fill(Color.qLime))
+                                .background(Circle().fill(Color.qGreenDeep.opacity(0.12)))
                             Text("Daily at 9 AM")
                                 .font(.ui(12, .semibold))
                                 .foregroundStyle(Color.qInk)

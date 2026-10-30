@@ -71,7 +71,7 @@ struct PeeksStoriesBar: View {
                             if store.hasAnsweredToday {
                                 Circle().strokeBorder(
                                     LinearGradient(
-                                        colors: [Color.qGreen, Color.qLime],
+                                        colors: [Color.qFlame, Color.qPink, Color.qLime],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     ),
@@ -142,7 +142,7 @@ private struct StoryBubble: View {
                         } else {
                             Circle().strokeBorder(
                                 LinearGradient(
-                                    colors: [Color.qGreen, Color.qLime],
+                                    colors: [Color.qFlame, Color.qPink, Color.qLime],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),

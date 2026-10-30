@@ -285,10 +285,10 @@ struct PersonRow: View {
                                     Text("Friend")
                                 }
                                 .font(.ui(10.5, .semibold))
-                                .foregroundStyle(Color.qGreen)
+                                .foregroundStyle(Color.qGreenDeep)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Capsule().fill(Color.qMint.opacity(0.35)))
+                                .background(Capsule().fill(Color.qSage.opacity(0.40)))
                             }
                         }
                         Text(user.bio.isEmpty ? "\(user.followers) followers" : user.bio)

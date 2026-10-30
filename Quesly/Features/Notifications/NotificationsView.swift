@@ -91,11 +91,11 @@ struct NotificationsView: View {
                     } label: {
                         Text(item.rawValue)
                             .font(.ui(13, .semibold))
-                            .foregroundStyle(isSelected ? Color.qLime : Color.qInk2)
+                            .foregroundStyle(isSelected ? Color.white : Color.qInk2)
                             .padding(.horizontal, 14)
                             .frame(height: 32)
                             .background(
-                                Capsule().fill(isSelected ? Color.qGreen : Color.qField)
+                                Capsule().fill(isSelected ? Color.qGreenDeep : Color.qField)
                             )
                     }
                     .buttonStyle(.pressable)

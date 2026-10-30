@@ -270,10 +270,10 @@ struct AnswerCard: View {
                     Text("Friend")
                 }
                 .font(.ui(10.5, .semibold))
-                .foregroundStyle(Color.qGreen)
+                .foregroundStyle(Color.qGreenDeep)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Capsule().fill(Color.qMint.opacity(0.35)))
+                .background(Capsule().fill(Color.qSage.opacity(0.40)))
             }
 
             if (answer.isHidden ?? false) {
@@ -455,7 +455,7 @@ struct AnswerCard: View {
                 withAnimation(.qSpring) { store.toggleBookmark(answer.id) }
             } glyph: {
                 Icon(answer.isBookmarked ? .bookmarkSimpleFill : .bookmarkSimple, size: 20)
-                    .foregroundStyle(answer.isBookmarked ? Color.qGreen : Color.qGray)
+                    .foregroundStyle(answer.isBookmarked ? Color.qPink : Color.qGray)
             }
             .pop(on: answer.isBookmarked)
             .sensoryFeedback(.selection, trigger: answer.isBookmarked)

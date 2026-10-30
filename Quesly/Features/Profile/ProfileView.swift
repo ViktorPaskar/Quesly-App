@@ -417,11 +417,11 @@ struct ProfileHeader: View {
                             Text("Friends")
                         }
                         .font(.ui(14, .semibold))
-                        .foregroundStyle(Color.qGreen)
+                        .foregroundStyle(Color.qGreenDeep)
                         .frame(maxWidth: .infinity)
                         .frame(height: 40)
-                        .background(Capsule().fill(Color.qMint.opacity(0.35)))
-                        .overlay(Capsule().stroke(Color.qGreen.opacity(0.25), lineWidth: 1))
+                        .background(Capsule().fill(Color.qSage.opacity(0.35)))
+                        .overlay(Capsule().stroke(Color.qSage.opacity(0.80), lineWidth: 1))
                     } else if following {
                         pill("Following", style: .gray)
                     } else {

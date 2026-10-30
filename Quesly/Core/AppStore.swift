@@ -417,6 +417,19 @@ final class AppStore {
 
     // MARK: Social
 
+    private let mutualFriendIds: Set<String> = ["u1", "u2", "u3", "u4", "u5", "u7", "u8", "u9", "u10", "u12", "u15", "u18"]
+
+    /// A friend is a mutual connection (you follow each other).
+    func isFriend(_ userId: String) -> Bool {
+        followingIds.contains(userId) && mutualFriendIds.contains(userId)
+    }
+
+    var friendsCount: Int { friendUsers.count }
+
+    var friendUsers: [AppUser] {
+        followingUsers.filter { isFriend($0.id) }
+    }
+
     func isFollowing(_ userId: String) -> Bool { followingIds.contains(userId) }
 
     func toggleFollow(_ userId: String) {

@@ -337,18 +337,31 @@ struct ProfileHeader: View {
 
     // MARK: Stats
 
-    /// Four equal columns on the content width, big number over a small label:
-    /// answers · followers · following · streak. Each column starts on the same grid line.
-    /// At accessibility text sizes the four columns become a 2 × 2 grid so labels never truncate.
+    /// Four equal columns with hairline dividers: Answers · Friends · Followers · Following.
     private var stats: some View {
-        let columns = Array(repeating: GridItem(.flexible(), spacing: 0, alignment: .leading),
-                            count: typeSize.isAccessibilitySize ? 2 : 4)
-        return LazyVGrid(columns: columns, alignment: .leading, spacing: DS.Space.s) {
+        HStack(spacing: 0) {
             stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil, action: isMe ? onAnswers : nil)
+
+            statDivider
+
+            stat(isMe ? store.friendsCount : 12, "Friends", route: isMe ? .friends : nil)
+
+            statDivider
+
             stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)
+
+            statDivider
+
             stat(followingCount, "Following", route: isMe ? .following : nil)
-            streakStat
         }
+        .padding(.vertical, 2)
+    }
+
+    private var statDivider: some View {
+        Rectangle()
+            .fill(Color.qLine.opacity(0.85))
+            .frame(width: 1, height: 26)
+            .padding(.horizontal, 4)
     }
 
     private func number(_ value: Int, color: Color = .qInk) -> some View {
@@ -360,41 +373,17 @@ struct ProfileHeader: View {
     }
 
     private func label(_ text: String) -> some View {
-        Text(text).font(.ui(13)).foregroundStyle(Color.qGray)
-    }
-
-    /// Last column; highlighted with the flame icon + orange number so it reads as the interactive ritual stat.
-    @ViewBuilder
-    private var streakStat: some View {
-        let content = VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: DS.Space.xxs) {
-                Icon(.fireFill, size: 16).foregroundStyle(Color.qFlame)
-                number(streak, color: .qFlame)
-            }
-            label("Day streak")
-        }
-        .lineLimit(1)
-        .frame(maxWidth: .infinity, minHeight: DS.hitTarget, alignment: .leading)
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(streak) day streak")
-        if isMe {
-            Button(action: onStreak) { content }
-                .buttonStyle(.pressable)
-                .accessibilityHint("Opens your calendar")
-        } else {
-            content
-        }
+        Text(text).font(.ui(12.5, .medium)).foregroundStyle(Color.qGray)
     }
 
     @ViewBuilder
     private func stat(_ value: Int, _ title: String, route: Route?, action: (() -> Void)? = nil) -> some View {
-        let content = VStack(alignment: .leading, spacing: 2) {
+        let content = VStack(alignment: .center, spacing: 2) {
             number(value)
             label(title)
         }
         .lineLimit(1)
-        .frame(maxWidth: .infinity, minHeight: DS.hitTarget, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: DS.hitTarget, alignment: .center)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         if let route {
@@ -416,9 +405,25 @@ struct ProfileHeader: View {
                 ShareLink(item: Invite.text(for: store.me.username)) { pill("Share profile") }
                     .buttonStyle(.pressable)
             } else if let user {
+                let isFriend = store.isFriend(user.id)
                 let following = store.isFollowing(user.id)
                 Button { store.toggleFollow(user.id) } label: {
-                    pill(following ? "Following" : "Follow", style: following ? .gray : .green)
+                    if isFriend {
+                        HStack(spacing: 5) {
+                            Icon(.checkBold, size: 11)
+                            Text("Friends")
+                        }
+                        .font(.ui(14, .semibold))
+                        .foregroundStyle(Color.qGreen)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 40)
+                        .background(Capsule().fill(Color.qMint.opacity(0.35)))
+                        .overlay(Capsule().stroke(Color.qGreen.opacity(0.25), lineWidth: 1))
+                    } else if following {
+                        pill("Following", style: .gray)
+                    } else {
+                        pill("Follow", style: .green)
+                    }
                 }
                 .buttonStyle(.pressable)
                 .sensoryFeedback(.success, trigger: following)

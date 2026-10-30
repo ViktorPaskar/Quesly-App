@@ -6,6 +6,7 @@ enum Route: Hashable {
     case menu
     case achievements
     case editProfile
+    case friends
     case following
     case followers
     case settings
@@ -263,6 +264,16 @@ struct AnswerCard: View {
                     .padding(.horizontal, 7)
                     .padding(.vertical, 2)
                     .background(Capsule().fill(Color(hex: 0xEDF8F3)))
+            } else if !isMine && store.isFriend(answer.authorId) {
+                HStack(spacing: 3) {
+                    Icon(.userFill, size: 8)
+                    Text("Friend")
+                }
+                .font(.ui(10.5, .semibold))
+                .foregroundStyle(Color.qGreen)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Capsule().fill(Color.qMint.opacity(0.35)))
             }
 
             if (answer.isHidden ?? false) {

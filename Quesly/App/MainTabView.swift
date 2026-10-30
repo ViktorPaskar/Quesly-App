@@ -195,6 +195,7 @@ extension View {
             case .menu, .settings: SettingsView()
             case .achievements: AchievementsView()
             case .editProfile: EditProfileView()
+            case .friends: FollowListView(kind: .friends)
             case .following: FollowListView(kind: .following)
             case .followers: FollowListView(kind: .followers)
             case .feedback: FeedbackView()

@@ -274,9 +274,23 @@ struct PersonRow: View {
                 HStack(spacing: 12) {
                     Avatar(user: user, size: 40)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(user.username)
-                            .font(.ui(15, .semibold))
-                            .foregroundStyle(Color.qInk)
+                        HStack(spacing: 5) {
+                            Text(user.username)
+                                .font(.ui(15, .semibold))
+                                .foregroundStyle(Color.qInk)
+
+                            if store.isFriend(user.id) {
+                                HStack(spacing: 3) {
+                                    Icon(.userFill, size: 8)
+                                    Text("Friend")
+                                }
+                                .font(.ui(10.5, .semibold))
+                                .foregroundStyle(Color.qGreen)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Capsule().fill(Color.qMint.opacity(0.35)))
+                            }
+                        }
                         Text(user.bio.isEmpty ? "\(user.followers) followers" : user.bio)
                             .font(.ui(13))
                             .foregroundStyle(Color.qGray)

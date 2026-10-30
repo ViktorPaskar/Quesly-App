@@ -25,7 +25,7 @@ enum QuestionBank {
 
     static func index(for date: Date, calendar: Calendar = .current) -> Int {
         let day = calendar.ordinality(of: .day, in: .era, for: date) ?? 0
-        return day % items.count
+        return abs(day) % max(1, items.count)
     }
 
     static func item(for date: Date) -> Item { items[index(for: date)] }

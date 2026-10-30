@@ -192,6 +192,7 @@ final class AppStore {
         blockedIds = []
         onboarding = .done
         isSignedIn = false
+        publishWidget()
     }
 
     // MARK: Answers
@@ -280,17 +281,27 @@ final class AppStore {
     }
 
     /// Personalised Daily 100 selection: deterministic shuffle per user and question,
-    /// so the feed is unique across users, fair to new authors, but rock-stable during the day.
+    /// so the feed is unique across users, fair to new authors, but rock-stable across app restarts.
     private func seededDaily100(from pool: [Answer], seed: String) -> [Answer] {
         guard pool.count > Self.worldDailyLimit else { return pool }
         var result = pool
-        var hash = abs(seed.hashValue)
+        var hash = deterministicHash(seed)
         for i in stride(from: result.count - 1, through: 1, by: -1) {
             hash = (hash &* 1664525 &+ 1013904223) & 0x7FFFFFFF
             let j = hash % (i + 1)
             result.swapAt(i, j)
         }
         return Array(result.prefix(Self.worldDailyLimit))
+    }
+
+    /// FNV-1a deterministic hash: stable across app launches (unlike Swift's per-process randomized `hashValue`).
+    private func deterministicHash(_ string: String) -> Int {
+        var hash: UInt64 = 14695981039346656037
+        for byte in string.utf8 {
+            hash ^= UInt64(byte)
+            hash = hash &* 1099511628211
+        }
+        return Int(hash & 0x7FFFFFFF)
     }
 
     // MARK: Friends today (stories row)

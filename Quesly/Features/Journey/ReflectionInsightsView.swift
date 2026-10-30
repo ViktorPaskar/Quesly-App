@@ -423,6 +423,3 @@ private struct Circular24hClockView: View {
         }
     }
 }
-        }
-    }
-}

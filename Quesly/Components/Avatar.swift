@@ -7,7 +7,6 @@ import UIKit
 struct Avatar: View {
     let user: AppUser?
     var size: CGFloat = 40
-    var showsBadge = false
     var isSticker = false
 
     @Environment(AppStore.self) private var store: AppStore?
@@ -41,13 +40,6 @@ struct Avatar: View {
         .overlay {
             if isSticker {
                 Circle().strokeBorder(.white, lineWidth: max(2, size * 0.045))
-            }
-        }
-        .overlay(alignment: .bottomTrailing) {
-            if showsBadge, let badge = user?.badge {
-                HexBadge(tier: badge)
-                    .frame(width: size * 0.34, height: size * 0.38)
-                    .offset(x: size * 0.04, y: size * 0.04)
             }
         }
         .accessibilityHidden(true)

@@ -308,7 +308,7 @@ struct ProfileHeader: View {
                     nickLine
                 }
                 Spacer(minLength: 0)
-                Avatar(user: user, size: 68, showsBadge: true, isSticker: true)
+                Avatar(user: user, size: 68, isSticker: true)
                     .scaleEffect(appeared ? 1 : 0.6)
                     .opacity(appeared ? 1 : 0)
             }

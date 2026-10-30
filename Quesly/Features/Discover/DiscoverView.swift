@@ -51,7 +51,7 @@ struct DiscoverView: View {
                                     ForEach(store.followingUsers) { user in
                                         NavigationLink(value: Route.profile(user.id)) {
                                             VStack(spacing: 8) {
-                                                Avatar(user: user, size: 58, showsBadge: true, isSticker: true)
+                                                Avatar(user: user, size: 58, isSticker: true)
                                                 Text(user.username)
                                                     .font(.ui(12, .medium))
                                                     .foregroundStyle(Color.qInk)

@@ -310,6 +310,11 @@ extension View {
     func pastelCanvas() -> some View {
         self.background(PastelCanvasBackground())
     }
+
+    /// Fades a list item in, staggered by `index`. Skipped entirely under Reduce Motion.
+    func staggeredAppear(_ index: Int) -> some View {
+        modifier(StaggeredAppear(index: index))
+    }
 }
 
 /// Ambient soft pastel gradient mesh background that elevates cards and creates glassmorphism.
@@ -342,11 +347,6 @@ struct PastelCanvasBackground: View {
             }
             .allowsHitTesting(false)
         }
-    }
-
-    /// Fades a list item in, staggered by `index`. Skipped entirely under Reduce Motion.
-    func staggeredAppear(_ index: Int) -> some View {
-        modifier(StaggeredAppear(index: index))
     }
 }
 

@@ -28,27 +28,27 @@ enum ContentModeration {
     /// Slurs, racial/ethnic disparagement, white supremacy, xenophobia, antisemitism, dehumanizing slurs.
     private static let hateAndRacismPatterns: [String] = [
         // English ethnic & racial slurs / hate phrases
-        @"\b(nigg(a|er|az|uh)|chink|spic|kike|gook|wetback|coon|raghead|towelhead)\b",
-        @"\b(white\s*power|white\s*supremac|kill\s*all\s*(blacks?|whites?|jews?|muslims?|gays?))\b",
-        @"\b(hitler\s*was\s*right|gas\s*the\s*jews?|death\s*to\s*(jews?|blacks?|gays?|arabs?))\b",
-        @"\b(subhuman|inferior\s*race|racial\s*purity|ethnic\s*cleansing)\b",
-        @"\b(faggot|fag|dyke|tranny)\b",
+        #"\b(nigg(a|er|az|uh)|chink|spic|kike|gook|wetback|coon|raghead|towelhead)\b"#,
+        #"\b(white\s*power|white\s*supremac|kill\s*all\s*(blacks?|whites?|jews?|muslims?|gays?))\b"#,
+        #"\b(hitler\s*was\s*right|gas\s*the\s*jews?|death\s*to\s*(jews?|blacks?|gays?|arabs?))\b"#,
+        #"\b(subhuman|inferior\s*race|racial\s*purity|ethnic\s*cleansing)\b"#,
+        #"\b(faggot|fag|dyke|tranny)\b"#,
         
         // Russian & Eastern European ethnic slurs, xenophobia & aggressive chauvinism
-        @"(хач|хачик|хачи|чурк|чурка|чурки|чуркам|чурками)",
-        @"(черномаз|чернож[оo]п|узкоглаз)",
-        @"(жид|жидяр|жидовск|жидов|пархат)",
-        @"(хох(ол|лы|лов)|укроп|укронацист|москал|кацап|бульбаш)",
-        @"(чучмек|мамбет|пидор|пидорас|педик)",
-        @"(россия\s*для\s*русских|бей\s*(жидов|чурок|хачей|хохлов|негров))",
-        @"(смерть\s*(хохлам|москалям|жидам|чуркам|хачам|неграм))",
-        @"(чурки\s*вон|очистим\s*нацию|недочеловек|недолюди)"
+        #"(хач|хачик|хачи|чурк|чурка|чурки|чуркам|чурками)"#,
+        #"(черномаз|чернож[оo]п|узкоглаз)"#,
+        #"(жид|жидяр|жидовск|жидов|пархат)"#,
+        #"(хох(ол|лы|лов)|укроп|укронацист|москал|кацап|бульбаш)"#,
+        #"(чучмек|мамбет|пидор|пидорас|педик)"#,
+        #"(россия\s*для\s*русских|бей\s*(жидов|чурок|хачей|хохлов|негров))"#,
+        #"(смерть\s*(хохлам|москалям|жидам|чуркам|хачам|неграм))"#,
+        #"(чурки\s*вон|очистим\s*нацию|недочеловек|недолюди)"#
     ]
 
     /// Explicit violent incitement, physical harm, terror promotion
     private static let violencePatterns: [String] = [
-        @"\b(i\s*will\s*kill\s*you|kill\s*yourself|go\s*die|mass\s*shoot)\b",
-        @"(я\s*тебя\s*(убью|зарежу|прикончу)|сдохни|убей\s*себя|повеситься|вскрыть\s*вены)"
+        #"\b(i\s*will\s*kill\s*you|kill\s*yourself|go\s*die|mass\s*shoot)\b"#,
+        #"(я\s*тебя\s*(убью|зарежу|прикончу)|сдохни|убей\s*себя|повеситься|вскрыть\s*вены)"#
     ]
 
     // MARK: - Validation API

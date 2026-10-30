@@ -100,7 +100,7 @@ struct AuthView: View {
 
                     if mode == .signUp {
                         Toggle(isOn: $acceptedTerms) {
-                            Text("I agree to the [Terms of Service](https://quesly.app/terms) and [Privacy Policy](https://quesly.app/privacy)")
+                            Text("I agree to the [Terms of Service](https://quesly.me/terms) and [Privacy Policy](https://quesly.me/privacy)")
                                 .font(.ui(13))
                                 .foregroundStyle(Color.qInk)
                                 .tint(Color.qBrandText)

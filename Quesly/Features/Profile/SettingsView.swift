@@ -327,13 +327,13 @@ struct SettingsView: View {
 
                 divider
 
-                Link(destination: URL(string: "https://quesly.app/terms")!) {
+                Link(destination: URL(string: "https://quesly.me/terms")!) {
                     settingsRow(icon: .copy, tint: Color.qGray, title: "Terms of Service")
                 }
 
                 divider
 
-                Link(destination: URL(string: "https://quesly.app/privacy")!) {
+                Link(destination: URL(string: "https://quesly.me/privacy")!) {
                     settingsRow(icon: .shieldCheckFill, tint: Color.qGray, title: "Privacy Policy")
                 }
             }

@@ -265,7 +265,7 @@ extension EmptyStateView where Actions == EmptyView {
 /// Shared invite text + link.
 enum Invite {
     static func text(for username: String) -> String {
-        "Join me on Quesly: one question a day, millions of stories ✨ Add me: @\(username) https://quesly.app/u/\(username)"
+        "Join me on Quesly: one question a day, millions of stories ✨ Add me: @\(username) https://quesly.me/u/\(username)"
     }
 }
 

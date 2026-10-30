@@ -318,8 +318,7 @@ struct EditProfileView: View {
                 .autocorrectionDisabled()
                 .font(.ui(15))
                 .foregroundStyle(Color.qInk)
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: true, vertical: false)
+                .multilineTextAlignment(.trailing)
         }
     }
 

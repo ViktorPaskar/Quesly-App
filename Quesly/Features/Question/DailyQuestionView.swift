@@ -110,7 +110,14 @@ struct DailyQuestionView: View {
 
     private var header: some View {
         ZStack {
-            QueslyLogo(height: 32, markColor: .qGreen, textColor: .qInk, background: .qLime)
+            Image("brand-wordmark")
+                .renderingMode(.template)
+                .resizable()
+                .aspectRatio(1900.0 / 602.0, contentMode: .fit)
+                .frame(height: 24)
+                .foregroundStyle(Color.qInk)
+                .accessibilityLabel("Quesly")
+
             HStack {
                 Spacer()
                 if let onClose {

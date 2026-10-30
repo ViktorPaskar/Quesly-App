@@ -51,23 +51,23 @@ struct JourneyView: View {
         }
     }
 
-    // MARK: - On This Day / Time Capsule Card (Editorial & Empty-State aware)
+    // MARK: - On This Day / Time Capsule Card (Editorial & Clean)
 
     private var onThisDayCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // Header with interactive state preview
+            // Header with subtle warm styling
             HStack(spacing: 8) {
                 IconChip(
-                    icon: showNewUserCapsule ? .hourglassMediumFill : .sparkleFill,
-                    tint: showNewUserCapsule ? Color(hex: 0xF59E0B) : .qGreen,
-                    fill: (showNewUserCapsule ? Color(hex: 0xF59E0B) : Color.qGreen).opacity(0.12)
+                    icon: showNewUserCapsule ? .hourglassMediumFill : .calendar,
+                    tint: Color(hex: 0xF59E0B),
+                    fill: Color(hex: 0xF59E0B).opacity(0.12)
                 )
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(showNewUserCapsule ? "TIME CAPSULE" : "ON THIS DAY")
                         .font(.ui(11, .semibold))
                         .tracking(0.6)
-                        .foregroundStyle(showNewUserCapsule ? Color(hex: 0xD97706) : Color.qBrandText)
+                        .foregroundStyle(Color(hex: 0xD97706))
                     Text(showNewUserCapsule ? "Brewing memories" : "1 year ago today")
                         .font(.ui(13.5, .semibold))
                         .foregroundStyle(Color.qInk)
@@ -84,10 +84,10 @@ struct JourneyView: View {
                         Text(showNewUserCapsule ? "View flashback" : "New user view")
                             .font(.ui(11, .semibold))
                     }
-                    .foregroundStyle(Color.qGreen)
+                    .foregroundStyle(Color.qInk2)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.qMint.opacity(0.35)))
+                    .background(Capsule().fill(Color.qLine.opacity(0.6)))
                 }
                 .buttonStyle(.plain)
             }
@@ -109,7 +109,7 @@ struct JourneyView: View {
                         HStack {
                             Text("9 of 30 reflections saved")
                                 .font(.ui(11.5, .semibold))
-                                .foregroundStyle(Color.qBrandText)
+                                .foregroundStyle(Color.qInk)
                             Spacer()
                             Text("21 days left")
                                 .font(.ui(11.5))
@@ -120,13 +120,7 @@ struct JourneyView: View {
                             ZStack(alignment: .leading) {
                                 Capsule().fill(Color.qLine)
                                 Capsule()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [Color.qLime, Color.qGreen],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
+                                    .fill(Color(hex: 0xF59E0B))
                                     .frame(width: max(8, g.size.width * 0.30))
                             }
                         }
@@ -159,7 +153,7 @@ struct JourneyView: View {
 
                     HStack(alignment: .top, spacing: 10) {
                         Rectangle()
-                            .fill(Color.qGreen)
+                            .fill(Color(hex: 0xF59E0B))
                             .frame(width: 3)
                             .clipShape(Capsule())
 
@@ -179,7 +173,7 @@ struct JourneyView: View {
                                 .font(.ui(12.5, .semibold))
                             Icon(.arrowRightBold, size: 10)
                         }
-                        .foregroundStyle(Color.qGreen)
+                        .foregroundStyle(Color.qInk)
                     }
                     .buttonStyle(.plain)
                     .padding(.top, 2)
@@ -459,16 +453,16 @@ struct ReflectionRhythmCard: View {
                 systemIcon: "sunrise.fill",
                 percentage: mPct,
                 isPeak: mPct == maxVal,
-                colors: [Color(hex: 0xF59E0B), Color(hex: 0xD97706)]
+                colors: [Color(hex: 0xF59E0B)]
             ),
             Slot(
                 id: "afternoon",
                 title: "Afternoon",
                 hours: "12–18h",
-                systemIcon: "cloud.sun.fill",
+                systemIcon: "sun.max.fill",
                 percentage: aPct,
                 isPeak: aPct == maxVal && aPct > mPct,
-                colors: [Color.qGreen, Color.qGreenDeep]
+                colors: [Color.qGreen]
             ),
             Slot(
                 id: "evening",
@@ -477,7 +471,7 @@ struct ReflectionRhythmCard: View {
                 systemIcon: "sunset.fill",
                 percentage: ePct,
                 isPeak: ePct == maxVal && ePct > mPct,
-                colors: [Color.qPink, Color(hex: 0xE06C9F)]
+                colors: [Color.qPink]
             ),
             Slot(
                 id: "night",
@@ -486,7 +480,7 @@ struct ReflectionRhythmCard: View {
                 systemIcon: "moon.stars.fill",
                 percentage: nPct,
                 isPeak: nPct == maxVal && nPct > mPct,
-                colors: [Color(hex: 0x6366F1), Color.qObsidian]
+                colors: [Color(hex: 0x6366F1)]
             )
         ]
     }
@@ -607,14 +601,8 @@ struct ReflectionRhythmCard: View {
                     .frame(width: 24, height: barMaxHeight)
 
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: slot.colors,
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .opacity(slot.isPeak ? 1.0 : 0.65)
-                    )
+                    .fill(slot.colors[0])
+                    .opacity(slot.isPeak ? 1.0 : 0.65)
                     .frame(width: 24, height: barHeight)
             }
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))

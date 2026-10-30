@@ -480,7 +480,7 @@ struct AnswerCard: View {
                             SpringKeyframe(1.0, duration: 0.2)
                         }
                 } else {
-                    Icon(.smiley, size: 20)
+                    Icon(.smileyFill, size: 20)
                         .foregroundStyle(isTrayOpen ? Color.qInk : Color.qGray)
                 }
             }

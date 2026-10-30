@@ -234,7 +234,7 @@ struct EditProfileView: View {
 
             VStack(spacing: 0) {
                 // Instagram
-                formRow(title: "Instagram") {
+                formRow(icon: .instagram, iconTint: Color(hex: 0xE1306C), title: "Instagram") {
                     HStack(spacing: 2) {
                         Text("@")
                             .font(.ui(14, .semibold))
@@ -251,7 +251,7 @@ struct EditProfileView: View {
                 divider
 
                 // TikTok
-                formRow(title: "TikTok") {
+                formRow(icon: .tiktok, iconTint: Color.qInk, title: "TikTok") {
                     HStack(spacing: 2) {
                         Text("@")
                             .font(.ui(14, .semibold))
@@ -268,7 +268,7 @@ struct EditProfileView: View {
                 divider
 
                 // Threads
-                formRow(title: "Threads") {
+                formRow(icon: .threads, iconTint: Color.qInk, title: "Threads") {
                     HStack(spacing: 2) {
                         Text("@")
                             .font(.ui(14, .semibold))
@@ -285,7 +285,7 @@ struct EditProfileView: View {
                 divider
 
                 // Twitter / X
-                formRow(title: "X (Twitter)") {
+                formRow(icon: .xTwitter, iconTint: Color.qInk, title: "X (Twitter)") {
                     HStack(spacing: 2) {
                         Text("@")
                             .font(.ui(14, .semibold))
@@ -342,12 +342,27 @@ struct EditProfileView: View {
         }
     }
 
-    private func formRow<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
-        HStack(spacing: DS.Space.m) {
+    private func formRow<Content: View>(
+        icon: QIcon? = nil,
+        iconTint: Color = .qInk,
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        HStack(spacing: icon == nil ? DS.Space.m : DS.Space.s) {
+            if let icon {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(iconTint.opacity(0.12))
+                    .frame(width: 28, height: 28)
+                    .overlay(
+                        Icon(icon, size: 14)
+                            .foregroundStyle(iconTint)
+                    )
+            }
+
             Text(title)
                 .font(.ui(15, .medium))
                 .foregroundStyle(Color.qInk)
-                .frame(width: 80, alignment: .leading)
+                .frame(width: icon == nil ? 80 : 95, alignment: .leading)
 
             content()
         }

@@ -100,7 +100,7 @@ struct SettingsView: View {
             VStack(spacing: 0) {
                 // Instagram
                 settingsRow(
-                    icon: .cameraFill,
+                    icon: .instagram,
                     tint: Color(hex: 0xE1306C),
                     title: "Instagram",
                     detail: "@\(store.me.instagram.isEmpty ? "lilly.laurent" : store.me.instagram)"
@@ -110,7 +110,7 @@ struct SettingsView: View {
 
                 // TikTok
                 settingsRow(
-                    icon: .sparkleFill,
+                    icon: .tiktok,
                     tint: Color.qInk,
                     title: "TikTok",
                     detail: "@\(store.me.tiktok.isEmpty ? "lilly" : store.me.tiktok)"
@@ -120,7 +120,7 @@ struct SettingsView: View {
 
                 // Threads
                 settingsRow(
-                    icon: .chatCircleTextFill,
+                    icon: .threads,
                     tint: Color.qInk,
                     title: "Threads",
                     detail: "@\(store.me.threads.isEmpty ? "lilly.laurent" : store.me.threads)"

@@ -53,6 +53,12 @@ enum QIcon: String {
     case chatCircleTextFill = "text.bubble.fill", cameraFill = "camera.fill"
     case chartBarFill = "chart.bar.fill"
 
+    // Social Networks & Connected Accounts
+    case instagram = "camera"
+    case tiktok = "music.note"
+    case threads = "at"
+    case xTwitter = "xmark.app"
+
     /// Asset name of the UIcons glyph for this concept.
     var assetName: String { "ui-" + String(describing: self) }
 

@@ -40,14 +40,7 @@ struct MemoriesCard: View {
             }
         }
         .padding(18)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.qBlock)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.qLine, lineWidth: 1)
-                )
-        )
+        .bentoCard(radius: 22, fill: Color.white)
     }
 
     // MARK: Parts

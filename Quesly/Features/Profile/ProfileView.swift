@@ -358,7 +358,9 @@ struct ProfileHeader: View {
             stat(followingCount, "Following", route: isMe ? .following : nil)
                 .padding(.leading, DS.Space.s)
         }
-        .padding(.vertical, 2)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .bentoCard(radius: 18, fill: Color.white, shadowRadius: 8)
     }
 
     private var statDivider: some View {
@@ -517,6 +519,7 @@ struct StreakCard: View {
             ZStack(alignment: .topTrailing) {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(Color.white)
+                    .shadow(color: Color.black.opacity(0.04), radius: 14, x: 0, y: 5)
 
                 // Ambient blurred warm flame glow in the top-right corner
                 Circle()

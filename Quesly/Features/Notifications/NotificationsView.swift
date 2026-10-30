@@ -44,7 +44,7 @@ struct NotificationsView: View {
                 }
             }
         }
-        .pastelCanvas()
+        .background(Color.qBackground)
         .toolbar(.hidden, for: .navigationBar)
         .onDisappear { store.markNotificationsSeen() }
         .sheet(item: $reactionAnswer) { answer in
@@ -133,19 +133,17 @@ struct NotificationsView: View {
                                 .padding(.leading, 70)
                         }
                         row(group)
-                            .padding(.horizontal, 14)
+                            .padding(.horizontal, DS.Space.screen)
                             .padding(.vertical, 12)
                             .overlay(alignment: .leading) {
                                 if group.date > store.notificationsSeenAt {
-                                    Circle().fill(Color.qLime).frame(width: 7, height: 7).padding(.leading, 6)
+                                    Circle().fill(Color.qGreen).frame(width: 7, height: 7).padding(.leading, 6)
                                         .accessibilityLabel("Unread")
                                 }
                             }
                             .staggeredAppear(index)
                     }
                 }
-                .bentoCard(radius: 20, fill: Color.white)
-                .padding(.horizontal, DS.Space.screen)
             }
         }
     }

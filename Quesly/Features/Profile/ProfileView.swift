@@ -55,7 +55,7 @@ struct ProfileView: View {
                     } header: {
                         UnderlineTabs(items: tabs, selection: $tab, title: \.title,
                                       indicator: 1, inactive: Color(hex: 0x999999), hairline: .qLine)
-                            .background(.ultraThinMaterial)
+                            .background(Color.qBackground)
                     }
                 }
                 .contentShape(Rectangle())
@@ -71,7 +71,7 @@ struct ProfileView: View {
                 }
             }
         }
-        .pastelCanvas()
+        .background(Color.qBackground)
         .safeAreaInset(edge: .top, spacing: 0) { topBar(user) }
         .toolbar(.hidden, for: .navigationBar)
         .confirmationDialog("Block @\(user?.username ?? "")?", isPresented: $confirmBlock, titleVisibility: .visible) {
@@ -358,9 +358,7 @@ struct ProfileHeader: View {
             stat(followingCount, "Following", route: isMe ? .following : nil)
                 .padding(.leading, DS.Space.s)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .bentoCard(radius: 18, fill: Color.white, shadowRadius: 8)
+        .padding(.vertical, 2)
     }
 
     private var statDivider: some View {
@@ -519,7 +517,6 @@ struct StreakCard: View {
             ZStack(alignment: .topTrailing) {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(Color.white)
-                    .shadow(color: Color.black.opacity(0.04), radius: 14, x: 0, y: 5)
 
                 // Ambient blurred warm flame glow in the top-right corner
                 Circle()

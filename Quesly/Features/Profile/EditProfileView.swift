@@ -332,11 +332,10 @@ struct EditProfileView: View {
 
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 20, style: .continuous)
-            .fill(Color.white)
-            .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 3)
+            .fill(Color.qBlock)
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.qLine.opacity(0.65), lineWidth: 1)
+                    .stroke(Color.qLine, lineWidth: 1)
             )
     }
 

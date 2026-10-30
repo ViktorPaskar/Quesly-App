@@ -26,70 +26,6 @@ struct JourneyView: View {
                 }
                 .buttonStyle(.plain)
 
-                // MARK: 2b. Modern Bento Metrics Row (Soft UI Analytics)
-                HStack(spacing: 12) {
-                    // Left Bento: Consistency Pace
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            ZStack {
-                                Circle().fill(Color.qPastelMint)
-                                    .frame(width: 32, height: 32)
-                                Icon(.sparkleFill, size: 14)
-                                    .foregroundStyle(Color.qGreenDeep)
-                            }
-                            Spacer()
-                            Text("94%")
-                                .font(.ui(12, .semibold))
-                                .foregroundStyle(Color.qGreenDeep)
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 3)
-                                .background(Capsule().fill(Color.qPastelMint))
-                        }
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Consistency")
-                                .font(.ui(14, .semibold))
-                                .foregroundStyle(Color.qInk)
-                            Text("On-time daily rhythm")
-                                .font(.ui(11.5))
-                                .foregroundStyle(Color.qGray)
-                        }
-                    }
-                    .padding(16)
-                    .bentoCard(radius: 20, fill: Color.qPastelMint.opacity(0.85))
-
-                    // Right Bento: Total Reflections
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            ZStack {
-                                Circle().fill(Color.white)
-                                    .frame(width: 32, height: 32)
-                                Icon(.chatCircleTextFill, size: 14)
-                                    .foregroundStyle(Color(hex: 0x0284C7))
-                            }
-                            Spacer()
-                            Text("ALL TIME")
-                                .font(.ui(10, .bold))
-                                .tracking(0.6)
-                                .foregroundStyle(Color(hex: 0x0284C7))
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 3)
-                                .background(Capsule().fill(Color.white))
-                        }
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("\(store.totalQuestionsAnswered) Reflections")
-                                .font(.ui(14, .semibold))
-                                .foregroundStyle(Color.qInk)
-                            Text("Shared in your journal")
-                                .font(.ui(11.5))
-                                .foregroundStyle(Color.qGray)
-                        }
-                    }
-                    .padding(16)
-                    .bentoCard(radius: 20, fill: Color.qPastelSky.opacity(0.80))
-                }
-
                 // MARK: 3. "On This Day" Memory Flashback
                 onThisDayCard
 
@@ -100,7 +36,7 @@ struct JourneyView: View {
             .padding(.top, DS.Space.s)
             .padding(.bottom, 90) // comfortable clearance above floating bottom bar
         }
-        .pastelCanvas()
+        .background(Color.qBackground)
         .navigationTitle("Journey")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $openedMemory) { answer in
@@ -246,12 +182,19 @@ struct JourneyView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.85))
+                        .fill(Color.qField)
                 )
             }
         }
         .padding(18)
-        .bentoCard(radius: 22, fill: Color.qPastelPeach.opacity(0.75))
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.qBlock)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.qLine, lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Milestones Section
@@ -630,7 +573,14 @@ struct ReflectionRhythmCard: View {
             .padding(.top, 2)
         }
         .padding(18)
-        .bentoCard(radius: 22, fill: Color.white)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.qBlock)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.qLine, lineWidth: 1)
+                )
+        )
     }
 
     private func barColumn(_ slot: Slot) -> some View {

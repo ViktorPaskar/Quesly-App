@@ -25,7 +25,15 @@ struct DailyQuestionView: View {
 
     var body: some View {
         ZStack {
-            PastelCanvasBackground()
+            Color.qBackground.ignoresSafeArea()
+
+            // Subtle ambient lime glow at top to remove bleak void feel
+            Circle()
+                .fill(Color.qLime.opacity(0.12))
+                .frame(width: 340, height: 340)
+                .blur(radius: 70)
+                .offset(y: -160)
+                .allowsHitTesting(false)
 
             VStack(spacing: 0) {
                 header
@@ -138,30 +146,26 @@ struct DailyQuestionView: View {
     private var questionText: some View {
         let highlighted = question.keyWords
 
-        return VStack(alignment: .leading, spacing: 16) {
-            // Branded question pill kicker with live date
+        return VStack(alignment: .leading, spacing: 14) {
+            // Branded question pill kicker
             HStack(spacing: 6) {
                 Icon(.sparkleFill, size: 12)
-                    .foregroundStyle(Color.qGreenDeep)
+                    .foregroundStyle(Color.qGreen)
                 Text("QUESTION OF THE DAY")
-                    .font(.ui(11, .bold))
+                    .font(.ui(11.5, .bold))
                     .tracking(0.8)
                     .foregroundStyle(Color.qBrandText)
-                Spacer()
-                Text(Date().formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
-                    .font(.ui(11.5, .medium))
-                    .foregroundStyle(Color.qGray)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(Capsule().fill(Color.qPastelMint))
+            .background(Capsule().fill(Color.qLime.opacity(0.35)))
 
             WrappingHStack(spacing: 8, lineSpacing: 8, centered: false) {
                 ForEach(Array(words.enumerated()), id: \.offset) { _, word in
                     let clean = word.uppercased().filter(\.isLetter)
                     let isHot = highlighted.contains(clean)
                     Text(word)
-                        .font(.display(30, .regular))
+                        .font(.display(32, .regular))
                         .foregroundStyle(isHot ? Color.qGreen : Color.qInk)
                         .padding(.horizontal, isHot ? 8 : 0)
                         .padding(.vertical, isHot ? 2 : 0)
@@ -181,9 +185,8 @@ struct DailyQuestionView: View {
             AnsweredTodayProof(count: store.answeredTodayCount, friends: store.friendsAnsweredToday)
                 .padding(.top, 4)
         }
-        .padding(22)
-        .bentoCard(radius: 26, fill: Color.white.opacity(0.92), shadowRadius: 16)
-        .padding(.horizontal, DS.Space.screen)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, DS.Space.xl)
         .transition(.asymmetric(insertion: .opacity, removal: .scale(scale: 0.95).combined(with: .opacity)))
     }
 

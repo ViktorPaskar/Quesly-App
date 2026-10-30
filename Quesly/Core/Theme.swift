@@ -109,27 +109,14 @@ extension Color {
     static let qMint = Color(light: 0x9BD9B5, dark: 0x1A4032)
     /// Brand green used as *text or icon* color on neutral backgrounds (lighter in dark mode).
     static let qBrandText = Color(light: 0x08563B, dark: 0x7FD49B)
-
-    // Soft Pastel SaaS & Bento Palette
-    /// Airy morning mint for fresh reflection cards & chips.
-    static let qPastelMint = Color(light: 0xE6F4ED, dark: 0x0F3827)
-    /// Calming soft sage for focus cards & subtle tags.
-    static let qPastelSage = Color(light: 0xECF1ED, dark: 0x143325)
-    /// Warm sunrise / nostalgic memory peach.
-    static let qPastelPeach = Color(light: 0xFEF2E8, dark: 0x332316)
-    /// Contemplative twilight & evening lavender.
-    static let qPastelLavender = Color(light: 0xF1EEF8, dark: 0x271F36)
-    /// Clarity sky blue for metrics & milestones.
-    static let qPastelSky = Color(light: 0xE8F3F8, dark: 0x132C3A)
-
-    /// App background: calm, warm porcelain oat canvas.
-    static let qBackground = Color(light: 0xF9FAF7, dark: 0x052B1E)
+    /// App background.
+    static let qBackground = Color(light: 0xFFFFFF, dark: 0x053424)
     /// Elevated surfaces (sheets, popovers).
     static let qSurface = Color(light: 0xFFFFFF, dark: 0x12241C)
-    /// Screen background: warm minimal porcelain canvas.
-    static let qCanvas = Color(light: 0xF9FAF7, dark: 0x052B1E)
+    /// Screen background: clean pure white canvas.
+    static let qCanvas = Color(light: 0xFFFFFF, dark: 0x053424)
     /// Feed background behind the white answer cards.
-    static let qFeedCanvas = Color(light: 0xF9FAF7, dark: 0x052B1E)
+    static let qFeedCanvas = Color(light: 0xFFFFFF, dark: 0x053424)
     /// White rounded block that sits on `qCanvas`.
     static let qBlock = Color(light: 0xFFFFFF, dark: 0x0E261D)
 
@@ -261,92 +248,9 @@ extension View {
             .overlay(shape.strokeBorder(Color.qLine.opacity(0.65), lineWidth: 0.5))
     }
 
-    /// Modern Bento Grid card: soft pastel fill / pure white, delicate specular border, and diffused ambient elevation.
-    func bentoCard(radius: CGFloat = 22, fill: Color = .qBlock, shadowRadius: CGFloat = 12) -> some View {
-        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
-        return self
-            .background(
-                shape
-                    .fill(fill)
-                    .shadow(color: Color.black.opacity(0.04), radius: shadowRadius, x: 0, y: 5)
-            )
-            .overlay(
-                shape
-                    .strokeBorder(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.95), Color.qLine.opacity(0.6)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1.2
-                    )
-            )
-    }
-
-    /// Pastel frosted glassmorphic surface with subtle blur and specular stroke.
-    func softGlassCard(radius: CGFloat = 22, tint: Color = .clear) -> some View {
-        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
-        return self
-            .background(
-                shape
-                    .fill(.ultraThinMaterial)
-                    .overlay(shape.fill(tint))
-                    .shadow(color: Color.black.opacity(0.04), radius: 12, x: 0, y: 4)
-            )
-            .overlay(
-                shape
-                    .strokeBorder(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.85), Color.qLine.opacity(0.4)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1.2
-                    )
-            )
-    }
-
-    /// Ambient soft pastel gradient mesh canvas for SaaS / EdTech dashboards.
-    func pastelCanvas() -> some View {
-        self.background(PastelCanvasBackground())
-    }
-
     /// Fades a list item in, staggered by `index`. Skipped entirely under Reduce Motion.
     func staggeredAppear(_ index: Int) -> some View {
         modifier(StaggeredAppear(index: index))
-    }
-}
-
-/// Ambient soft pastel gradient mesh background that elevates cards and creates glassmorphism.
-struct PastelCanvasBackground: View {
-    var body: some View {
-        ZStack {
-            Color.qBackground.ignoresSafeArea()
-
-            GeometryReader { geo in
-                // Top-left soft mint aura
-                Circle()
-                    .fill(Color.qPastelMint.opacity(0.60))
-                    .frame(width: geo.size.width * 0.95, height: geo.size.width * 0.95)
-                    .blur(radius: 75)
-                    .offset(x: -geo.size.width * 0.25, y: -geo.size.height * 0.08)
-
-                // Top-right soft warm peach aura
-                Circle()
-                    .fill(Color.qPastelPeach.opacity(0.55))
-                    .frame(width: geo.size.width * 0.85, height: geo.size.width * 0.85)
-                    .blur(radius: 70)
-                    .offset(x: geo.size.width * 0.40, y: geo.size.height * 0.06)
-
-                // Mid-bottom soft lavender aura
-                Circle()
-                    .fill(Color.qPastelLavender.opacity(0.50))
-                    .frame(width: geo.size.width * 0.9, height: geo.size.width * 0.9)
-                    .blur(radius: 80)
-                    .offset(x: -geo.size.width * 0.15, y: geo.size.height * 0.5)
-            }
-            .allowsHitTesting(false)
-        }
     }
 }
 

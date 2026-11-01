@@ -96,7 +96,7 @@ struct NotificationPrimingView: View {
 
                 NotificationHeroArt()
 
-                Text("Never miss a question —\nor a friend's answer")
+                Text("Nice answer!\nWant a nudge tomorrow?")
                     .font(.display(28, .medium))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Color.qInk)

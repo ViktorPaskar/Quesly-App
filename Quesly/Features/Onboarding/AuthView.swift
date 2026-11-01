@@ -15,6 +15,8 @@ struct AuthView: View {
     @State private var password = ""
     @State private var acceptedTerms = false
     @State private var showPassword = false
+    @State private var showForgotPassword = false
+    @State private var forgotPasswordSent = false
     @FocusState private var focused: Field?
 
     private enum Field { case username, email, password }
@@ -107,9 +109,11 @@ struct AuthView: View {
                         }
                         .toggleStyle(CheckboxToggleStyle())
                     } else {
-                        Button("Forgot password?") {}
-                            .font(.ui(13))
-                            .foregroundStyle(Color.qBrandText)
+                        Button("Forgot password?") {
+                            showForgotPassword = true
+                        }
+                        .font(.ui(13))
+                        .foregroundStyle(Color.qBrandText)
                     }
 
                     GreenButton(title: mode == .signUp ? "Sign Up" : "Sign In", isEnabled: canSubmit, action: submit)
@@ -140,6 +144,21 @@ struct AuthView: View {
                     }
                     .accessibilityLabel("Close")
                 }
+            }
+            .alert("Reset Password", isPresented: $showForgotPassword) {
+                TextField("Email", text: $email)
+                    .textInputAutocapitalization(.never)
+                Button("Send Link") {
+                    if !email.isEmpty { forgotPasswordSent = true }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Enter your email address and we'll send you a password reset link.")
+            }
+            .alert("Check Your Email", isPresented: $forgotPasswordSent) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("We've sent password reset instructions to \(email.isEmpty ? "your email" : email).")
             }
         }
     }

@@ -28,11 +28,14 @@ final class AppStore {
     var me: AppUser = MockData.me
     private(set) var users: [String: AppUser] = [:]
     private(set) var followingIds: Set<String> = []
+    private(set) var followerIds: Set<String> = []
     private(set) var blockedIds: Set<String> = []
     private(set) var todayAnswers: [Answer] = []
     private(set) var myAnswers: [Answer] = []
     private(set) var notifications: [AppNotification] = []
     private(set) var todayQuestion: DailyQuestion = MockData.questions[0]
+    private(set) var reportedAnswerIds: Set<String> = []
+    private(set) var lastRefreshDate: Date?
     /// Fresh installs treat older seed notifications as already seen, so "unread" stays meaningful.
     private(set) var notificationsSeenAt: Date = Date.now.addingTimeInterval(-50 * 60)
 
@@ -46,6 +49,9 @@ final class AppStore {
     var reminderTime: Date = Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: .now) ?? .now {
         didSet { persist(); NotificationScheduler.reschedule(store: self) }
     }
+    var streakAlerts: Bool = true { didSet { persist(); NotificationScheduler.reschedule(store: self) } }
+    var syncContacts: Bool = false { didSet { persist() } }
+    var showInDiscover: Bool = true { didSet { persist() } }
     var isPrivateAccount = false { didSet { persist() } }
     /// Visibility pre-selected in the composer (remembers the last choice).
     var defaultVisibility: AnswerVisibility = .everyone { didSet { persist() } }
@@ -61,6 +67,7 @@ final class AppStore {
     init() {
         users = Dictionary(uniqueKeysWithValues: MockData.users.map { ($0.id, $0) })
         followingIds = MockData.followingIds
+        followerIds = MockData.followerIds
         refreshDay()
         restore()
         myPhoto = Self.loadPhoto()
@@ -119,12 +126,15 @@ final class AppStore {
 
     /// Picks today's question and reloads the day's feed. Call when the app becomes active.
     func refreshDay(now: Date = .now) {
+        let isSameDay = lastRefreshDate.map { Calendar.current.isDate($0, inSameDayAs: now) } ?? false
         let question = Self.question(for: now)
-        guard question.id != todayQuestion.id || todayAnswers.isEmpty else { return }
+        guard !isSameDay || question.id != todayQuestion.id || todayAnswers.isEmpty else { return }
+        lastRefreshDate = now
         todayQuestion = question
         todayAnswers = MockData.answers(for: question, now: now)
         if notifications.isEmpty { notifications = MockData.notifications(now: now) }
         publishWidget()
+        persist()
     }
 
     nonisolated static func question(for date: Date) -> DailyQuestion {
@@ -185,11 +195,30 @@ final class AppStore {
 
     func deleteAccount() {
         UserDefaults.standard.removeObject(forKey: Self.defaultsKey)
+        UserDefaults.standard.removeObject(forKey: draftKey)
         removePhoto()
+        NotificationScheduler.cancelAll()
+
         me = MockData.me
         myAnswers = []
+        todayAnswers = MockData.answers(for: todayQuestion)
+        notifications = []
+        hiddenAnswerIds = []
+        reportedAnswerIds = []
+        seenStoryAuthorIds = []
         followingIds = MockData.followingIds
+        followerIds = MockData.followerIds
         blockedIds = []
+
+        remindersEnabled = true
+        streakAlerts = true
+        syncContacts = false
+        showInDiscover = true
+        isPrivateAccount = false
+        defaultVisibility = .everyone
+        notificationsSeenAt = .distantPast
+        lastRefreshDate = nil
+
         onboarding = .done
         isSignedIn = false
         publishWidget()
@@ -251,9 +280,12 @@ final class AppStore {
         String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maxAnswerLength))
     }
 
-    /// Answers hidden with "Not interested" (this session only).
+    /// Answers hidden with "Not interested" or reported.
     private(set) var hiddenAnswerIds: Set<String> = []
-    func hideAnswer(_ id: String) { hiddenAnswerIds.insert(id) }
+    func hideAnswer(_ id: String) {
+        hiddenAnswerIds.insert(id)
+        persist()
+    }
 
     /// Hide or unhide the user's own answer from the public feed (Feature: Hide My Answer).
     func toggleHideMyAnswer(_ id: String) {
@@ -272,6 +304,7 @@ final class AppStore {
         var others = todayAnswers.filter {
             !blockedIds.contains($0.authorId)
             && !hiddenAnswerIds.contains($0.id)
+            && !reportedAnswerIds.contains($0.id)
             && !($0.isHidden ?? false)
             && $0.visibility != .onlyMe
         }
@@ -322,7 +355,13 @@ final class AppStore {
     var friendStories: [Answer] {
         var authors = Set<String>()
         let unique = todayAnswers.filter {
-            followingIds.contains($0.authorId) && !blockedIds.contains($0.authorId) && authors.insert($0.authorId).inserted
+            $0.visibility != .onlyMe
+                && !($0.isHidden ?? false)
+                && !hiddenAnswerIds.contains($0.id)
+                && !reportedAnswerIds.contains($0.id)
+                && followingIds.contains($0.authorId)
+                && !blockedIds.contains($0.authorId)
+                && authors.insert($0.authorId).inserted
         }
         return unique.filter { !seenStoryAuthorIds.contains($0.authorId) }
             + unique.filter { seenStoryAuthorIds.contains($0.authorId) }
@@ -393,16 +432,36 @@ final class AppStore {
 
     // MARK: Personal Stats (Feature: My Quesly Stats)
 
-    var totalQuestionsAnswered: Int { max(23, myAnswers.count) }
+    var totalQuestionsAnswered: Int { myAnswers.count }
     var uniqueActiveDays: Int {
-        max(28, Set(myAnswers.map { Calendar.current.startOfDay(for: $0.createdAt) }).count)
+        Set(myAnswers.map { Calendar.current.startOfDay(for: $0.createdAt) }).count
     }
-    var totalSavedCount: Int { max(14, bookmarkedAnswers.count) }
+    var totalSavedCount: Int { bookmarkedAnswers.count }
     var topThemesBreakdown: [(theme: String, percentage: Int)] {
-        [
-            ("Human Stories", 45),
-            ("Life Wisdom", 30),
-            ("Daily Reflection", 25)
+        guard !myAnswers.isEmpty else {
+            return [("Daily Reflection", 100)]
+        }
+        var humanCount = 0
+        var wisdomCount = 0
+        var reflectionCount = 0
+        for a in myAnswers {
+            let lower = a.questionText.lowercased()
+            if lower.contains("friend") || lower.contains("family") || lower.contains("grandma") || lower.contains("call") || lower.contains("together") || lower.contains("home") || lower.contains("meal") {
+                humanCount += 1
+            } else if lower.contains("life") || lower.contains("wisdom") || lower.contains("future") || lower.contains("happy") || lower.contains("power") || lower.contains("habit") {
+                wisdomCount += 1
+            } else {
+                reflectionCount += 1
+            }
+        }
+        let total = max(1, myAnswers.count)
+        let hPct = max(1, (humanCount * 100) / total)
+        let wPct = max(1, (wisdomCount * 100) / total)
+        let rPct = max(0, 100 - hPct - wPct)
+        return [
+            ("Human Stories", hPct),
+            ("Life Wisdom", wPct),
+            ("Daily Reflection", rPct)
         ]
     }
 
@@ -493,9 +552,11 @@ final class AppStore {
         followingIds.compactMap { users[$0] }.sorted { $0.username.lowercased() < $1.username.lowercased() }
     }
 
-    /// Mock: people who appear in notifications as followers plus a few others.
+    /// People who follow `me`.
     var followerUsers: [AppUser] {
-        users.values.filter { !blockedIds.contains($0.id) }.sorted { $0.username.lowercased() < $1.username.lowercased() }
+        followerIds.compactMap { users[$0] }
+            .filter { !blockedIds.contains($0.id) }
+            .sorted { $0.username.lowercased() < $1.username.lowercased() }
     }
 
     /// People you don't follow yet, most active first.
@@ -524,8 +585,10 @@ final class AppStore {
     // MARK: Moderation
 
     func report(_ answerId: String, reason: ReportReason) {
-        // TODO: send to moderation API. Locally we just hide nothing — the answer stays until reviewed.
-        _ = (answerId, reason)
+        reportedAnswerIds.insert(answerId)
+        hiddenAnswerIds.insert(answerId)
+        todayAnswers.removeAll { $0.id == answerId }
+        persist()
     }
 
     func block(_ userId: String) {
@@ -652,25 +715,25 @@ final class AppStore {
         let thoughtfulAnswers = myAnswers.filter { $0.text.count >= 100 }.count
         return [
             .init(id: "crown", title: "The Crowned One", subtitle: "Given by Quesly for exceptional impact",
-                  icon: .crownSimpleFill, color: Color(hex: 0xE2A72E), progress: 1, goal: 1, isSpecial: true),
+                  icon: .crownSimpleFill, color: Color(hex: 0xE2A72E), progress: (bestStreak >= 7 || answered >= 10) ? 1 : 0, goal: 1, isSpecial: true),
             .init(id: "first", title: "The First Step", subtitle: "You answered your first question",
-                  icon: .starFill, color: Color(hex: 0x7ED321), progress: min(max(answered, 1), 1), goal: 1),
+                  icon: .starFill, color: Color(hex: 0x7ED321), progress: min(answered, 1), goal: 1),
             .init(id: "streak3", title: "Consistent Soul", subtitle: "You answered 3 days in a row",
-                  icon: .fireFill, color: Color(hex: 0xF5A623), progress: min(max(bestStreak, 3), 3), goal: 3),
+                  icon: .fireFill, color: Color(hex: 0xF5A623), progress: min(bestStreak, 3), goal: 3),
             .init(id: "vibe", title: "Vibe Connector", subtitle: "Invited 3 friends to join Quesly",
-                  icon: .smileyFill, color: Color(hex: 0xE84FA5), progress: 3, goal: 3),
+                  icon: .smileyFill, color: Color(hex: 0xE84FA5), progress: min(followingIds.count, 3), goal: 3),
             .init(id: "streak14", title: "Steady Flow", subtitle: "You answered 14 days in a row",
-                  icon: .sparkleFill, color: Color(hex: 0x6F8FC0), progress: 14, goal: 14),
+                  icon: .sparkleFill, color: Color(hex: 0x6F8FC0), progress: min(bestStreak, 14), goal: 14),
             .init(id: "weekend", title: "Weekend Reflector", subtitle: "Answered on 5 different weekends",
-                  icon: .leafFill, color: Color(hex: 0xB0643A), progress: min(max(weekendsAnswered, 5), 5), goal: 5),
+                  icon: .leafFill, color: Color(hex: 0xB0643A), progress: min(weekendsAnswered, 5), goal: 5),
             .init(id: "voice", title: "Thoughtful Voice", subtitle: "Answered 30 questions total",
-                  icon: .chatCircleTextFill, color: Color(hex: 0x3BA3A0), progress: min(answered, 22), goal: 30),
+                  icon: .chatCircleTextFill, color: Color(hex: 0x3BA3A0), progress: min(answered, 30), goal: 30),
             .init(id: "support", title: "Community Supporter", subtitle: "Reacted to 20 different people's answers",
-                  icon: .heartFill, color: Color(hex: 0xE5484D), progress: min(reactedCount, 12), goal: 20),
+                  icon: .heartFill, color: Color(hex: 0xE5484D), progress: min(reactedCount, 20), goal: 20),
             .init(id: "story", title: "Storyteller", subtitle: "Wrote 10 answers using 100+ characters",
-                  icon: .shareNetworkFill, color: Color(hex: 0x1B63AB), progress: min(thoughtfulAnswers, 6), goal: 10),
+                  icon: .shareNetworkFill, color: Color(hex: 0x1B63AB), progress: min(thoughtfulAnswers, 10), goal: 10),
             .init(id: "early", title: "Early Adopter", subtitle: "Joined Quesly before public launch",
-                  icon: .sparkleFill, color: Color(hex: 0x8052F0), progress: 0, goal: 1, isSpecial: true),
+                  icon: .sparkleFill, color: Color(hex: 0x8052F0), progress: 1, goal: 1, isSpecial: true),
         ]
     }
 
@@ -693,6 +756,14 @@ final class AppStore {
         var notificationsSeenAt: Date
         /// Optional so snapshots from before bookmarks still decode.
         var bookmarkedIds: Set<String>?
+        var notifications: [AppNotification]?
+        var hiddenAnswerIds: Set<String>?
+        var reportedAnswerIds: Set<String>?
+        var followerIds: Set<String>?
+        var lastRefreshDate: Date?
+        var syncContacts: Bool?
+        var streakAlerts: Bool?
+        var showInDiscover: Bool?
     }
 
     private func persist() {
@@ -705,7 +776,15 @@ final class AppStore {
             savedIds: Set(todayAnswers.filter(\.isResharedByMe).map(\.id)), reactions: reactions,
             remindersEnabled: remindersEnabled, reminderTime: reminderTime, isPrivateAccount: isPrivateAccount,
             defaultVisibility: defaultVisibility, notificationsSeenAt: notificationsSeenAt,
-            bookmarkedIds: Set(todayAnswers.filter(\.isBookmarked).map(\.id))
+            bookmarkedIds: Set(todayAnswers.filter(\.isBookmarked).map(\.id)),
+            notifications: notifications,
+            hiddenAnswerIds: hiddenAnswerIds,
+            reportedAnswerIds: reportedAnswerIds,
+            followerIds: followerIds,
+            lastRefreshDate: lastRefreshDate,
+            syncContacts: syncContacts,
+            streakAlerts: streakAlerts,
+            showInDiscover: showInDiscover
         )
         if let data = try? JSONEncoder().encode(snapshot) {
             UserDefaults.standard.set(data, forKey: Self.defaultsKey)
@@ -729,6 +808,15 @@ final class AppStore {
         isPrivateAccount = s.isPrivateAccount
         defaultVisibility = s.defaultVisibility
         notificationsSeenAt = s.notificationsSeenAt
+        if let notifs = s.notifications { notifications = notifs }
+        if let hidden = s.hiddenAnswerIds { hiddenAnswerIds = hidden }
+        if let reported = s.reportedAnswerIds { reportedAnswerIds = reported }
+        if let followers = s.followerIds { followerIds = followers }
+        if let refreshDate = s.lastRefreshDate { lastRefreshDate = refreshDate }
+        if let sync = s.syncContacts { syncContacts = sync }
+        if let streak = s.streakAlerts { streakAlerts = streak }
+        if let discover = s.showInDiscover { showInDiscover = discover }
+
         for i in todayAnswers.indices {
             let id = todayAnswers[i].id
             todayAnswers[i].isResharedByMe = s.savedIds.contains(id)

@@ -76,6 +76,9 @@ enum MockData {
     /// Users that `me` follows (drives the Friends feed).
     static let followingIds: Set<String> = ["u1", "u2", "u3", "u4", "u5", "u7", "u8", "u9", "u10", "u12", "u15", "u18", "u21", "u25"]
 
+    /// Users that follow `me` (drives the Followers list).
+    static let followerIds: Set<String> = ["u1", "u2", "u3", "u5", "u6", "u8", "u11", "u13", "u14", "u16", "u17", "u20", "u22", "u24", "u26", "u28", "u30"]
+
     /// Other people's answers per question: (authorId, text, minutesAgo).
     private static let feedAnswers: [String: [(String, String, Double)]] = [
         "q-dayoff": [

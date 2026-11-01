@@ -20,6 +20,7 @@ struct EditProfileView: View {
     @State private var showChangeEmail = false
     @State private var newEmail = ""
     @State private var showChangePassword = false
+    @State private var showPasswordUpdatedToast = false
     @State private var oldPassword = ""
     @State private var newPassword = ""
 
@@ -72,6 +73,19 @@ struct EditProfileView: View {
         }
         .sheet(isPresented: $showChangeEmail) { changeEmailSheet }
         .sheet(isPresented: $showChangePassword) { changePasswordSheet }
+        .overlay(alignment: .top) {
+            if showPasswordUpdatedToast {
+                Text("Password successfully updated")
+                    .font(.ui(13.5, .semibold))
+                    .foregroundStyle(Color.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(Capsule().fill(Color.qGreenDeep))
+                    .shadow(color: Color.black.opacity(0.15), radius: 10, y: 4)
+                    .padding(.top, 10)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
     }
 
     // MARK: - Avatar
@@ -487,7 +501,13 @@ struct EditProfileView: View {
                 Spacer()
 
                 GreenButton(title: "Update password", isEnabled: newPassword.count >= 8) {
+                    oldPassword = ""
+                    newPassword = ""
                     showChangePassword = false
+                    withAnimation(.qSpring) { showPasswordUpdatedToast = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                        withAnimation { showPasswordUpdatedToast = false }
+                    }
                 }
             }
             .padding(DS.Space.screen)

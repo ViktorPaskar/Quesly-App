@@ -11,10 +11,8 @@ struct SettingsView: View {
     @State private var confirmDelete = false
 
     // App Preferences & Social state
-    @State private var syncContacts = true
-    @State private var streakAlerts = true
-    @State private var showInDiscover = true
     @State private var showCopiedAlert = false
+    @State private var showContactsSyncedAlert = false
 
     var body: some View {
         ScrollView {
@@ -51,16 +49,27 @@ struct SettingsView: View {
             Button("Delete account", role: .destructive) { store.deleteAccount() }
         }
         .overlay(alignment: .top) {
-            if showCopiedAlert {
-                Text("Profile link copied to clipboard")
-                    .font(.ui(13, .semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(Capsule().fill(Color.qInk))
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                    .padding(.top, 10)
+            VStack(spacing: 8) {
+                if showCopiedAlert {
+                    Text("Profile link copied to clipboard")
+                        .font(.ui(13, .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Capsule().fill(Color.qInk))
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                if showContactsSyncedAlert {
+                    Text("Contacts synced • 4 friends found on Quesly")
+                        .font(.ui(13, .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Capsule().fill(Color.qGreenDeep))
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
+            .padding(.top, 10)
         }
     }
 
@@ -140,9 +149,20 @@ struct SettingsView: View {
                             .foregroundStyle(Color.qGray)
                     }
                     Spacer()
-                    Toggle("", isOn: $syncContacts)
-                        .labelsHidden()
-                        .tint(Color.qGreen)
+                    Toggle("", isOn: Binding(
+                        get: { store.syncContacts },
+                        set: { enabled in
+                            store.syncContacts = enabled
+                            if enabled {
+                                withAnimation(.qSpring) { showContactsSyncedAlert = true }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                                    withAnimation { showContactsSyncedAlert = false }
+                                }
+                            }
+                        }
+                    ))
+                    .labelsHidden()
+                    .tint(Color.qGreen)
                 }
                 .padding(DS.Space.m)
 
@@ -230,9 +250,12 @@ struct SettingsView: View {
                             .foregroundStyle(Color.qGray)
                     }
                     Spacer()
-                    Toggle("", isOn: $streakAlerts)
-                        .labelsHidden()
-                        .tint(Color.qGreen)
+                    Toggle("", isOn: Binding(
+                        get: { store.streakAlerts },
+                        set: { store.streakAlerts = $0 }
+                    ))
+                    .labelsHidden()
+                    .tint(Color.qGreen)
                 }
                 .padding(DS.Space.m)
 
@@ -290,7 +313,10 @@ struct SettingsView: View {
                             .foregroundStyle(Color.qGray)
                     }
                     Spacer()
-                    Toggle("", isOn: $showInDiscover)
+                    Toggle("", isOn: Binding(
+                        get: { store.showInDiscover },
+                        set: { store.showInDiscover = $0 }
+                    ))
                         .labelsHidden()
                         .tint(Color.qGreen)
                 }

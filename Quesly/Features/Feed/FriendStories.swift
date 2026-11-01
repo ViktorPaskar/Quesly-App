@@ -22,8 +22,16 @@ struct PeeksStoriesBar: View {
         if scope == .friends {
             return store.friendStories.filter { $0.authorId != store.me.id }
         } else {
-            // World scope: community answers for today (excluding followed friends & my own for pure discovery)
-            return store.todayAnswers.filter { $0.authorId != store.me.id && !store.followingIds.contains($0.authorId) }
+            // World scope: community answers for today (public only, excluding followed friends & my own for pure discovery)
+            return store.todayAnswers.filter {
+                $0.authorId != store.me.id
+                    && $0.visibility == .everyone
+                    && !($0.isHidden ?? false)
+                    && !store.hiddenAnswerIds.contains($0.id)
+                    && !store.reportedAnswerIds.contains($0.id)
+                    && !store.blockedIds.contains($0.authorId)
+                    && !store.followingIds.contains($0.authorId)
+            }
         }
     }
 

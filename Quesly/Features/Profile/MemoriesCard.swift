@@ -30,6 +30,7 @@ struct MemoriesCard: View {
             if showsHeader { header }
             monthBar
             MonthGrid(month: month, answered: store.answeredDays, selected: activeSelectedDate.wrappedValue) { day in
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 withAnimation(.qSpring) {
                     if let sel = activeSelectedDate.wrappedValue, calendar.isDate(sel, inSameDayAs: day) {
                         activeSelectedDate.wrappedValue = nil

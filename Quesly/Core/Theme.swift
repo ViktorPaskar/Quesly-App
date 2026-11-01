@@ -199,15 +199,15 @@ extension Animation {
     static let qSmooth = Animation.spring(response: 0.45, dampingFraction: 0.9)
 }
 
-/// Button style that gently shrinks on press.
+/// Button style that gently shrinks on press (Emil Kowalski / minimalist tactile feedback budget: <200ms).
 struct PressableStyle: ButtonStyle {
     var scale: CGFloat = 0.97
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? scale : 1)
-            .opacity(configuration.isPressed ? 0.85 : 1)
-            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+            .opacity(configuration.isPressed ? 0.88 : 1)
+            .animation(.spring(response: 0.20, dampingFraction: 0.75), value: configuration.isPressed)
     }
 }
 

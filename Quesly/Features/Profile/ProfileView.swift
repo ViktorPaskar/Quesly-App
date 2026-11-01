@@ -222,6 +222,7 @@ struct ProfileView: View {
             guard abs(dx) > 60, abs(dx) > abs(dy) * 1.5, let i = tabs.firstIndex(of: tab) else { return }
             let next = dx < 0 ? i + 1 : i - 1
             guard tabs.indices.contains(next) else { return }
+            UISelectionFeedbackGenerator().selectionChanged()
             withAnimation(.qSmooth) { tab = tabs[next] }
         }
     }

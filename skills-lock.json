@@ -229,6 +229,12 @@
       "skillPath": ".claude/skills/design-system/SKILL.md",
       "computedHash": "a8d1f1cd0f55979a872a2ce9717d3c33df23b0c378738b8d6adb574bfb266c77"
     },
+    "design-taste-frontend": {
+      "source": "leonxlnx/taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/taste-skill/SKILL.md",
+      "computedHash": "53590ee9325bee34d7888bf0d81bd3941a108b1e7850df46802d93104e3f2b90"
+    },
     "diagnosing-bugs": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -288,6 +294,12 @@
       "sourceType": "github",
       "skillPath": "skills/executing-plans/SKILL.md",
       "computedHash": "8e1b5cfea8dc1660d4d7c86cf028f1f84bbcddd5d33ef0ff26a219de9d7f60d0"
+    },
+    "find-animation-opportunities": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-animation-opportunities/SKILL.md",
+      "computedHash": "c6673fadf179233cc0a52c978ea9acc9b82a210665c749307a571a86ed4c092e"
     },
     "finishing-a-development-branch": {
       "source": "obra/superpowers",
@@ -355,6 +367,12 @@
       "skillPath": "skills/idea-refine/SKILL.md",
       "computedHash": "f4400771e231aeaa6d954cc41ea5845b71d96d8f4d1df5e312849cd75bff97dd"
     },
+    "impeccable": {
+      "source": "pbakaus/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/impeccable/SKILL.md",
+      "computedHash": "1c48f0f9ad4bf6cac3c1a17e511b064153b6439d6af5028189a0d7c1708e5aa9"
+    },
     "implement": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -378,6 +396,12 @@
       "sourceType": "github",
       "skillPath": "skills/incremental-implementation/SKILL.md",
       "computedHash": "bb1198705f46dc9ff75fb5685a7a872de5924d743b44eb202135f5046750ab7e"
+    },
+    "industrial-brutalist-ui": {
+      "source": "Leonxlnx/taste-skill-classics",
+      "sourceType": "github",
+      "skillPath": "skills/brutalist-skill/SKILL.md",
+      "computedHash": "f5f5fbe2b2a143f0205fad49ce169132921dc19d7cf2d5fa7e31a6295a116c3a"
     },
     "internal-comms": {
       "source": "anthropics/skills",
@@ -438,6 +462,12 @@
       "sourceType": "github",
       "skillPath": "skills/migration/SKILL.md",
       "computedHash": "7348b2d21ca05bdecc1e4ec2c8b63515ccb1700c8a261fdbd458b04b7383945b"
+    },
+    "minimalist-ui": {
+      "source": "Leonxlnx/taste-skill-classics",
+      "sourceType": "github",
+      "skillPath": "skills/minimalist-skill/SKILL.md",
+      "computedHash": "230a0028435595fdc5cdbbf046adc57babc31e94da9af39d6553f1d68a34f6f9"
     },
     "observability-and-instrumentation": {
       "source": "addyosmani/agent-skills",
@@ -512,10 +542,10 @@
       "computedHash": "e6e63bada1f038e0b5488f8b62f77ebbd36c97669ddc5afaffcd17f974709f9a"
     },
     "prototype": {
-      "source": "mattpocock/skills",
+      "source": "emilkowalski/skills",
       "sourceType": "github",
-      "skillPath": "skills/engineering/prototype/SKILL.md",
-      "computedHash": "62979fe039ef64407b258f8824db41b9185f788638747df803032df4153c2aae"
+      "skillPath": "skills/prototype/SKILL.md",
+      "computedHash": "165c803775adbe0df600b961167747b6ba6577e6e1dc9ae1b87fcf5dee800645"
     },
     "receiving-code-review": {
       "source": "obra/superpowers",
@@ -697,6 +727,12 @@
       "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
       "computedHash": "bf7fef75af567d1f5be7bcb98b4af1f9b38a68ad26d71b513f629896747ee190"
     },
+    "uizze-ui": {
+      "source": "uizze/uizze",
+      "sourceType": "github",
+      "skillPath": "skills/uizze-ui/SKILL.md",
+      "computedHash": "aea66917a4fdabeb559607af5fd1482fac51019cb1b7c17d0591e3c7241e4597"
+    },
     "ultracave": {
       "source": "JuliusBrussee/caveman",
       "sourceType": "github",
@@ -720,6 +756,12 @@
       "sourceType": "github",
       "skillPath": "skills/using-superpowers/SKILL.md",
       "computedHash": "ef8670c2a2d8e2f6ed52d6f3219759903300ca13afc5ec2e25826a735112562b"
+    },
+    "vercel-react-view-transitions": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-view-transitions/SKILL.md",
+      "computedHash": "fb654c297f52c2771ce64b22a4a18509d0412ef07e020bc09625441df18a750d"
     },
     "verification-before-completion": {
       "source": "obra/superpowers",

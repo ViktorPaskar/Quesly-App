@@ -338,6 +338,7 @@ struct DailyQuestionView: View {
 
         editorFocused = false
         store.submitAnswer(text, visibility: visibility)
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
         onSubmitted()
     }
 }

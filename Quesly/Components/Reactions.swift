@@ -12,7 +12,10 @@ struct ReactionPopover: View {
     var body: some View {
         HStack(spacing: 0) {
             ForEach(Array(ReactionKind.allCases.enumerated()), id: \.element) { index, kind in
-                Button { onPick(kind) } label: {
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    onPick(kind)
+                } label: {
                     ReactionSticker(kind: kind, size: 42)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)

@@ -35,11 +35,13 @@ enum DemoConfig {
         switch screen {
         case .welcome:
             return
-        case .findFriends:
-            store.signUp(username: MockData.me.username, email: MockData.me.email)
         case .notifyPrime:
             store.signUp(username: MockData.me.username, email: MockData.me.email)
-            store.finishFindFriends()
+            store.submitAnswer(MockData.sampleAnswers[store.todayQuestion.id] ?? "")
+        case .findFriends:
+            store.signUp(username: MockData.me.username, email: MockData.me.email)
+            store.submitAnswer(MockData.sampleAnswers[store.todayQuestion.id] ?? "")
+            store.finishNotificationPriming(enable: false)
         case .question, .composer, .tour:
             store.signIn(email: MockData.me.email)
         default:

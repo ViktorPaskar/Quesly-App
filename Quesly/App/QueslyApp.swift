@@ -62,14 +62,15 @@ struct RootView: View {
                     WidgetGalleryView()
                 } else if !store.isSignedIn {
                     WelcomeView()
-                } else if store.onboarding == .findFriends {
-                    NavigationStack { FindFriendsView().withQueslyRoutes().toolbar(.hidden, for: .navigationBar) }
-                        .transition(.move(edge: .trailing))
+                } else if !store.hasAnsweredToday {
+                    // New users answer first: value before any permission or friends ask.
+                    DailyQuestionView(onSubmitted: flashThenFeed)
                 } else if store.onboarding == .notifications {
                     NotificationPrimingView()
                         .transition(.move(edge: .trailing))
-                } else if !store.hasAnsweredToday {
-                    DailyQuestionView(onSubmitted: flashThenFeed)
+                } else if store.onboarding == .findFriends {
+                    NavigationStack { FindFriendsView().withQueslyRoutes().toolbar(.hidden, for: .navigationBar) }
+                        .transition(.move(edge: .trailing))
                 } else {
                     MainTabView()
                 }

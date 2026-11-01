@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Onboarding step 1 after sign-up: follow a few people so the Friends feed isn't empty on day one.
+/// Onboarding step 2 (after the first answer): follow a few people so the Friends feed isn't empty on day one.
 struct FindFriendsView: View {
     @Environment(AppStore.self) private var store
     @State private var query = ""
@@ -14,7 +14,7 @@ struct FindFriendsView: View {
     var body: some View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 6) {
-                StepDots(current: 0, total: 2)
+                StepDots(current: 1, total: 2)
                     .padding(.bottom, 2)
                 Text("Find your people")
                     .font(.display(24, .medium))
@@ -67,7 +67,7 @@ struct FindFriendsView: View {
             }
 
             let count = store.followingIds.count
-            LimeButton(title: count > 0 ? "Continue · \(count) following" : "Continue") {
+            LimeButton(title: count > 0 ? "Continue · \(count) following" : "Skip for now") {
                 withAnimation(.qSmooth) { store.finishFindFriends() }
             }
             .padding(.horizontal, DS.Space.screen)
@@ -80,7 +80,7 @@ struct FindFriendsView: View {
     }
 }
 
-/// Onboarding step 2: explain *why* before the iOS permission prompt (much higher opt-in).
+/// Onboarding step 1 (right after the first answer): explain *why* before the iOS permission prompt (much higher opt-in).
 struct NotificationPrimingView: View {
     @Environment(AppStore.self) private var store
 
@@ -88,7 +88,7 @@ struct NotificationPrimingView: View {
         ZStack {
             Color.qBackground.ignoresSafeArea()
             VStack(spacing: 0) {
-                StepDots(current: 1, total: 2, onDark: false)
+                StepDots(current: 0, total: 2, onDark: false)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, DS.Space.screen)
                     .padding(.top, 20)
@@ -101,7 +101,7 @@ struct NotificationPrimingView: View {
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Color.qInk)
                     .padding(.top, 20)
-                Text("Get notified when the daily question drops at 9:00 AM, and the moment your friends share their honest thoughts.")
+                Text("We’ll remind you when the next question drops at 9:00 AM, and when friends answer.")
                     .font(.ui(15))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Color.qGray)

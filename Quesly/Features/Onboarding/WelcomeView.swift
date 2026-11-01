@@ -415,15 +415,7 @@ struct WelcomeView: View {
     }
 
     private func primaryContinueButton(title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.ui(16, .semibold))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(Capsule().fill(Color.black))
-        }
-        .buttonStyle(.pressable)
+        LimeButton(title: title, action: action)
     }
 }
 

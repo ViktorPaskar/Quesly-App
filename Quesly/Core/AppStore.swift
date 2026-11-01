@@ -10,7 +10,8 @@ enum FeedScope: String, CaseIterable, Identifiable {
 }
 
 enum OnboardingStep: String, Codable {
-    case findFriends, notifications, done
+    /// Order after sign-up: first answer → notifications → findFriends → done.
+    case notifications, findFriends, done
 }
 
 /// Single source of truth for the app. Currently backed by `MockData` + local persistence;
@@ -156,7 +157,8 @@ final class AppStore {
         me.username = username.trimmingCharacters(in: .whitespaces)
         me.email = email.trimmingCharacters(in: .whitespaces)
         seedHistoryIfNeeded()
-        onboarding = .findFriends
+        followingIds = [] // the user picks who to follow; nothing pre-selected
+        onboarding = .notifications
         isSignedIn = true
         persist()
     }
@@ -176,7 +178,7 @@ final class AppStore {
     }
 
     func finishFindFriends() {
-        onboarding = .notifications
+        onboarding = .done
         persist()
     }
 
@@ -184,7 +186,7 @@ final class AppStore {
     func finishNotificationPriming(enable: Bool) {
         remindersEnabled = enable
         if enable { NotificationScheduler.requestAuthorization(store: self) }
-        onboarding = .done
+        onboarding = .findFriends
         persist()
     }
 

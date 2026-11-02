@@ -155,6 +155,11 @@ struct FeedView: View {
     }
 
     private func handleScroll(currentY: CGFloat) {
+        // Once the full question card has scrolled under the header, pin the compact bar.
+        let pinned = currentY < -280
+        if pinned != questionPinned {
+            Task { @MainActor in withAnimation(.qSmooth) { questionPinned = pinned } }
+        }
         guard lastScrollY != 0 else {
             lastScrollY = currentY
             return
@@ -227,15 +232,6 @@ struct FeedView: View {
                     TodayQuestionBanner(question: store.todayQuestion,
                                         answeredCount: store.answeredTodayCount) {
                         showQuestion = true
-                    }
-                    .background {
-                        // Once the full card scrolls under the header, a compact copy pins to the top.
-                        GeometryReader { geo in
-                            Color.clear.onChange(of: geo.frame(in: .named("feedScrollSpace_\(scope.rawValue)")).maxY < 100) { _, gone in
-                                guard scope == self.scope, gone != questionPinned else { return }
-                                withAnimation(.qSmooth) { questionPinned = gone }
-                            }
-                        }
                     }
 
                     // Seamless Threads & X continuous stream with indented hairline dividers
@@ -397,7 +393,7 @@ struct CaughtUpFooter: View {
                 .background(Circle().fill(Color.qGreen.opacity(0.10)))
 
             if scope == .world {
-                Text("You’ve seen today’s 100 answers")
+                Text(count >= AppStore.worldDailyLimit ? "You’ve seen today’s 100 answers" : "You’ve seen all of today’s answers")
                     .font(.display(22, .semibold))
                     .foregroundStyle(Color.qInk)
                     .multilineTextAlignment(.center)

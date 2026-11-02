@@ -24,6 +24,7 @@ struct FeedView: View {
     // Twitter/X style collapsing header on scroll
     @State private var isHeaderHidden = false
     @State private var lastScrollY: CGFloat = 0
+    @State private var questionPinned = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -227,6 +228,15 @@ struct FeedView: View {
                                         answeredCount: store.answeredTodayCount) {
                         showQuestion = true
                     }
+                    .background {
+                        // Once the full card scrolls under the header, a compact copy pins to the top.
+                        GeometryReader { geo in
+                            Color.clear.onChange(of: geo.frame(in: .named("feedScrollSpace_\(scope.rawValue)")).maxY < 100) { _, gone in
+                                guard scope == self.scope, gone != questionPinned else { return }
+                                withAnimation(.qSmooth) { questionPinned = gone }
+                            }
+                        }
+                    }
 
                     // Seamless Threads & X continuous stream with indented hairline dividers
                     VStack(spacing: 0) {
@@ -301,6 +311,18 @@ struct FeedView: View {
                 .animation(.qSmooth, value: scope)
             }
             .coordinateSpace(name: "feedScrollSpace_\(scope.rawValue)")
+            .overlay(alignment: .top) {
+                if questionPinned && scope == self.scope {
+                    CompactQuestionBar(question: store.todayQuestion) {
+                        withAnimation(.qSmooth) {
+                            isHeaderHidden = false
+                            proxy.scrollTo("top", anchor: .top)
+                        }
+                    }
+                    .padding(.top, isHeaderHidden ? 6 : 94)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
             .onPreferenceChange(FeedScrollOffsetKey.self) { currentY in
                 if scope == self.scope {
                     handleScroll(currentY: currentY)
@@ -546,6 +568,42 @@ struct TodayQuestionBanner: View {
         }
         .buttonStyle(.pressable)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Slim pinned copy of today's question shown while scrolling, so the question is never out of sight.
+/// Tap scrolls back to the full card.
+struct CompactQuestionBar: View {
+    let question: DailyQuestion
+    var onTap: () -> Void = {}
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: DS.Space.xs) {
+                Circle().fill(Color.qLime).frame(width: 7, height: 7)
+                Text(question.text)
+                    .font(.display(15, .medium))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color.qLime)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, 14)
+            .frame(minHeight: DS.hitTarget)
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous)
+                    .fill(Color.qGreen)
+                    .shadow(color: .black.opacity(0.12), radius: 10, y: 4)
+            )
+            .padding(.horizontal, DS.Space.screen)
+        }
+        .buttonStyle(.pressable)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .accessibilityLabel("Today's question: \(question.text)")
+        .accessibilityHint("Scrolls back to the question card")
     }
 }
 

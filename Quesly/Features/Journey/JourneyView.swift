@@ -1,40 +1,38 @@
 import SwiftUI
 
-/// 3rd Bottom Tab: Journey ("Путь").
-/// Dedicated hub for daily ritual, streak, reflection rhythm, and quiet milestones.
-/// - 1. Streak Hero Card (7-day circles tracker, personal best, month total)
-/// - 2. Reflection Rhythm Card (clean, restrained time-of-day habit card without generic AI slop)
-/// - 3. "On This Day" Memory Flashback (reread previous reflections)
-/// - 4. Milestones Hub (all unlocked, in-progress, and locked achievements)
+/// 3rd Bottom Tab: Journey.
+/// Apple Fitness–style summary: one big number per section, one supporting line, generous air.
+/// - 1. Streak hero (the number, the week, best / this month)
+/// - 2. Rhythm (when you usually answer, one bar)
+/// - 3. On this day (a past answer to reread)
+/// - 4. Milestones
 struct JourneyView: View {
     @Environment(AppStore.self) private var store
     @State private var openedMemory: Answer?
     @State private var showInsightsSheet = DemoConfig.opensInsights
-    @State private var showNewUserCapsule = false
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DS.Space.m) {
-                // MARK: 1. Streak Hero Card (7-Day Tracker)
-                StreakCard()
+            VStack(alignment: .leading, spacing: 28) {
+                streakHero
 
-                // MARK: 2. Personal Reflection Rhythm
-                Button {
-                    showInsightsSheet = true
-                } label: {
-                    ReflectionRhythmCard()
+                section("Rhythm") {
+                    Button { showInsightsSheet = true } label: { rhythmCard }
+                        .buttonStyle(.pressable)
                 }
-                .buttonStyle(.plain)
 
-                // MARK: 3. "On This Day" Memory Flashback
-                onThisDayCard
+                if let memory = store.myAnswers.first(where: { !Calendar.current.isDateInToday($0.createdAt) }) {
+                    section("On this day") {
+                        Button { openedMemory = memory } label: { memoryCard(memory) }
+                            .buttonStyle(.pressable)
+                    }
+                }
 
-                // MARK: 4. Milestones & Achievements Hub
                 milestonesSection
             }
             .padding(.horizontal, DS.Space.screen)
             .padding(.top, DS.Space.s)
-            .padding(.bottom, 90) // comfortable clearance above floating bottom bar
+            .padding(.bottom, 90) // clearance above the floating dock
         }
         .background(Color.qBackground)
         .navigationTitle("Journey")
@@ -51,150 +49,167 @@ struct JourneyView: View {
         }
     }
 
-    // MARK: - On This Day / Time Capsule Card (Editorial & Clean)
+    // MARK: - Section scaffold
 
-    private var onThisDayCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            // Header with subtle warm styling
-            HStack(spacing: 8) {
-                IconChip(
-                    icon: showNewUserCapsule ? .hourglassMediumFill : .calendar,
-                    tint: Color(hex: 0xF59E0B),
-                    fill: Color(hex: 0xF59E0B).opacity(0.12)
-                )
+    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.ui(20, .semibold))
+                .foregroundStyle(Color.qInk)
+            content()
+        }
+    }
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(showNewUserCapsule ? "TIME CAPSULE" : "ON THIS DAY")
-                        .font(.ui(11, .semibold))
-                        .tracking(0.6)
-                        .foregroundStyle(Color(hex: 0xD97706))
-                    Text(showNewUserCapsule ? "Brewing memories" : "1 year ago today")
-                        .font(.ui(13.5, .semibold))
-                        .foregroundStyle(Color.qInk)
-                }
+    private func card<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+    }
 
-                Spacer(minLength: 0)
+    // MARK: - 1. Streak hero
 
-                // Toggle between Flashback and New User Capsule
-                Button {
-                    withAnimation(.qSpring) { showNewUserCapsule.toggle() }
-                } label: {
-                    HStack(spacing: 4) {
-                        Icon(showNewUserCapsule ? .sparkleFill : .hourglassMediumFill, size: 10)
-                        Text(showNewUserCapsule ? "View flashback" : "New user view")
-                            .font(.ui(11, .semibold))
+    private var weekDays: [Date] {
+        var cal = Calendar.current
+        cal.firstWeekday = 2
+        let today = cal.startOfDay(for: .now)
+        let start = cal.dateInterval(of: .weekOfYear, for: today)?.start ?? today
+        return (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: start) }
+    }
+
+    private var streakHero: some View {
+        let cal = Calendar.current
+        let streak = store.streak
+        let best = max(store.bestStreak, streak)
+        let thisMonth = store.answeredDays.filter { cal.isDate($0, equalTo: .now, toGranularity: .month) }.count
+
+        return VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("\(streak)")
+                    .font(.display(76, .semibold))
+                    .foregroundStyle(Color.qFlame)
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                Text("day streak")
+                    .font(.ui(20, .semibold))
+                    .foregroundStyle(Color.qInk)
+            }
+            .accessibilityElement(children: .combine)
+
+            HStack(spacing: 0) {
+                ForEach(weekDays, id: \.self) { day in
+                    let done = store.answeredDays.contains { cal.isDate($0, inSameDayAs: day) }
+                    let isToday = cal.isDateInToday(day)
+                    VStack(spacing: 8) {
+                        Circle()
+                            .fill(done ? Color.qFlame : Color.qField)
+                            .overlay(Circle().strokeBorder(isToday && !done ? Color.qFlame : .clear, lineWidth: 2))
+                            .frame(width: 30, height: 30)
+                        Text(day.formatted(.dateTime.weekday(.narrow)))
+                            .font(.ui(12, isToday ? .semibold : .regular))
+                            .foregroundStyle(isToday ? Color.qInk : Color.qGray)
                     }
-                    .foregroundStyle(Color.qInk2)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.qLine.opacity(0.6)))
+                    .frame(maxWidth: .infinity)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(day.formatted(.dateTime.weekday(.wide))), \(done ? "answered" : "not answered")")
                 }
-                .buttonStyle(.plain)
             }
 
-            if showNewUserCapsule {
-                // MARK: State A: New user state (no 1-month or 1-year history yet)
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Your personal time capsule is in the making")
-                        .font(.ui(14, .semibold))
-                        .foregroundStyle(Color.qInk)
+            Text("Best \(best) days · \(thisMonth) this month")
+                .font(.ui(15))
+                .foregroundStyle(Color.qGray)
+        }
+    }
 
-                    Text("Every reflection you write today is quietly sealed and will resurface here next month and next year.")
-                        .font(.ui(12.5))
-                        .foregroundStyle(Color.qGray)
-                        .lineSpacing(2.5)
+    // MARK: - 2. Rhythm
 
-                    // Capsule Progress Indicator
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("9 of 30 reflections saved")
-                                .font(.ui(11.5, .semibold))
-                                .foregroundStyle(Color.qInk)
-                            Spacer()
-                            Text("21 days left")
-                                .font(.ui(11.5))
-                                .foregroundStyle(Color.qGray)
-                        }
-
-                        GeometryReader { g in
-                            ZStack(alignment: .leading) {
-                                Capsule().fill(Color.qLine)
-                                Capsule()
-                                    .fill(Color(hex: 0xF59E0B))
-                                    .frame(width: max(8, g.size.width * 0.30))
-                            }
-                        }
-                        .frame(height: 6)
-                    }
-                    .padding(.top, 4)
-                }
-                .padding(14)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.qField)
-                )
-            } else {
-                // MARK: State B: Populated 1-year memory flashback
-                let sampleAnswer = store.myAnswers.first ?? MockData.myHistory().first ?? Answer(
-                    id: "sample",
-                    questionId: "q-kindness",
-                    questionText: "What is a small kindness you never forgot?",
-                    authorId: store.me.id,
-                    text: "A stranger held the train door for me when I was running late with heavy bags.",
-                    createdAt: .now
-                )
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(sampleAnswer.questionText)
-                        .font(.ui(13.5, .semibold))
-                        .foregroundStyle(Color.qInk)
-                        .lineLimit(2)
-
-                    HStack(alignment: .top, spacing: 10) {
-                        Rectangle()
-                            .fill(Color(hex: 0xF59E0B))
-                            .frame(width: 3)
-                            .clipShape(Capsule())
-
-                        Text("“\(sampleAnswer.text)”")
-                            .font(.display(15, .regular))
-                            .foregroundStyle(Color.qInk)
-                            .lineSpacing(3)
-                            .lineLimit(3)
-                    }
-
-                    // Button to open memory details
-                    Button {
-                        openedMemory = sampleAnswer
-                    } label: {
-                        HStack(spacing: 5) {
-                            Text("Read full reflection")
-                                .font(.ui(12.5, .semibold))
-                            Icon(.arrowRightBold, size: 10)
-                        }
-                        .foregroundStyle(Color.qInk)
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 2)
-                }
-                .padding(14)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.qField)
-                )
+    private var rhythm: [(period: String, share: Double, color: Color)] {
+        let cal = Calendar.current
+        var m = 0, a = 0, e = 0, n = 0
+        for answer in store.myAnswers {
+            switch cal.component(.hour, from: answer.createdAt) {
+            case 6..<12: m += 1
+            case 12..<18: a += 1
+            case 18..<23: e += 1
+            default: n += 1
             }
         }
-        .padding(18)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.qBlock)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.qLine, lineWidth: 1)
-                )
-        )
+        let total = max(1, m + a + e + n)
+        return [("Morning", Double(m) / Double(total), Color(hex: 0xF5A30B)),
+                ("Afternoon", Double(a) / Double(total), Color.qGreen),
+                ("Evening", Double(e) / Double(total), Color(hex: 0xF29CC0)),
+                ("Night", Double(n) / Double(total), Color(hex: 0x8B85E8))]
+    }
+
+    private var usualTime: String {
+        let cal = Calendar.current
+        let minutes = store.myAnswers.map { cal.component(.hour, from: $0.createdAt) * 60 + cal.component(.minute, from: $0.createdAt) }
+        guard !minutes.isEmpty else { return "—" }
+        let median = minutes.sorted()[minutes.count / 2]
+        let date = cal.date(bySettingHour: median / 60, minute: median % 60, second: 0, of: .now) ?? .now
+        return date.formatted(date: .omitted, time: .shortened)
+    }
+
+    private var rhythmCard: some View {
+        let parts = rhythm
+        let peak = parts.max { $0.share < $1.share }
+        return card {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("You usually answer at")
+                            .font(.ui(15))
+                            .foregroundStyle(Color.qGray)
+                        Text(usualTime)
+                            .font(.display(34, .semibold))
+                            .foregroundStyle(Color.qInk)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.qGray)
+                        .accessibilityHidden(true)
+                }
+
+                GeometryReader { geo in
+                    HStack(spacing: 3) {
+                        ForEach(parts, id: \.period) { part in
+                            Capsule().fill(part.color)
+                                .frame(width: max(part.share > 0 ? 6 : 0, (geo.size.width - 9) * part.share))
+                        }
+                    }
+                }
+                .frame(height: 10)
+                .accessibilityHidden(true)
+
+                if let peak {
+                    Text("Mostly in the \(peak.period.lowercased()) · \(Int((peak.share * 100).rounded()))%")
+                        .font(.ui(15))
+                        .foregroundStyle(Color.qGray)
+                }
+            }
+        }
+    }
+
+    // MARK: - 3. On this day
+
+    private func memoryCard(_ answer: Answer) -> some View {
+        card {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(answer.createdAt.formatted(.dateTime.month(.wide).day()))
+                    .font(.ui(13, .semibold))
+                    .foregroundStyle(Color.qGray)
+                Text(answer.questionText)
+                    .font(.ui(15, .semibold))
+                    .foregroundStyle(Color.qInk)
+                    .multilineTextAlignment(.leading)
+                Text(answer.text)
+                    .font(.display(20))
+                    .foregroundStyle(Color.qInk)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(4)
+            }
+        }
     }
 
     // MARK: - Milestones Section
@@ -406,229 +421,3 @@ private struct MilestoneRow: View {
         .padding(14)
     }
 }
-
-// MARK: - Reflection Rhythm & Time-of-Day Habit Card (Clean, Restrained, No Emojis)
-
-struct ReflectionRhythmCard: View {
-    @Environment(AppStore.self) private var store
-
-    struct Slot: Identifiable {
-        let id: String
-        let title: String
-        let hours: String
-        let systemIcon: String
-        let percentage: Int
-        let isPeak: Bool
-        let colors: [Color]
-    }
-
-    private var slots: [Slot] {
-        let answers = store.myAnswers
-        let cal = Calendar.current
-        var morning = 0, afternoon = 0, evening = 0, night = 0
-
-        for a in answers {
-            let h = cal.component(.hour, from: a.createdAt)
-            switch h {
-            case 6..<12: morning += 1
-            case 12..<18: afternoon += 1
-            case 18..<23: evening += 1
-            default: night += 1
-            }
-        }
-
-        let total = morning + afternoon + evening + night
-        let mPct = total > 0 ? Int(round(Double(morning) / Double(total) * 100)) : 54
-        let aPct = total > 0 ? Int(round(Double(afternoon) / Double(total) * 100)) : 24
-        let ePct = total > 0 ? Int(round(Double(evening) / Double(total) * 100)) : 17
-        let nPct = total > 0 ? max(0, 100 - (mPct + aPct + ePct)) : 5
-
-        let maxVal = max(mPct, aPct, ePct, nPct)
-
-        return [
-            Slot(
-                id: "morning",
-                title: "Morning",
-                hours: "06–12h",
-                systemIcon: "sunrise.fill",
-                percentage: mPct,
-                isPeak: mPct == maxVal,
-                colors: [Color(hex: 0xF59E0B)]
-            ),
-            Slot(
-                id: "afternoon",
-                title: "Afternoon",
-                hours: "12–18h",
-                systemIcon: "sun.max.fill",
-                percentage: aPct,
-                isPeak: aPct == maxVal && aPct > mPct,
-                colors: [Color.qGreen]
-            ),
-            Slot(
-                id: "evening",
-                title: "Evening",
-                hours: "18–23h",
-                systemIcon: "sunset.fill",
-                percentage: ePct,
-                isPeak: ePct == maxVal && ePct > mPct,
-                colors: [Color.qPink]
-            ),
-            Slot(
-                id: "night",
-                title: "Night",
-                hours: "23–06h",
-                systemIcon: "moon.stars.fill",
-                percentage: nPct,
-                isPeak: nPct == maxVal && nPct > mPct,
-                colors: [Color(hex: 0x6366F1)]
-            )
-        ]
-    }
-
-    private var peakSlot: Slot {
-        slots.first(where: \.isPeak) ?? slots[0]
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header
-            HStack(spacing: 8) {
-                IconChip(icon: .clock, tint: .qGreen, fill: Color.qMint.opacity(0.35))
-
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("REFLECTION RHYTHM")
-                        .font(.ui(11, .semibold))
-                        .tracking(0.6)
-                        .foregroundStyle(Color.qBrandText)
-                    Text("Daily peak & habit pace")
-                        .font(.ui(13.5, .medium))
-                        .foregroundStyle(Color.qGray)
-                }
-
-                Spacer()
-
-                HStack(spacing: 4) {
-                    Text("Details")
-                        .font(.ui(12, .semibold))
-                        .foregroundStyle(Color.qGreen)
-                    Icon(.caretRightBold, size: 10)
-                        .foregroundStyle(Color.qGreen)
-                }
-                .padding(.horizontal, 9)
-                .padding(.vertical, 4.5)
-                .background(Capsule().fill(Color.qMint.opacity(0.28)))
-            }
-
-            // Hero Peak Time + Subtitle
-            HStack(alignment: .center, spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Most active at")
-                        .font(.ui(12))
-                        .foregroundStyle(Color.qGray)
-                    Text("8:45 AM")
-                        .font(.ui(22, .semibold))
-                        .foregroundStyle(Color.qInk)
-                        .monospacedDigit()
-                }
-
-                Spacer()
-
-                // Proportional Distribution Bars (Clean, Restrained)
-                HStack(alignment: .bottom, spacing: 10) {
-                    ForEach(slots) { slot in
-                        barColumn(slot)
-                    }
-                }
-            }
-            .padding(14)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.qField)
-            )
-
-            // Micro-metrics Footer (Clean 3-column stats)
-            HStack(spacing: 0) {
-                metricColumn(
-                    value: "\(peakSlot.percentage)%",
-                    title: "\(peakSlot.title) peak",
-                    subtitle: peakSlot.hours
-                )
-
-                Rectangle().fill(Color.qLine).frame(width: 1, height: 26)
-
-                metricColumn(
-                    value: "94%",
-                    title: "Consistency",
-                    subtitle: "on-time rhythm"
-                )
-
-                Rectangle().fill(Color.qLine).frame(width: 1, height: 26)
-
-                metricColumn(
-                    value: "\(store.totalQuestionsAnswered)",
-                    title: "Total reflections",
-                    subtitle: "answered so far"
-                )
-            }
-            .padding(.top, 2)
-        }
-        .padding(18)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.qBlock)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.qLine, lineWidth: 1)
-                )
-        )
-    }
-
-    private func barColumn(_ slot: Slot) -> some View {
-        let barMaxHeight: CGFloat = 50
-        let maxPct = CGFloat(max(slots.map(\.percentage).max() ?? 100, 1))
-        let normalized = CGFloat(slot.percentage) / maxPct
-        let barHeight = slot.percentage == 0 ? 6 : max(10, barMaxHeight * (0.2 + 0.75 * normalized))
-
-        return VStack(spacing: 4) {
-            Text("\(slot.percentage)%")
-                .font(.ui(10, slot.isPeak ? .bold : .medium))
-                .foregroundStyle(slot.isPeak ? Color.qGreenDeep : Color.qGray)
-                .monospacedDigit()
-
-            ZStack(alignment: .bottom) {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.qLine.opacity(0.65))
-                    .frame(width: 24, height: barMaxHeight)
-
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(slot.colors[0])
-                    .opacity(slot.isPeak ? 1.0 : 0.65)
-                    .frame(width: 24, height: barHeight)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-
-            Image(systemName: slot.systemIcon)
-                .font(.system(size: 11, weight: slot.isPeak ? .semibold : .regular))
-                .foregroundStyle(slot.isPeak ? slot.colors[0] : Color.qGray)
-                .padding(.top, 1)
-        }
-    }
-
-    private func metricColumn(value: String, title: String, subtitle: String) -> some View {
-        VStack(spacing: 2) {
-            Text(value)
-                .font(.ui(15, .semibold))
-                .foregroundStyle(Color.qInk)
-                .monospacedDigit()
-            Text(title)
-                .font(.ui(11.5, .medium))
-                .foregroundStyle(Color.qInk2)
-            Text(subtitle)
-                .font(.ui(10))
-                .foregroundStyle(Color.qGray)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
-typealias ReflectionStatsCard = ReflectionRhythmCard

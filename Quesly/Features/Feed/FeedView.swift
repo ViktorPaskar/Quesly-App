@@ -302,6 +302,15 @@ struct FeedView: View {
                                     .frame(height: DS.hitTarget)
                             }
                         }
+                    } else if scope == .world && others.isEmpty {
+                        EmptyStateView(icon: .userFill,
+                                       title: "No new voices yet",
+                                       message: "World shows answers from people you don't follow. Check back later today, or see what your friends said.") {
+                            Button("Open Friends") { withAnimation(.qSmooth) { self.scope = .friends } }
+                                .font(.ui(16, .semibold))
+                                .foregroundStyle(Color.qBrandText)
+                                .frame(height: DS.hitTarget)
+                        }
                     } else if !others.isEmpty {
                         CaughtUpFooter(count: others.count, scope: scope)
                             .id("end")

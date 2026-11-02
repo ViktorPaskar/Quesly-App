@@ -164,8 +164,83 @@ enum MockData {
         ],
     ]
 
+    /// Answers from people the seed user doesn't follow, so the World feed (which excludes friends) is never empty.
+    private static let worldAnswers: [String: [(String, String, Double)]] = [
+        "q-dayoff": [
+            ("u11", "Sleep in, long brunch, then a museum I keep saying I'll visit", 4),
+            ("u17", "Fishing with my dad. We never catch anything and that's the point", 15),
+            ("u26", "Paint all day with the windows open", 28),
+            ("u32", "Football in the park until the sun goes down", 41),
+            ("u38", "Phone off, train to the coast, back by midnight", 55),
+        ],
+        "q-happy": [
+            ("u11", "Golden hour light on the Seine on my way home", 11),
+            ("u13", "My little brother's voice messages, they're always 4 minutes long", 20),
+            ("u23", "The smell of rain on hot pavement", 33),
+            ("u34", "Cold water swims before work", 46),
+            ("u40", "When the barista remembers my order", 58),
+        ],
+        "q-live": [
+            ("u11", "Kyoto in autumn, every single year", 3),
+            ("u17", "A farmhouse in Tuscany with too many olive trees", 14),
+            ("u22", "Cape Town, between the mountain and the ocean", 26),
+            ("u35", "Lagos. Loud, alive, and home", 39),
+            ("u36", "Reykjavík, for the northern lights from my window", 52),
+        ],
+        "q-power": [
+            ("u13", "Pausing time for ten extra minutes of sleep", 5),
+            ("u20", "Speaking every language fluently", 16),
+            ("u27", "Healing people with a touch", 29),
+            ("u33", "Breathing underwater, the ocean is so unexplored", 42),
+            ("u39", "Rewinding awkward moments", 57),
+        ],
+        "q-advice": [
+            ("u14", "\"Done is better than perfect\", my first boss", 6),
+            ("u16", "Drink water and call your mom", 18),
+            ("u24", "\"Nobody is thinking about you as much as you think\"", 30),
+            ("u30", "Say yes more often before you're ready", 44),
+            ("u37", "Rest is not a reward, it's a requirement", 59),
+        ],
+        "q-song": [
+            ("u6", "September by Earth, Wind & Fire", 7),
+            ("u19", "Anything with a saxophone solo", 19),
+            ("u28", "Dancing Queen, no discussion", 31),
+            ("u32", "Afrobeats playlist on shuffle", 45),
+            ("u40", "Mr. Brightside at full volume", 56),
+        ],
+        "q-proud": [
+            ("u6", "I moved to a new city alone and made it home", 8),
+            ("u16", "Finished my thesis while working full time", 21),
+            ("u23", "Learned to drive at 34", 34),
+            ("u29", "Kept a plant alive for a whole year", 47),
+            ("u31", "Opened my own little studio", 60),
+        ],
+        "q-tiny": [
+            ("u14", "A kid waved at me from a bus window", 9),
+            ("u19", "Found a note in a library book", 22),
+            ("u26", "My neighbour left fresh figs at my door", 35),
+            ("u34", "The bus driver waited for me", 48),
+            ("u38", "A dog chose to sit next to me in the park", 61),
+        ],
+        "q-learn": [
+            ("u20", "Woodworking, I want to build my own table", 10),
+            ("u22", "Sign language", 23),
+            ("u27", "Proper Italian cooking from a nonna", 36),
+            ("u33", "Surfing without falling every 3 seconds", 49),
+            ("u39", "Piano, finally", 62),
+        ],
+        "q-meal": [
+            ("u17", "My nonna's lasagna, the Sunday version", 12),
+            ("u24", "Jollof rice at a family party", 24),
+            ("u30", "Borscht with a lot of sour cream", 37),
+            ("u35", "Pho on a rainy evening", 50),
+            ("u36", "Miso soup and rice after a long trip", 63),
+        ],
+    ]
+
     static func answers(for question: DailyQuestion, now: Date = .now) -> [Answer] {
-        let seeds = feedAnswers[question.id] ?? feedAnswers["q-dayoff"]!
+        let seeds = (feedAnswers[question.id] ?? feedAnswers["q-dayoff"]!)
+            + (worldAnswers[question.id] ?? worldAnswers["q-dayoff"]!)
         return seeds.enumerated().map { index, seed in
             let (author, text, minutes) = seed
             var answer = Answer(id: "a-\(question.id)-\(author)", questionId: question.id, questionText: question.text,

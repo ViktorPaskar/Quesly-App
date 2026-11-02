@@ -25,6 +25,7 @@ struct FeedView: View {
     @State private var isHeaderHidden = false
     @State private var lastScrollY: CGFloat = 0
     @State private var questionPinned = false
+    @State private var showFriendsToast = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -92,6 +93,14 @@ struct FeedView: View {
             .presentationDragIndicator(.visible)
         }
         .sensoryFeedback(.success, trigger: unlockHaptic)
+        .islandToast(isPresented: $showFriendsToast) {
+            let friends = store.friendsAnsweredToday
+            return IslandToast(users: friends,
+                               title: friends.count == 1 ? "(friends[0].username) answered" : "(friends.count) friends answered",
+                               subtitle: "See what they said") {
+                withAnimation(.qSmooth) { scope = .friends; showFriendsToast = false }
+            }
+        }
         .task(id: store.unlockCelebrationAt) { await celebrateUnlock() }
         .task {
             guard DemoConfig.opensStory, storyLaunch == nil else { return }
@@ -377,6 +386,9 @@ struct FeedView: View {
         revealCount = .max
         try? await Task.sleep(for: .seconds(1.6))
         withAnimation(.qSmooth) { highlightsMine = false }
+        if !store.friendsAnsweredToday.isEmpty {
+            withAnimation { showFriendsToast = true }
+        }
     }
 }
 

@@ -64,7 +64,7 @@ struct JourneyView: View {
         content()
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qBlock))
+            .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qField))
     }
 
     // MARK: - 1. Streak hero
@@ -143,7 +143,18 @@ struct JourneyView: View {
 
     private var usualTime: String {
         let cal = Calendar.current
-        let minutes = store.myAnswers.map { cal.component(.hour, from: $0.createdAt) * 60 + cal.component(.minute, from: $0.createdAt) }
+        // Median time inside the most common part of the day, so it agrees with "Mostly in the …".
+        let peak = rhythm.max { $0.share < $1.share }?.period
+        let inPeak = store.myAnswers.filter { a in
+            let h = cal.component(.hour, from: a.createdAt)
+            switch peak {
+            case "Morning": return (6..<12).contains(h)
+            case "Afternoon": return (12..<18).contains(h)
+            case "Evening": return (18..<23).contains(h)
+            default: return h >= 23 || h < 6
+            }
+        }
+        let minutes = inPeak.map { cal.component(.hour, from: $0.createdAt) * 60 + cal.component(.minute, from: $0.createdAt) }
         guard !minutes.isEmpty else { return "—" }
         let median = minutes.sorted()[minutes.count / 2]
         let date = cal.date(bySettingHour: median / 60, minute: median % 60, second: 0, of: .now) ?? .now

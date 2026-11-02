@@ -182,6 +182,14 @@ struct MainTabView: View {
         .padding(.horizontal, DS.Space.screen)
         .padding(.top, 2)
         .padding(.bottom, -8)
+        // Fade content out under the dock so text doesn't run into the home indicator.
+        .background(alignment: .bottom) {
+            LinearGradient(colors: [Color.qBackground.opacity(0), Color.qBackground],
+                           startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.55))
+                .frame(height: 96)
+                .ignoresSafeArea(edges: .bottom)
+                .allowsHitTesting(false)
+        }
         .animation(.qSpring, value: tab)
         .sensoryFeedback(.selection, trigger: tab)
     }

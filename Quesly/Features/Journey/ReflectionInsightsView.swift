@@ -188,18 +188,20 @@ struct ReflectionInsightsView: View {
             .padding(.top, 4)
 
             // Micro 4-zone legend
-            HStack(spacing: 0) {
+            // Two columns so period names never break mid-word ("Mornin g").
+            LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)],
+                      alignment: .leading, spacing: 6) {
                 ForEach(DayPeriod.allCases) { p in
                     HStack(spacing: 4) {
                         Circle().fill(p.color).frame(width: 6, height: 6)
                         Text(p.rawValue)
-                            .font(.ui(11.5, .medium))
+                            .font(.ui(12, .medium))
                             .foregroundStyle(Color.qInk2)
                         Text("\(p.percentage(in: store.myAnswers))%")
-                            .font(.ui(11, .semibold))
+                            .font(.ui(12, .semibold))
                             .foregroundStyle(Color.qGray)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lineLimit(1)
                 }
             }
             .padding(.top, 2)

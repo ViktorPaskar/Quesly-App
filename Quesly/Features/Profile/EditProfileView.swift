@@ -196,7 +196,7 @@ struct EditProfileView: View {
                         Spacer()
                         Text("\(draft.bio.count)/\(AppUser.bioLimit)")
                             .font(.ui(12))
-                            .foregroundStyle(draft.bio.count >= AppUser.bioLimit ? Color.qFlame : Color.qGray)
+                            .foregroundStyle(draft.bio.count > AppUser.bioLimit ? Color.qFlame : Color.qGray)
                             .monospacedDigit()
                     }
 

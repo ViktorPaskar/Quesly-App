@@ -340,7 +340,26 @@ struct ProfileHeader: View {
 
     /// Four equal columns with hairline dividers: Answers · Friends · Followers · Following.
     /// Left-aligned numbers and labels for a strict vertical anchor matching the profile layout.
+    @ViewBuilder
     private var stats: some View {
+        if typeSize.isAccessibilitySize {
+            // Four columns can't fit at accessibility sizes: 2×2 so nothing truncates.
+            Grid(alignment: .leading, horizontalSpacing: DS.Space.m, verticalSpacing: DS.Space.s) {
+                GridRow {
+                    stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil, action: isMe ? onAnswers : nil)
+                    stat(isMe ? store.friendsCount : 12, "Friends", route: isMe ? .friends : nil)
+                }
+                GridRow {
+                    stat(user?.followers ?? 0, "Followers", route: isMe ? .followers : nil)
+                    stat(followingCount, "Following", route: isMe ? .following : nil)
+                }
+            }
+        } else {
+            statsRow
+        }
+    }
+
+    private var statsRow: some View {
         HStack(spacing: 0) {
             stat(store.answers(of: user?.id ?? "").count, "Answers", route: nil, action: isMe ? onAnswers : nil)
 

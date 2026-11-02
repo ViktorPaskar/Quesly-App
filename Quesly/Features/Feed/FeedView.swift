@@ -366,12 +366,12 @@ struct CaughtUpFooter: View {
                 .background(Circle().fill(Color.qGreen.opacity(0.10)))
 
             if scope == .world {
-                Text("You’ve explored today’s Daily 100")
+                Text("You’ve seen today’s 100 answers")
                     .font(.display(22, .semibold))
                     .foregroundStyle(Color.qInk)
                     .multilineTextAlignment(.center)
 
-                Text("Come back tomorrow for a new question, or catch up with your friends.")
+                Text("World shows 100 answers a day, so you can read and get on with your day. Your Friends feed never runs out.")
                     .font(.ui(15))
                     .foregroundStyle(Color.qGray)
                     .multilineTextAlignment(.center)

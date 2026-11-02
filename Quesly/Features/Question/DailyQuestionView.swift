@@ -47,12 +47,6 @@ struct DailyQuestionView: View {
                         HStack {
                             VisibilityPicker(selection: $visibility)
                             Spacer()
-                            HStack(spacing: 5) {
-                                Icon(.clock, size: 13, weight: .semibold)
-                                Text("\(AppStore.timeLeftString()) left")
-                                    .font(.ui(13, .semibold))
-                            }
-                            .foregroundStyle(Color.qGray)
                         }
                         .padding(.horizontal, DS.Space.xl)
                     }

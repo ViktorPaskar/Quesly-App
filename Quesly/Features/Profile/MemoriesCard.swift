@@ -298,7 +298,8 @@ private struct DayCell: View {
                     Text(number).font(.ui(13, .medium)).foregroundStyle(Color.qGray)
                 }
             case .future:
-                Text(number).font(.ui(13)).foregroundStyle(Color(hex: 0xC7C7CC))
+                // qGray keeps future days readable (AA); the missing fill already marks them as not yet.
+                Text(number).font(.ui(13)).foregroundStyle(Color.qGray.opacity(0.75))
             }
         }
         .frame(width: 36, height: 36)

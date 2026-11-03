@@ -39,17 +39,15 @@ struct AuthView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    QueslyLogo(height: 26, markColor: .qLime, textColor: .qInk, background: .qGreenDeep)
-                        .padding(.top, 8)
-
-                    VStack(alignment: .leading, spacing: 8) {
+                    // Just the brand, centred: no tagline promising numbers we don't have yet.
+                    VStack(spacing: 14) {
+                        QueslyLogo(height: 38, markColor: .qLime, textColor: .qInk, background: .qGreenDeep)
                         Text(mode == .signUp ? "Create your account" : "Welcome back")
-                            .font(.display(26, .medium)).foregroundStyle(Color.qInk)
-                        Text(mode == .signUp
-                             ? "One question a day. Join millions of stories."
-                             : "Today's question is waiting for you.")
-                            .font(.ui(15)).foregroundStyle(Color.qGray)
+                            .font(.display(24, .medium)).foregroundStyle(Color.qInk)
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 12)
+                    .padding(.bottom, 4)
 
                     if mode == .signUp {
                         labeled("Nickname") {

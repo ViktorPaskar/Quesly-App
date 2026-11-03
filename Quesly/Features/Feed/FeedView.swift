@@ -238,8 +238,7 @@ struct FeedView: View {
                     .padding(.top, 4)
                     .padding(.bottom, 2)
 
-                    TodayQuestionBanner(question: store.todayQuestion,
-                                        answeredCount: store.answeredTodayCount) {
+                    TodayQuestionBanner(question: store.todayQuestion) {
                         showQuestion = true
                     }
 
@@ -477,7 +476,6 @@ struct StreakChip: View {
 struct TodayQuestionBanner: View {
     @Environment(AppStore.self) private var store
     let question: DailyQuestion
-    var answeredCount: Int = 0
     var onTap: () -> Void = {}
 
     private var words: [String] {
@@ -549,9 +547,9 @@ struct TodayQuestionBanner: View {
                                 Icon(.fireFill, size: 14)
                                     .foregroundStyle(Color.qFlame)
                             }
-                            Text(answeredCount > 0
-                                 ? "\(answeredCount) answered" + (friends.isEmpty ? "" : " · \(friends.count) friends")
-                                 : "Be the first to answer")
+                            Text(friends.isEmpty
+                                 ? "Be the first of your friends"
+                                 : "\(friends.count) \(friends.count == 1 ? "friend" : "friends") answered")
                                 .font(.ui(13, .medium))
                                 .foregroundStyle(Color.white.opacity(0.85))
                                 .lineLimit(1)

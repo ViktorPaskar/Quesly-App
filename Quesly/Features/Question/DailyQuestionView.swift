@@ -176,7 +176,7 @@ struct DailyQuestionView: View {
             .offset(y: revealed > 0 || reduceMotion ? 0 : 12)
             .animation(.qSmooth, value: revealed)
 
-            AnsweredTodayProof(count: store.answeredTodayCount, friends: store.friendsAnsweredToday)
+            AnsweredTodayProof(friends: store.friendsAnsweredToday)
                 .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -445,7 +445,6 @@ private struct LockedFriendsPreview: View {
 
 /// "12,483 people answered today" with friends' faces — the nudge to join in.
 private struct AnsweredTodayProof: View {
-    let count: Int
     let friends: [AppUser]
 
     var body: some View {
@@ -453,11 +452,12 @@ private struct AnsweredTodayProof: View {
             if !friends.isEmpty {
                 AvatarStack(users: friends, size: 28, ring: .white)
             }
+            // Only real friends; no global count until it comes from the backend.
             Group {
                 if let first = friends.first {
-                    Text("**\(first.username)** and \((count - 1).formatted()) others answered")
-                } else {
-                    Text("**\(count.formatted())** people answered today")
+                    Text(friends.count == 1
+                         ? "**\(first.username)** already answered"
+                         : "**\(first.username)** and \(friends.count - 1) \(friends.count == 2 ? "friend" : "friends") already answered")
                 }
             }
             .font(.ui(14))

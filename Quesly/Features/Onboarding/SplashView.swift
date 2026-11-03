@@ -12,7 +12,7 @@ struct SplashView: View {
                 QueslyLogo(height: 38, background: .clear, animates: true)
                     .scaleEffect(animate ? 1 : 0.85)
                     .opacity(animate ? 1 : 0)
-                Text("ONE QUESTION A DAY. MILLIONS OF STORIES")
+                Text("ONE QUESTION A DAY")
                     .font(.ui(12, .semibold))
                     .foregroundStyle(.white)
                     .opacity(showTagline ? 1 : 0)

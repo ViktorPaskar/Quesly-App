@@ -66,12 +66,17 @@ struct MainTabView: View {
 
             if !isDetailActive {
                 // Fade content out behind the dock all the way down past the home indicator.
-                LinearGradient(colors: [Color.qBackground.opacity(0), Color.qBackground],
-                               startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.35))
-                    .frame(height: 90)
-                    .ignoresSafeArea(edges: .bottom)
-                    .allowsHitTesting(false)
-                    .transition(.opacity)
+                // Full-screen VStack so the solid part is pinned to the physical bottom edge.
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    LinearGradient(colors: [Color.qBackground.opacity(0), Color.qBackground],
+                                   startPoint: .top, endPoint: .bottom)
+                        .frame(height: 56)
+                    Color.qBackground.frame(height: 60)
+                }
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+                .transition(.opacity)
 
                 tabBar
                     .transition(.move(edge: .bottom).combined(with: .opacity))

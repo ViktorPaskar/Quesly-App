@@ -5,7 +5,7 @@ import Observation
 /// `SIMCTL_CHILD_QUESLY_SCREEN=feed xcrun simctl launch booted app.quesly.ios`
 enum DemoConfig {
     enum Screen: String {
-        case welcome, findFriends, notifyPrime, question, composer
+        case welcome, addPhoto, findFriends, notifyPrime, question, composer
         case feed, feedEnd, feedError, offline, tray, friends, otherProfile, share, reactions, story
         case discover, notifications, profile, profileList, profileReposts, profileSaved, memory, streakFirst, streakRestart, menu, settings, editProfile, achievements, insights
         case widgets
@@ -35,12 +35,17 @@ enum DemoConfig {
         switch screen {
         case .welcome:
             return
+        case .addPhoto:
+            store.signUp(username: MockData.me.username, email: MockData.me.email)
+            store.submitAnswer(MockData.sampleAnswers[store.todayQuestion.id] ?? "")
         case .notifyPrime:
             store.signUp(username: MockData.me.username, email: MockData.me.email)
             store.submitAnswer(MockData.sampleAnswers[store.todayQuestion.id] ?? "")
+            store.finishPhotoStep()
         case .findFriends:
             store.signUp(username: MockData.me.username, email: MockData.me.email)
             store.submitAnswer(MockData.sampleAnswers[store.todayQuestion.id] ?? "")
+            store.finishPhotoStep()
             store.finishNotificationPriming(enable: false)
         case .question, .composer, .tour:
             store.signIn(email: MockData.me.email)

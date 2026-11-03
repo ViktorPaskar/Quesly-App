@@ -316,6 +316,29 @@ struct ProfileHeader: View {
 
             if let bio = user?.bio, !bio.isEmpty {
                 ExpandableBio(text: bio).padding(.top, DS.Space.m)
+            } else if isMe && store.answeredDays.count >= 2 {
+                // Asked only once the user has come back, never during sign-up.
+                NavigationLink(value: Route.editProfile) {
+                    HStack(spacing: DS.Space.s) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Tell people about yourself")
+                                .font(.ui(15, .semibold))
+                                .foregroundStyle(Color.qInk)
+                            Text("Add a short bio so friends know what you’re about.")
+                                .font(.ui(13))
+                                .foregroundStyle(Color.qGray)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.qGray)
+                            .accessibilityHidden(true)
+                    }
+                    .padding(14)
+                    .background(RoundedRectangle(cornerRadius: DS.Radius.m, style: .continuous).fill(Color.qMint.opacity(0.6)))
+                }
+                .buttonStyle(.pressable)
+                .padding(.top, DS.Space.m)
             }
 
             stats.padding(.top, DS.Space.m)

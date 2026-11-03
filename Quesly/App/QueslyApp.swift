@@ -65,6 +65,9 @@ struct RootView: View {
                 } else if !store.hasAnsweredToday {
                     // New users answer first: value before any permission or friends ask.
                     DailyQuestionView(onSubmitted: flashThenFeed)
+                } else if store.onboarding == .photo {
+                    AddPhotoView()
+                        .transition(.move(edge: .trailing))
                 } else if store.onboarding == .notifications {
                     NotificationPrimingView()
                         .transition(.move(edge: .trailing))

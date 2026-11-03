@@ -14,7 +14,7 @@ struct FindFriendsView: View {
     var body: some View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 6) {
-                StepDots(current: 1, total: 2)
+                StepDots(current: 2, total: 3)
                     .padding(.bottom, 2)
                 Text("Find your people")
                     .font(.display(24, .medium))
@@ -88,7 +88,7 @@ struct NotificationPrimingView: View {
         ZStack {
             Color.qBackground.ignoresSafeArea()
             VStack(spacing: 0) {
-                StepDots(current: 0, total: 2, onDark: false)
+                StepDots(current: 1, total: 3, onDark: false)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, DS.Space.screen)
                     .padding(.top, 20)

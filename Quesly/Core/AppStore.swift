@@ -10,8 +10,8 @@ enum FeedScope: String, CaseIterable, Identifiable {
 }
 
 enum OnboardingStep: String, Codable {
-    /// Order after sign-up: first answer → notifications → findFriends → done.
-    case notifications, findFriends, done
+    /// Order after sign-up: first answer → photo → notifications → findFriends → done.
+    case photo, notifications, findFriends, done
 }
 
 /// Single source of truth for the app. Currently backed by `MockData` + local persistence;
@@ -158,7 +158,7 @@ final class AppStore {
         me.email = email.trimmingCharacters(in: .whitespaces)
         seedHistoryIfNeeded()
         followingIds = [] // the user picks who to follow; nothing pre-selected
-        onboarding = .notifications
+        onboarding = .photo
         isSignedIn = true
         persist()
     }
@@ -175,6 +175,11 @@ final class AppStore {
     private func seedHistoryIfNeeded() {
         guard myAnswers.isEmpty else { return }
         myAnswers = MockData.myHistory()
+    }
+
+    func finishPhotoStep() {
+        onboarding = .notifications
+        persist()
     }
 
     func finishFindFriends() {

@@ -380,11 +380,6 @@ final class AppStore {
         seenStoryAuthorIds.insert(authorId)
     }
 
-    /// Mock "people answered today" counter for social proof. Replace with the API value.
-    var answeredTodayCount: Int {
-        let day = Calendar.current.ordinality(of: .day, in: .era, for: .now) ?? 0
-        return 9_000 + (day * 7_919) % 6_000 + todayAnswers.count + (hasAnsweredToday ? 1 : 0)
-    }
 
     func answers(of userId: String) -> [Answer] {
         if userId == me.id { return myAnswers }

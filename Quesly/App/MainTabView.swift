@@ -59,22 +59,22 @@ struct MainTabView: View {
                 stack(.journey) { JourneyView() }
                 stack(.profile) { ProfileView(userId: store.me.id, isTabRoot: true, onNavigateToJourney: { select(.journey) }) }
             }
-            // Fade content out under the dock and home indicator (the dock's own background
-            // can't reach the bottom safe area from inside safeAreaInset).
-            .overlay(alignment: .bottom) {
-                if !isDetailActive {
-                    LinearGradient(colors: [Color.qBackground.opacity(0), Color.qBackground],
-                                   startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.45))
-                        .frame(height: 70)
-                        .ignoresSafeArea(edges: .bottom)
-                        .allowsHitTesting(false)
-                }
-            }
+            // Reserve the dock's height so content can scroll clear of it.
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !isDetailActive {
-                    tabBar
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
+                if !isDetailActive { Color.clear.frame(height: 52) }
+            }
+
+            if !isDetailActive {
+                // Fade content out behind the dock all the way down past the home indicator.
+                LinearGradient(colors: [Color.qBackground.opacity(0), Color.qBackground],
+                               startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.35))
+                    .frame(height: 90)
+                    .ignoresSafeArea(edges: .bottom)
+                    .allowsHitTesting(false)
+                    .transition(.opacity)
+
+                tabBar
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .ignoresSafeArea(.keyboard)

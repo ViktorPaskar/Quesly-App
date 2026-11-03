@@ -71,8 +71,13 @@ struct ReflectionInsightsView: View {
     }
 
     /// Median time of the shown answers (median, so one late night doesn't drag it).
+    /// With no filter it uses the peak part of the day, so it agrees with "Morning person".
     private var usualMinute: Int? {
-        let m = filteredAnswers.map { Self.minuteOfDay($0.createdAt) }.sorted()
+        let cal = Calendar.current
+        let pool = selectedPeriod == nil
+            ? store.myAnswers.filter { peak.contains(hour: cal.component(.hour, from: $0.createdAt)) }
+            : filteredAnswers
+        let m = pool.map { Self.minuteOfDay($0.createdAt) }.sorted()
         return m.isEmpty ? nil : m[m.count / 2]
     }
 
@@ -192,7 +197,7 @@ struct ReflectionInsightsView: View {
                     ForEach(points) { a in
                         LineMark(x: .value("Day", a.createdAt, unit: .day),
                                  y: .value("Time", 1440 - Self.minuteOfDay(a.createdAt)))
-                            .interpolationMethod(.catmullRom)
+                            .interpolationMethod(.monotone)
                             .foregroundStyle(tint.gradient)
                             .lineStyle(StrokeStyle(lineWidth: 2.5))
                         PointMark(x: .value("Day", a.createdAt, unit: .day),

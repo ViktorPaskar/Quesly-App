@@ -105,17 +105,10 @@ struct WelcomeView: View {
                     )
                     .frame(height: geo.size.height * 0.54)
 
-                    // Floating circular friend avatars around phone
-                    ZStack {
-                        floatingAvatar(name: "avatar-u1", size: 48)
-                            .offset(x: 100, y: -50 + (floating ? -4 : 3))
-
-                        floatingAvatar(name: "avatar-u2", size: 42)
-                            .offset(x: 138, y: 6 + (floating ? 3 : -3))
-
-                        floatingAvatar(name: "avatar-u3", size: 46)
-                            .offset(x: 106, y: 62 + (floating ? -3 : 4))
-                    }
+                    // Real UI: today's question card
+                    miniQuestionCard
+                        .rotationEffect(.degrees(-3))
+                        .offset(x: -40, y: -36 + (floating ? -3 : 3))
                 }
                 .frame(width: geo.size.width, height: geo.size.height * 0.54)
 
@@ -179,42 +172,10 @@ struct WelcomeView: View {
                     )
                     .frame(height: geo.size.height * 0.54)
 
-                    // Floating prompt & reaction chips
-                    ZStack {
-                        // Daily at 9 AM Prompt pill
-                        HStack(spacing: 7) {
-                            QueslyMark(color: .qLime, cutout: .qGreenDeep)
-                                .frame(width: 14)
-                                .frame(width: 22, height: 22)
-                                .background(Circle().fill(Color.qGreenDeep.opacity(0.12)))
-                            Text("Daily at 9 AM")
-                                .font(.ui(12, .semibold))
-                                .foregroundStyle(Color.qInk)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(
-                            Capsule().fill(Color.white)
-                                .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
-                        )
-                        .offset(x: -85, y: -45 + (floating ? -3 : 4))
-
-                        // Heart Like Reaction Pill
-                        HStack(spacing: 6) {
-                            Text("❤️")
-                                .font(.system(size: 14))
-                            Text("Like")
-                                .font(.ui(12, .semibold))
-                                .foregroundStyle(Color.qInk)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(
-                            Capsule().fill(Color.white)
-                                .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
-                        )
-                        .offset(x: 105, y: 25 + (floating ? 4 : -3))
-                    }
+                    // Real UI: a friend's answer with a sticker reaction
+                    miniAnswerCard
+                        .rotationEffect(.degrees(2))
+                        .offset(x: 24, y: -30 + (floating ? -3 : 3))
                 }
                 .frame(width: geo.size.width, height: geo.size.height * 0.54)
 
@@ -278,40 +239,10 @@ struct WelcomeView: View {
                     )
                     .frame(height: geo.size.height * 0.50)
 
-                    // Floating Streak & Milestone Badges
-                    ZStack {
-                        // Streak Pill
-                        HStack(spacing: 6) {
-                            Icon(.fireFill, size: 14)
-                                .foregroundStyle(Color.qFlame)
-                            Text("9 Day streak")
-                                .font(.ui(13, .semibold))
-                                .foregroundStyle(Color.qInk)
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule().fill(Color.white)
-                                .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
-                        )
-                        .offset(x: -85, y: -40 + (floating ? -4 : 3))
-
-                        // Milestone Pill
-                        HStack(spacing: 6) {
-                            Icon(.sparkleFill, size: 13)
-                                .foregroundStyle(Color.qBrandText)
-                            Text("Milestones")
-                                .font(.ui(12, .semibold))
-                                .foregroundStyle(Color.qInk)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(
-                            Capsule().fill(Color.white)
-                                .overlay(Capsule().stroke(Color.qLine, lineWidth: 1))
-                        )
-                        .offset(x: 100, y: 20 + (floating ? 3 : -4))
-                    }
+                    // Real UI: the Journey streak with a badge
+                    miniStreakCard
+                        .rotationEffect(.degrees(-2))
+                        .offset(x: -70, y: -30 + (floating ? -3 : 3))
                 }
                 .frame(width: geo.size.width, height: geo.size.height * 0.50)
 
@@ -403,15 +334,70 @@ struct WelcomeView: View {
         }
     }
 
-    // MARK: - Reusable Components
+    // MARK: - Real UI pieces over the photos (same look as in the app)
 
-    private func floatingAvatar(name: String, size: CGFloat) -> some View {
-        Image(name)
-            .resizable()
-            .scaledToFill()
-            .frame(width: size, height: size)
-            .clipShape(Circle())
-            .overlay(Circle().stroke(Color.white, lineWidth: 2.5))
+    private var miniQuestionCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                QueslyMark(color: .qLime, cutout: .qGreenDeep).frame(width: 16)
+                Text("TODAY'S QUESTION")
+                    .font(.ui(11, .semibold)).tracking(0.6)
+                    .foregroundStyle(Color.qLime)
+            }
+            (Text("What's a small thing that makes you ")
+             + Text("happy").foregroundColor(.qLime)
+             + Text(" every day?"))
+                .font(.display(19))
+                .foregroundStyle(.white)
+                .lineSpacing(2)
+        }
+        .padding(16)
+        .frame(width: 240, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(Color.qGreen))
+        .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
+        .accessibilityHidden(true)
+    }
+
+    private var miniAnswerCard: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image("avatar-u2")
+                .resizable().scaledToFill()
+                .frame(width: 34, height: 34)
+                .clipShape(Circle())
+                .overlay(Circle().strokeBorder(.white, lineWidth: 2))
+                .overlay(Circle().strokeBorder(Color.qLime, lineWidth: 2).padding(-3))
+            VStack(alignment: .leading, spacing: 3) {
+                Text("nia.adebayo").font(.ui(14, .semibold)).foregroundStyle(Color.qInk)
+                Text("The first sip of coffee while the apartment is still quiet")
+                    .font(.ui(14)).foregroundStyle(Color.qInk)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(14)
+        .frame(width: 250, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(.white))
+        .overlay(alignment: .topTrailing) {
+            ReactionSticker(kind: .aww, size: 46)
+                .rotationEffect(.degrees(8))
+                .offset(x: 14, y: -18)
+        }
+        .shadow(color: .black.opacity(0.16), radius: 18, y: 8)
+        .accessibilityHidden(true)
+    }
+
+    private var miniStreakCard: some View {
+        HStack(spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text("9").font(.display(40, .semibold)).foregroundStyle(Color.qFlame)
+                Text("day streak").font(.ui(15, .semibold)).foregroundStyle(Color.qInk)
+            }
+            HexBadge(tier: .gold).frame(width: 40, height: 44)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: DS.Radius.l, style: .continuous).fill(.white))
+        .shadow(color: .black.opacity(0.16), radius: 18, y: 8)
+        .accessibilityHidden(true)
     }
 
     private func primaryContinueButton(title: String, action: @escaping () -> Void) -> some View {

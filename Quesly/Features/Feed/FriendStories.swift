@@ -78,11 +78,7 @@ struct PeeksStoriesBar: View {
                         .background {
                             if store.hasAnsweredToday {
                                 Circle().strokeBorder(
-                                    LinearGradient(
-                                        colors: [Color.qGreen, Color.qGreenDeep],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
+                                    Color.qGreen,
                                     style: StrokeStyle(lineWidth: 2.2, lineCap: .round, dash: [8, 3.5])
                                 )
                             } else {
@@ -102,7 +98,7 @@ struct PeeksStoriesBar: View {
                         .overlay(
                             Image(systemName: "plus")
                                 .font(.system(size: 11.5, weight: .bold))
-                                .foregroundStyle(Color.qGreenDeep)
+                                .foregroundStyle(Color.qGreen)
                         )
                         .overlay(Circle().stroke(Color.white, lineWidth: 2))
                 }
@@ -149,11 +145,7 @@ private struct StoryBubble: View {
                             Circle().strokeBorder(Color.qLine, lineWidth: 1.5)
                         } else {
                             Circle().strokeBorder(
-                                LinearGradient(
-                                    colors: [Color.qGreen, Color.qGreenDeep],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
+                                Color.qGreen,
                                 style: StrokeStyle(lineWidth: 2.2, lineCap: .round, dash: [8, 3.5])
                             )
                         }
@@ -199,12 +191,7 @@ struct StoryViewer: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                // Cinematic deep emerald gradient
-                LinearGradient(
-                    colors: [Color(hex: 0x053F2B), Color.qGreenDeep, Color(hex: 0x021E14)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                Color.qGreen
                 .ignoresSafeArea()
 
                 // Soft ambient lime glow

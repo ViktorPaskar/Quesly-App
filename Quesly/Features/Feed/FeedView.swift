@@ -542,7 +542,7 @@ struct TodayQuestionBanner: View {
                     HStack(spacing: DS.Space.xs) {
                         HStack(spacing: 8) {
                             if !friends.isEmpty {
-                                AvatarStack(users: friends, size: 24, ring: Color.qGreenDeep)
+                                AvatarStack(users: friends, size: 24, ring: Color.qGreen)
                             } else {
                                 Icon(.fireFill, size: 14)
                                     .foregroundStyle(Color.qFlame)
@@ -560,14 +560,14 @@ struct TodayQuestionBanner: View {
                                 .font(.ui(13, .semibold))
                             Icon(.arrowRightBold, size: 11)
                         }
-                        .foregroundStyle(Color.qGreenDeep)
+                        .foregroundStyle(Color.qGreen)
                         .padding(.horizontal, 14)
                         .frame(height: 32)
                         .background(Capsule().fill(Color.qLime))
                     }
                     .padding(.horizontal, 18)
                     .padding(.vertical, 12)
-                    .background(Color.qGreenDeep.opacity(0.60))
+                    .background(Color.white.opacity(0.08))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -143,11 +143,7 @@ private struct NotificationHeroArt: View {
                 // Central branded squircle tile
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(
-                        LinearGradient(
-                            colors: [Color.qGreen, Color.qGreenDeep],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                        Color.qGreen
                     )
                     .frame(width: 80, height: 80)
                     .overlay(
@@ -172,7 +168,7 @@ private struct NotificationHeroArt: View {
                 ZStack {
                     Circle().fill(Color.qLime)
                         .frame(width: 26, height: 26)
-                    QueslyMark(color: .qLime, cutout: .qGreenDeep)
+                    QueslyMark(color: .qLime, cutout: .qGreen)
                         .frame(width: 14)
                 }
                 .overlay(Circle().strokeBorder(Color.white, lineWidth: 2))
@@ -213,7 +209,7 @@ private struct NotificationPreview: View {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(Color.qLime)
                         .frame(width: 38, height: 38)
-                    QueslyMark(color: .qLime, cutout: .qGreenDeep)
+                    QueslyMark(color: .qLime, cutout: .qGreen)
                         .frame(width: 22)
                 }
 
@@ -252,7 +248,7 @@ private struct NotificationPreview: View {
                         .overlay(
                             Text("CB")
                                 .font(.ui(13, .bold))
-                                .foregroundStyle(Color.qGreenDeep)
+                                .foregroundStyle(Color.qGreen)
                         )
                     Circle()
                         .fill(Color.qLime)
@@ -363,7 +359,7 @@ struct PersonRow: View {
                                     Text("Friend")
                                 }
                                 .font(.ui(10.5, .semibold))
-                                .foregroundStyle(Color.qGreenDeep)
+                                .foregroundStyle(Color.qGreen)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Capsule().fill(Color.qSage.opacity(0.40)))

@@ -65,7 +65,7 @@ struct SettingsView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(Capsule().fill(Color.qGreenDeep))
+                        .background(Capsule().fill(Color.qGreen))
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }

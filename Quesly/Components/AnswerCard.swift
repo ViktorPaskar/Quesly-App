@@ -260,7 +260,7 @@ struct AnswerCard: View {
             if isMine && !isCompact {
                 Text("You")
                     .font(.ui(11, .semibold))
-                    .foregroundStyle(Color.qGreenDeep)
+                    .foregroundStyle(Color.qGreen)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 2)
                     .background(Capsule().fill(Color(hex: 0xEDF8F3)))
@@ -270,7 +270,7 @@ struct AnswerCard: View {
                     Text("Friend")
                 }
                 .font(.ui(10.5, .semibold))
-                .foregroundStyle(Color.qGreenDeep)
+                .foregroundStyle(Color.qGreen)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
                 .background(Capsule().fill(Color.qSage.opacity(0.40)))

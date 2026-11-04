@@ -59,11 +59,7 @@ struct WidgetGalleryView: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
                         .fill(
-                            LinearGradient(
-                                colors: [WidgetPalette.obsidian, WidgetPalette.green],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            WidgetPalette.green
                         )
                     Circle()
                         .fill(WidgetPalette.lime.opacity(0.06))

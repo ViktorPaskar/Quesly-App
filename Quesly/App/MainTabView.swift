@@ -167,7 +167,7 @@ struct MainTabView: View {
                     ZStack {
                         if active {
                             Capsule()
-                                .fill(Color.qGreenDeep)
+                                .fill(Color.qGreen)
                                 .frame(width: 58, height: 42)
                                 .matchedGeometryEffect(id: "tabBubble", in: ns)
                         }

@@ -113,7 +113,7 @@ struct DailyQuestionView: View {
     private var header: some View {
         ZStack {
             // Master base logo on screens before Feed (11.svg: lime badge with dark green eyes + black text)
-            QueslyLogo(height: 26, markColor: .qLime, textColor: .qInk, background: .qGreenDeep)
+            QueslyLogo(height: 26, markColor: .qLime, textColor: .qInk, background: .qGreen)
 
             HStack {
                 Spacer()

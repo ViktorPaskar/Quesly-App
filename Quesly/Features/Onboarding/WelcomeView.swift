@@ -339,7 +339,7 @@ struct WelcomeView: View {
     private var miniQuestionCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                QueslyMark(color: .qLime, cutout: .qGreenDeep).frame(width: 16)
+                QueslyMark(color: .qLime, cutout: .qGreen).frame(width: 16)
                 Text("TODAY'S QUESTION")
                     .font(.ui(11, .semibold)).tracking(0.6)
                     .foregroundStyle(Color.qLime)

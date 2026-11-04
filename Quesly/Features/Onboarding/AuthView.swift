@@ -41,7 +41,7 @@ struct AuthView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     // Just the brand, centred: no tagline promising numbers we don't have yet.
                     VStack(spacing: 14) {
-                        QueslyLogo(height: 38, markColor: .qLime, textColor: .qInk, background: .qGreenDeep)
+                        QueslyLogo(height: 38, markColor: .qLime, textColor: .qInk, background: .qGreen)
                         Text(mode == .signUp ? "Create your account" : "Welcome back")
                             .font(.display(24, .medium)).foregroundStyle(Color.qInk)
                     }

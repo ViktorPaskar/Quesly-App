@@ -48,7 +48,6 @@ struct QuestionWidgetModel: Equatable {
 
 /// Brand values for the widget. The widget can't see the app's design tokens, so the few it needs live here.
 enum WidgetPalette {
-    static let obsidian = Color(red: 5 / 255, green: 52 / 255, blue: 36 / 255)   // #053424
     static let green = Color(red: 8 / 255, green: 86 / 255, blue: 59 / 255)      // #08563B
     static let lime = Color(red: 212 / 255, green: 1, blue: 0)                    // #D4FF00
     static let flame = Color(red: 255 / 255, green: 79 / 255, blue: 61 / 255)    // #FF4F3D (Poppy Coral)
@@ -103,7 +102,7 @@ struct QuestionWidgetSmallView: View {
                     Image(systemName: "arrow.right")
                         .font(.system(size: 10.5, weight: .bold))
                 }
-                .foregroundStyle(WidgetPalette.obsidian)
+                .foregroundStyle(WidgetPalette.green)
                 .padding(.horizontal, 13)
                 .frame(height: 28)
                 .background(Capsule().fill(WidgetPalette.lime))
@@ -181,7 +180,7 @@ struct QuestionWidgetMediumView: View {
 
                     Text("Answer")
                         .font(.system(size: 13.5, weight: .bold))
-                        .foregroundStyle(WidgetPalette.obsidian)
+                        .foregroundStyle(WidgetPalette.green)
                         .padding(.horizontal, 16)
                         .frame(height: 34)
                         .background(Capsule().fill(WidgetPalette.lime))

@@ -121,7 +121,7 @@ struct StoryCard: View {
             case .sage: return .qSage
             }
         }
-        var ink: Color { self == .green ? .white : Color.qGreenDeep }
+        var ink: Color { self == .green ? .white : Color.qGreen }
         var swatch: Color { background }
     }
 
@@ -142,7 +142,7 @@ struct StoryCard: View {
 
                 Text("TODAY'S QUESTION")
                     .font(.custom("Outfit-Bold", fixedSize: 12))
-                    .foregroundStyle(theme == .green ? Color.qLime : Color.qGreenDeep.opacity(0.75))
+                    .foregroundStyle(theme == .green ? Color.qLime : Color.qGreen.opacity(0.75))
                     .padding(.bottom, 12)
                 Text(answer.questionText.uppercased())
                     .font(.custom("Outfit-ExtraBold", fixedSize: 26))
@@ -178,7 +178,7 @@ struct StoryCard: View {
                         .font(.custom("Outfit-SemiBold", fixedSize: 15))
                     Icon(.arrowRightBold, size: DS.Icon.inline)
                 }
-                .foregroundStyle(theme == .green ? Color.qGreenDeep : .white)
+                .foregroundStyle(theme == .green ? Color.qGreen : .white)
                 .padding(.horizontal, 20)
                 .frame(height: 42)
                 .background(Capsule().fill(theme == .green ? Color.qLime : Color.qGreen))

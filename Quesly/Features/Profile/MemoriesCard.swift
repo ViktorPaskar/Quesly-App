@@ -277,7 +277,7 @@ private struct DayCell: View {
         return ZStack {
             switch state {
             case .answered:
-                shape.fill(isSelected ? Color.qGreenDeep : (isToday ? Color.qLime : Color.qGreen))
+                shape.fill(isToday && !isSelected ? Color.qLime : Color.qGreen)
                 if isToday {
                     shape.strokeBorder(Color.qGreen.opacity(0.28), lineWidth: 1)
                 }

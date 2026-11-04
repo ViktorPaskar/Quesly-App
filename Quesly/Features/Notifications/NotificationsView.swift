@@ -95,7 +95,7 @@ struct NotificationsView: View {
                             .padding(.horizontal, 14)
                             .frame(height: 32)
                             .background(
-                                Capsule().fill(isSelected ? Color.qGreenDeep : Color.qField)
+                                Capsule().fill(isSelected ? Color.qGreen : Color.qField)
                             )
                     }
                     .buttonStyle(.pressable)

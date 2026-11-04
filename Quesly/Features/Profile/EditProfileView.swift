@@ -80,7 +80,7 @@ struct EditProfileView: View {
                     .foregroundStyle(Color.white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
-                    .background(Capsule().fill(Color.qGreenDeep))
+                    .background(Capsule().fill(Color.qGreen))
                     .shadow(color: Color.black.opacity(0.15), radius: 10, y: 4)
                     .padding(.top, 10)
                     .transition(.move(edge: .top).combined(with: .opacity))

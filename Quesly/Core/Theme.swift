@@ -56,10 +56,7 @@ enum DS {
 // MARK: - Colors
 
 extension Color {
-    // Brand (official palette: 053424, 08563B, D4FF00, FF8FC0, 9BD9B5, FF4F3D)
-    /// #053424 — Brand dark obsidian pine green: deepest contrast, dark mode base, dark accents.
-    static let qGreenDeep = Color(hex: 0x053424)
-    static let qObsidian = Color(hex: 0x053424)
+    // Brand (official palette: 08563B, D4FF00, FF8FC0, 9BD9B5, FF4F3D)
     /// #08563B — Brand emerald green: primary buttons, active states, key brand markers.
     static let qGreen = Color(hex: 0x08563B)
     static let qGreenLight = Color(hex: 0x5BA21E)
@@ -110,13 +107,13 @@ extension Color {
     /// Brand green used as *text or icon* color on neutral backgrounds (lighter in dark mode).
     static let qBrandText = Color(light: 0x08563B, dark: 0x7FD49B)
     /// App background.
-    static let qBackground = Color(light: 0xFFFFFF, dark: 0x053424)
+    static let qBackground = Color(light: 0xFFFFFF, dark: 0x0E1512)
     /// Elevated surfaces (sheets, popovers).
     static let qSurface = Color(light: 0xFFFFFF, dark: 0x12241C)
     /// Screen background: clean pure white canvas.
-    static let qCanvas = Color(light: 0xFFFFFF, dark: 0x053424)
+    static let qCanvas = Color(light: 0xFFFFFF, dark: 0x0E1512)
     /// Feed background behind the white answer cards.
-    static let qFeedCanvas = Color(light: 0xFFFFFF, dark: 0x053424)
+    static let qFeedCanvas = Color(light: 0xFFFFFF, dark: 0x0E1512)
     /// White rounded block that sits on `qCanvas`.
     static let qBlock = Color(light: 0xFFFFFF, dark: 0x0E261D)
 

@@ -460,7 +460,7 @@ struct ProfileHeader: View {
                             Text("Friends")
                         }
                         .font(.ui(14, .semibold))
-                        .foregroundStyle(Color.qGreenDeep)
+                        .foregroundStyle(Color.qGreen)
                         .frame(maxWidth: .infinity)
                         .frame(height: 40)
                         .background(Capsule().fill(Color.qSage.opacity(0.35)))

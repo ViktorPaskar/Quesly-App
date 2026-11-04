@@ -33,47 +33,78 @@ struct QuestionProvider: TimelineProvider {
     }
 }
 
-struct QuestionWidgetEntryView: View {
+/// Tells a style view whether it is drawn in the medium size.
+struct WidgetSizeReader<Content: View>: View {
+    @Environment(.widgetFamily) private var family
+    @ViewBuilder let content: (Bool) -> Content
+
+    var body: some View { content(family == .systemMedium) }
+}
+
+/// Paper keeps the original kind, so widgets people already placed carry over. It also owns the Lock Screen sizes.
+struct PaperEntryView: View {
     @Environment(\.widgetFamily) private var family
     let entry: QuestionEntry
 
     var body: some View {
         content
             .containerBackground(for: .widget) {
-                if family == .systemSmall || family == .systemMedium {
-                    WidgetPalette.green
-                } else {
-                    Color.clear
-                }
+                if family == .systemSmall || family == .systemMedium { Color.white } else { Color.clear }
             }
     }
 
     @ViewBuilder
     private var content: some View {
         switch family {
-        case .systemMedium: QuestionWidgetMediumView(model: entry.model)
         case .accessoryRectangular: QuestionWidgetRectangularView(model: entry.model)
         case .accessoryCircular: QuestionWidgetCircularView(model: entry.model)
         case .accessoryInline: QuestionWidgetInlineView(model: entry.model)
-        default: QuestionWidgetSmallView(model: entry.model)
+        case .systemMedium: PaperWidgetView(model: entry.model, isMedium: true)
+        default: PaperWidgetView(model: entry.model)
         }
     }
 }
 
-struct QuestionWidget: Widget {
+struct PaperWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: WidgetBridge.widgetKind, provider: QuestionProvider()) { entry in
-            QuestionWidgetEntryView(entry: entry)
+            PaperEntryView(entry: entry)
         }
-        .configurationDisplayName("Today's question")
-        .description("Today's question, your streak and how many friends already answered.")
+        .configurationDisplayName("Paper")
+        .description("Just today's question. After you answer, your own words.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular, .accessoryCircular, .accessoryInline])
+    }
+}
+
+struct BrightWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: WidgetBridge.brightKind, provider: QuestionProvider()) { entry in
+            WidgetSizeReader { BrightWidgetView(model: entry.model, isMedium: $0) }
+                .containerBackground(entry.model.answered ? WidgetPalette.mint : WidgetPalette.lime, for: .widget)
+        }
+        .configurationDisplayName("Bright")
+        .description("Today's question on lime. Turns mint once you've answered.")
+        .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+struct StreakWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: WidgetBridge.streakKind, provider: QuestionProvider()) { entry in
+            WidgetSizeReader { StreakWidgetView(model: entry.model, isMedium: $0) }
+                .containerBackground(WidgetPalette.flame, for: .widget)
+        }
+        .configurationDisplayName("Streak")
+        .description("Your streak, big, and how long is left to answer.")
+        .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
 
 @main
 struct QueslyWidgetBundle: WidgetBundle {
     var body: some Widget {
-        QuestionWidget()
+        PaperWidget()
+        BrightWidget()
+        StreakWidget()
     }
 }

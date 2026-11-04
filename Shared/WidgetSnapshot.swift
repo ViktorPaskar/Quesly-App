@@ -15,6 +15,8 @@ struct WidgetSnapshot: Codable, Equatable {
 enum WidgetBridge {
     static let appGroup = "group.app.quesly.ios"
     static let widgetKind = "QueslyQuestion"
+    static let brightKind = "QueslyBright"
+    static let streakKind = "QueslyStreak"
     private static let key = "quesly.widget.snapshot"
 
     private static var defaults: UserDefaults? { UserDefaults(suiteName: appGroup) }

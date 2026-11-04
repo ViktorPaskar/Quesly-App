@@ -8,21 +8,35 @@ struct WidgetGalleryView: View {
         var m = QuestionWidgetModel.placeholder
         m.answered = false
         m.friendsAnswered = 0
+        m.myAnswer = nil
         return m
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Space.m) {
-                caption("Home Screen")
+                caption("Paper")
                 HStack(spacing: DS.Space.m) {
-                    tile { QuestionWidgetSmallView(model: waiting) }
-                    tile { QuestionWidgetSmallView(model: answered) }
+                    tile(.white) { PaperWidgetView(model: waiting) }
+                    tile(.white) { PaperWidgetView(model: answered) }
                 }
-                tile(width: 338) { QuestionWidgetMediumView(model: answered) }
-                tile(width: 338) { QuestionWidgetMediumView(model: waiting) }
+                tile(.white, medium: true) { PaperWidgetView(model: waiting, isMedium: true) }
 
-                caption("Lock Screen").padding(.top, DS.Space.s)
+                caption("Bright")
+                HStack(spacing: DS.Space.m) {
+                    tile(WidgetPalette.lime) { BrightWidgetView(model: waiting) }
+                    tile(WidgetPalette.mint) { BrightWidgetView(model: answered) }
+                }
+                tile(WidgetPalette.lime, medium: true) { BrightWidgetView(model: waiting, isMedium: true) }
+
+                caption("Streak")
+                HStack(spacing: DS.Space.m) {
+                    tile(WidgetPalette.flame) { StreakWidgetView(model: waiting) }
+                    tile(WidgetPalette.flame) { StreakWidgetView(model: answered) }
+                }
+                tile(WidgetPalette.flame, medium: true) { StreakWidgetView(model: waiting, isMedium: true) }
+
+                caption("Lock Screen")
                 VStack(alignment: .leading, spacing: DS.Space.m) {
                     QuestionWidgetInlineView(model: answered)
                         .font(.ui(15, .semibold))
@@ -41,37 +55,20 @@ struct WidgetGalleryView: View {
             .padding(.horizontal, DS.Space.screen)
             .padding(.vertical, DS.Space.l)
         }
-        .background(Color.qField.ignoresSafeArea())
+        .background(Color(white: 0.2).ignoresSafeArea())
     }
 
     private func caption(_ text: String) -> some View {
         Text(text.uppercased())
             .font(.ui(13, .semibold))
-            .foregroundStyle(Color.qGray)
+            .foregroundStyle(.white.opacity(0.7))
     }
 
-    /// Home Screen widget frame: brand green, 22 pt corners, system content margins.
-    private func tile<Content: View>(width: CGFloat = 161, @ViewBuilder _ content: () -> Content) -> some View {
+    /// Home Screen widget frame: 22 pt corners, system content margins.
+    private func tile<Content: View>(_ background: Color, medium: Bool = false, @ViewBuilder _ content: () -> Content) -> some View {
         content()
-            .padding(DS.Space.m)
-            .frame(width: width, height: 161)
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(
-                            WidgetPalette.green
-                        )
-                    Circle()
-                        .fill(WidgetPalette.lime.opacity(0.06))
-                        .frame(width: 90, height: 90)
-                        .blur(radius: 20)
-                        .offset(x: width / 3, y: -30)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
-                )
-            )
+                        .padding(DS.Space.m)
+            .frame(width: medium ? 338 : 161, height: 161)
+            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(background))
     }
 }

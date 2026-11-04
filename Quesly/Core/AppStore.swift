@@ -695,9 +695,9 @@ final class AppStore {
         let snapshot = WidgetSnapshot(
             day: Calendar.current.startOfDay(for: .now), isSignedIn: isSignedIn,
             answeredToday: hasAnsweredToday, streak: streak,
-            friendsAnswered: friends.count, friendNames: friends.prefix(2).map(\.username))
+            friendsAnswered: friends.count, friendNames: friends.prefix(2).map(.username), myAnswer: todaysAnswer?.text)
         if WidgetBridge.save(snapshot) {
-            WidgetCenter.shared.reloadTimelines(ofKind: WidgetBridge.widgetKind)
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 

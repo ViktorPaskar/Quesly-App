@@ -10,6 +10,8 @@ struct WidgetSnapshot: Codable, Equatable {
     var friendsAnswered: Int
     /// Up to two names for "camille_b and 2 others answered".
     var friendNames: [String]
+    /// What the user wrote today, shown on the Paper widget.
+    var myAnswer: String? = nil
 }
 
 enum WidgetBridge {

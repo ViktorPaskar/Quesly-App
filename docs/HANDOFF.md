@@ -1,9 +1,9 @@
 # Quesly App: передача в новий чат (22.10.2026)
 
-Відкрий новий чат Claude Code у папці `C:\Users\user\Desktop\Quesly-App` і почни з: «Прочитай HANDOFF.md, CLAUDE.md і docs/QUESLY_BRIEF.md».
+Відкрий новий чат Claude Code у папці `C:\Users\user\Desktop\Projects\Quesly-App` і почни з: «Прочитай HANDOFF.md, CLAUDE.md і docs/QUESLY_BRIEF.md».
 
 ## Де що
-- Код: `C:\Users\user\Desktop\Quesly-App` (Xcode: застосунок `Quesly`, віджет `QueslyWidget`, спільне `Shared`).
+- Код: `C:\Users\user\Desktop\Projects\Quesly-App` (Xcode: застосунок `Quesly`, віджет `QueslyWidget`, спільне `Shared`).
 - GitHub: ViktorPaskar/Quesly-App, гілка `claude/eloquent-faraday-pqg0gs`.
 - Бриф продукту: `docs/QUESLY_BRIEF.md`. Правила роботи: `CLAUDE.md`.
 - Архів-копія всієї папки (з історією git): `C:\Users\user\Desktop\Quesly-App-backup-2026-10-22.zip`.

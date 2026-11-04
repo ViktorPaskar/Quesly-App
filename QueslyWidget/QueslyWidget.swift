@@ -35,7 +35,7 @@ struct QuestionProvider: TimelineProvider {
 
 /// Tells a style view whether it is drawn in the medium size.
 struct WidgetSizeReader<Content: View>: View {
-    @Environment(.widgetFamily) private var family
+    @Environment(\.widgetFamily) private var family
     @ViewBuilder let content: (Bool) -> Content
 
     var body: some View { content(family == .systemMedium) }

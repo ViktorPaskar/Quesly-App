@@ -229,7 +229,6 @@ struct FeedView: View {
                     Color.clear.frame(height: 88).id("top")
 
                     PeeksStoriesBar(
-                        scope: scope,
                         onAddAnswer: { showQuestion = true },
                         onOpenStory: { stories, index in
                             storyLaunch = StoryLaunch(stories: stories, start: index)

@@ -9,30 +9,16 @@ struct StoryLaunch: Identifiable {
 
 // MARK: - Row
 
-/// Peeks stories bar for both World and Friends feeds:
+/// Peeks stories bar, the same row in the World and Friends feeds:
 /// - Always starts with "My Peek": shows avatar with '+' if unanswered (tap to write answer), or gradient ring if answered (tap to view story).
-/// - Followed by friends' or community members' stories for today.
+/// - Followed by today's Peeks from the people you follow.
 struct PeeksStoriesBar: View {
     @Environment(AppStore.self) private var store
-    let scope: FeedScope
     var onAddAnswer: () -> Void
     var onOpenStory: ([Answer], Int) -> Void
 
     private var feedStories: [Answer] {
-        if scope == .friends {
-            return store.friendStories.filter { $0.authorId != store.me.id }
-        } else {
-            // World scope: community answers for today (public only, excluding followed friends & my own for pure discovery)
-            return store.todayAnswers.filter {
-                $0.authorId != store.me.id
-                    && $0.visibility == .everyone
-                    && !($0.isHidden ?? false)
-                    && !store.hiddenAnswerIds.contains($0.id)
-                    && !store.reportedAnswerIds.contains($0.id)
-                    && !store.blockedIds.contains($0.authorId)
-                    && !store.followingIds.contains($0.authorId)
-            }
-        }
+        store.friendStories.filter { $0.authorId != store.me.id }
     }
 
     var body: some View {
@@ -123,7 +109,6 @@ struct FriendStoriesRow: View {
 
     var body: some View {
         PeeksStoriesBar(
-            scope: .friends,
             onAddAnswer: {},
             onOpenStory: { stories, index in onOpen(index) }
         )

@@ -98,7 +98,7 @@ struct FriendGoalNudge: View {
                         .font(.ui(15, .semibold))
                         .foregroundStyle(Color.qBrandText)
                         .frame(maxWidth: .infinity).frame(height: DS.hitTarget)
-                        .background(Capsule().fill(Color.qField))
+                        .background(Capsule().fill(Color.white))
                 }
                 .buttonStyle(.pressable)
             }

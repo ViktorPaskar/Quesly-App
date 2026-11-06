@@ -241,6 +241,11 @@ struct FeedView: View {
                         showQuestion = true
                     }
 
+                    // Right under the question, so the invite is visible without scrolling.
+                    if scope == .friends && store.followingIds.isEmpty && store.feedError == nil && !store.isLoadingFeed {
+                        NoFriendsInvitePrompt(onDiscover: onDiscover)
+                    }
+
                     // Seamless Threads & X continuous stream with indented hairline dividers
                     VStack(spacing: 0) {
                         if let mine {
@@ -292,7 +297,7 @@ struct FeedView: View {
                     if store.feedError != nil || store.isLoadingFeed {
                         EmptyView()
                     } else if scope == .friends && store.followingIds.isEmpty {
-                        NoFriendsInvitePrompt(onDiscover: onDiscover)
+                        EmptyView() // the invite block above already covers this
                     } else if scope == .friends && others.isEmpty {
                         EmptyStateView(icon: .userFill,
                                        title: "Your friends are quiet",

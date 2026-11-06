@@ -21,43 +21,50 @@ struct NoFriendsInvitePrompt: View {
     var onDiscover: () -> Void
 
     var body: some View {
-        VStack(spacing: 16) {
-            HexBadge(asset: "badge-vibe", isLocked: !store.hasVibeBadge)
-                .frame(width: 88, height: 100)
-            Text("Quesly is better with friends")
-                .font(.display(24, .semibold))
-                .foregroundStyle(Color.qInk)
-                .multilineTextAlignment(.center)
-            Text(store.hasVibeBadge
-                 ? "Invite friends to see their answers here."
-                 : "Add \(AppStore.friendGoal) friends to see their answers here and unlock the **Vibe Connector** badge.")
-                .font(.ui(16))
-                .foregroundStyle(Color.qGray)
-                .multilineTextAlignment(.center)
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                HexBadge(asset: "badge-vibe", isLocked: !store.hasVibeBadge)
+                    .frame(width: 44, height: 50)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Quesly is better with friends")
+                        .font(.ui(16, .semibold))
+                        .foregroundStyle(Color.qInk)
+                    Text(store.hasVibeBadge
+                         ? "Invite friends to see their answers here."
+                         : "Add \(AppStore.friendGoal) to see their answers and unlock **Vibe Connector**.")
+                        .font(.ui(14))
+                        .foregroundStyle(Color.qGray)
+                }
+                Spacer(minLength: 0)
+            }
 
             if !store.hasVibeBadge {
                 FriendGoalProgress()
-                    .padding(.horizontal, 28)
             }
 
-            VStack(spacing: DS.Space.s) {
+            HStack(spacing: 8) {
                 ShareLink(item: Invite.text(for: store.me.username)) {
                     Text("Invite friends")
-                        .font(.ui(16, .semibold))
+                        .font(.ui(15, .semibold))
                         .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity).frame(height: 50)
+                        .frame(maxWidth: .infinity).frame(height: DS.hitTarget)
                         .background(Capsule().fill(Color.qGreen))
                 }
                 .buttonStyle(.pressable)
-                Button("Find people", action: onDiscover)
-                    .font(.ui(16))
-                    .foregroundStyle(Color.qBrandText)
-                    .frame(height: DS.hitTarget)
+                Button(action: onDiscover) {
+                    Text("Find people")
+                        .font(.ui(15, .semibold))
+                        .foregroundStyle(Color.qBrandText)
+                        .frame(maxWidth: .infinity).frame(height: DS.hitTarget)
+                        .background(Capsule().fill(Color.white))
+                }
+                .buttonStyle(.pressable)
             }
-            .padding(.top, 4)
         }
+        .padding(16)
+        .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.qField))
         .padding(.horizontal, DS.Space.screen)
-        .padding(.vertical, 28)
+        .padding(.top, DS.Space.s)
     }
 }
 

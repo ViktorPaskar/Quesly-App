@@ -46,6 +46,8 @@ struct MainTabView: View {
     @State private var reselect: [MainTab: Int] = [:]
     @State private var demoShare = DemoConfig.opensShareSheet
     @State private var demoReactions = DemoConfig.opensReactionsSheet
+    @State private var showVibeToast = false
+    @State private var vibeHaptic = 0
 
     private var isDetailActive: Bool {
         !(paths[tab]?.isEmpty ?? true)
@@ -83,6 +85,21 @@ struct MainTabView: View {
             }
         }
         .ignoresSafeArea(.keyboard)
+        // `initial`: the badge may be earned on the onboarding step, before this screen exists.
+        .onChange(of: store.vibeUnlockedAt, initial: true) { _, unlockedAt in
+            guard unlockedAt != nil else { return }
+            store.vibeUnlockedAt = nil
+            vibeHaptic += 1
+            withAnimation { showVibeToast = true }
+        }
+        .sensoryFeedback(.success, trigger: vibeHaptic)
+        .islandToast(isPresented: $showVibeToast) {
+            IslandToast(users: [], title: "Vibe Connector unlocked",
+                        subtitle: "You added \(AppStore.friendGoal) friends") {
+                showVibeToast = false
+                select(.journey)
+            }
+        }
         .task { if DemoTour.isOn { await playTour() } }
         .sheet(isPresented: $demoShare) {
             if let answer = store.todaysAnswer { ShareStorySheet(answer: answer) }
@@ -110,7 +127,7 @@ struct MainTabView: View {
         .accessibilityHidden(tab != t)
     }
 
-    /// Demo walkthrough after the answer is posted: react, swipe to Friends, watch a story,
+    /// Demo walkthrough after the answer is posted: react, swipe to World, watch a story,
     /// then visit notifications, discover, profile and settings.
     private func playTour() async {
         let tour = DemoTour.shared
@@ -118,13 +135,13 @@ struct MainTabView: View {
         await DemoTour.pause(5)
         tour.openTray = true
         await DemoTour.pause(1.8)
-        if let other = store.feed(.world).first(where: { $0.authorId != store.me.id }) {
+        if let other = store.feed(.friends).first(where: { $0.authorId != store.me.id }) {
             withAnimation(.qSpring) { store.react(.aww, on: other.id) }
         }
         await DemoTour.pause(0.6)
         tour.openTray = false
         await DemoTour.pause(1.5)
-        tour.feedScope = .friends
+        tour.feedScope = .world
         await DemoTour.pause(2.5)
         tour.showStory = true
         await DemoTour.pause(6)

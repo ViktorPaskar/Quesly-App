@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// World / Friends feeds on white: wordmark + streak, Threads-style tabs, then flat answer rows
-/// as white rounded cards 8 pt apart on a light gray canvas. World opens with the question card; Friends with your own answer.
+/// Friends / World feeds on white: wordmark + streak, Threads-style tabs, then flat answer rows
+/// as white rounded cards 8 pt apart on a light gray canvas. Friends opens first and asks you to invite people when empty.
 struct FeedView: View {
     @Environment(AppStore.self) private var store
     @State private var scope: FeedScope = DemoConfig.initialFeedScope
@@ -96,7 +96,7 @@ struct FeedView: View {
         .islandToast(isPresented: $showFriendsToast) {
             let friends = store.friendsAnsweredToday
             return IslandToast(users: friends,
-                               title: friends.count == 1 ? "(friends[0].username) answered" : "(friends.count) friends answered",
+                               title: friends.count == 1 ? "\(friends[0].username) answered" : "\(friends.count) friends answered",
                                subtitle: "See what they said") {
                 withAnimation(.qSmooth) { scope = .friends; showFriendsToast = false }
             }
@@ -284,8 +284,15 @@ struct FeedView: View {
                     }
                     .background(Color.white)
 
+                    if scope == .friends, !others.isEmpty, !store.hasVibeBadge,
+                       store.feedError == nil, !store.isLoadingFeed {
+                        FriendGoalNudge(onDiscover: onDiscover)
+                    }
+
                     if store.feedError != nil || store.isLoadingFeed {
                         EmptyView()
+                    } else if scope == .friends && store.followingIds.isEmpty {
+                        NoFriendsInvitePrompt(onDiscover: onDiscover)
                     } else if scope == .friends && others.isEmpty {
                         EmptyStateView(icon: .userFill,
                                        title: "Your friends are quiet",
@@ -384,7 +391,8 @@ struct FeedView: View {
         revealCount = .max
         try? await Task.sleep(for: .seconds(1.6))
         withAnimation(.qSmooth) { highlightsMine = false }
-        if !store.friendsAnsweredToday.isEmpty {
+        // On Friends their answers are already on screen; the toast only helps from World.
+        if scope != .friends, !store.friendsAnsweredToday.isEmpty {
             withAnimation { showFriendsToast = true }
         }
     }

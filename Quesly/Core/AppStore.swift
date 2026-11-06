@@ -4,8 +4,8 @@ import Observation
 import WidgetKit
 
 enum FeedScope: String, CaseIterable, Identifiable {
-    case world = "World"
     case friends = "Friends"
+    case world = "World"
     var id: String { rawValue }
 }
 
@@ -29,6 +29,14 @@ final class AppStore {
     var me: AppUser = MockData.me
     private(set) var users: [String: AppUser] = [:]
     private(set) var followingIds: Set<String> = []
+    /// Friends needed for the Vibe Connector badge.
+    nonisolated static let friendGoal = 3
+    /// Stays true after unfollowing: a badge, once earned, is never taken back.
+    private(set) var vibeEarned = false
+    /// Set when the badge is earned; the main screen shows the moment and clears it. Transient.
+    var vibeUnlockedAt: Date?
+    var friendGoalProgress: Int { vibeEarned ? Self.friendGoal : min(followingIds.count, Self.friendGoal) }
+    var hasVibeBadge: Bool { friendGoalProgress >= Self.friendGoal }
     private(set) var followerIds: Set<String> = []
     private(set) var blockedIds: Set<String> = []
     private(set) var todayAnswers: [Answer] = []
@@ -158,6 +166,7 @@ final class AppStore {
         me.email = email.trimmingCharacters(in: .whitespaces)
         seedHistoryIfNeeded()
         followingIds = [] // the user picks who to follow; nothing pre-selected
+        vibeEarned = false
         onboarding = .photo
         isSignedIn = true
         persist()
@@ -214,6 +223,8 @@ final class AppStore {
         reportedAnswerIds = []
         seenStoryAuthorIds = []
         followingIds = MockData.followingIds
+        vibeEarned = false
+        vibeUnlockedAt = nil
         followerIds = MockData.followerIds
         blockedIds = []
 
@@ -540,6 +551,7 @@ final class AppStore {
     func isFollowing(_ userId: String) -> Bool { followingIds.contains(userId) }
 
     func toggleFollow(_ userId: String) {
+        let alreadyEarned = hasVibeBadge
         if followingIds.contains(userId) {
             followingIds.remove(userId)
             users[userId]?.followers -= 1
@@ -547,8 +559,21 @@ final class AppStore {
             followingIds.insert(userId)
             users[userId]?.followers += 1
         }
+        if !alreadyEarned && followingIds.count >= Self.friendGoal {
+            notifications.insert(.init(id: UUID().uuidString, kind: .badge, actorId: nil,
+                                       message: "You unlocked Vibe Connector!", date: .now), at: 0)
+            vibeUnlockedAt = .now
+        }
+        vibeEarned = alreadyEarned || followingIds.count >= Self.friendGoal
         persist()
     }
+
+    #if DEBUG
+    /// Demo-only: start with a chosen set of friends, for the invite screenshots.
+    func demoSetFollowing(_ ids: Set<String>) {
+        followingIds = ids
+    }
+    #endif
 
     var followingUsers: [AppUser] {
         followingIds.compactMap { users[$0] }.sorted { $0.username.lowercased() < $1.username.lowercased() }
@@ -722,8 +747,8 @@ final class AppStore {
                   icon: .starFill, color: Color(hex: 0x7ED321), progress: min(answered, 1), goal: 1),
             .init(id: "streak3", title: "Consistent Soul", subtitle: "You answered 3 days in a row",
                   icon: .fireFill, color: Color(hex: 0xF5A623), progress: min(bestStreak, 3), goal: 3),
-            .init(id: "vibe", title: "Vibe Connector", subtitle: "Invited 3 friends to join Quesly",
-                  icon: .smileyFill, color: Color(hex: 0xE84FA5), progress: min(followingIds.count, 3), goal: 3),
+            .init(id: "vibe", title: "Vibe Connector", subtitle: "Added \(Self.friendGoal) friends on Quesly",
+                  icon: .smileyFill, color: Color(hex: 0xE84FA5), progress: friendGoalProgress, goal: Self.friendGoal),
             .init(id: "streak14", title: "Steady Flow", subtitle: "You answered 14 days in a row",
                   icon: .sparkleFill, color: Color(hex: 0x6F8FC0), progress: min(bestStreak, 14), goal: 14),
             .init(id: "weekend", title: "Weekend Reflector", subtitle: "Answered on 5 different weekends",
@@ -766,6 +791,7 @@ final class AppStore {
         var syncContacts: Bool?
         var streakAlerts: Bool?
         var showInDiscover: Bool?
+        var vibeEarned: Bool?
     }
 
     private func persist() {
@@ -786,7 +812,8 @@ final class AppStore {
             lastRefreshDate: lastRefreshDate,
             syncContacts: syncContacts,
             streakAlerts: streakAlerts,
-            showInDiscover: showInDiscover
+            showInDiscover: showInDiscover,
+            vibeEarned: vibeEarned
         )
         if let data = try? JSONEncoder().encode(snapshot) {
             UserDefaults.standard.set(data, forKey: Self.defaultsKey)
@@ -818,6 +845,7 @@ final class AppStore {
         if let sync = s.syncContacts { syncContacts = sync }
         if let streak = s.streakAlerts { streakAlerts = streak }
         if let discover = s.showInDiscover { showInDiscover = discover }
+        vibeEarned = s.vibeEarned ?? (s.followingIds.count >= Self.friendGoal)
 
         for i in todayAnswers.indices {
             let id = todayAnswers[i].id

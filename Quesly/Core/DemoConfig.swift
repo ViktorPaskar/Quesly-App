@@ -6,7 +6,7 @@ import Observation
 enum DemoConfig {
     enum Screen: String {
         case welcome, addPhoto, findFriends, notifyPrime, question, composer
-        case feed, feedEnd, feedError, offline, tray, friends, otherProfile, share, reactions, story
+        case feed, feedEnd, feedError, offline, tray, friends, world, noFriends, fewFriends, otherProfile, share, reactions, story
         case discover, notifications, profile, profileList, profileReposts, profileSaved, memory, streakFirst, streakRestart, menu, settings, editProfile, achievements, insights
         case widgets
         /// Auto-playing walkthrough recorded to video by CI: question → answer → feed → react → story → tabs → settings.
@@ -54,6 +54,8 @@ enum DemoConfig {
             #if DEBUG
             if screen == .streakFirst { store.demoTrimHistory { _ in false } }
             if screen == .streakRestart { store.demoTrimHistory { $0 > 1 } }
+            if screen == .noFriends { store.demoSetFollowing([]) }
+            if screen == .fewFriends { store.demoSetFollowing(["u1", "u2"]) }
             #endif
             store.submitAnswer(MockData.sampleAnswers[store.todayQuestion.id] ?? "")
         }
@@ -87,7 +89,7 @@ enum DemoConfig {
         guard screen == .composer else { return "" }
         return MockData.sampleAnswers[AppStore.question(for: .now).id] ?? ""
     }
-    static var initialFeedScope: FeedScope { screen == .friends ? .friends : .world }
+    static var initialFeedScope: FeedScope { screen == .world ? .world : .friends }
     static var opensShareSheet: Bool { screen == .share }
     static var opensReactionsSheet: Bool { screen == .reactions }
     static var opensStory: Bool { screen == .story }
